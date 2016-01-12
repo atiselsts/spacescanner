@@ -1,0 +1,9 @@
+{
+    "optimizationMaxTimeSec" : 10.0,
+    "copasiModelFile" : "@SELF@/../models/simple-6params.cps",
+    "paramSweepExhaustiveMax" : 1,
+    "paramSweepGreedyMax" : 2,
+    "methods" : ["ParticleSwarm", "ParticleSwarm"],
+    "logLevel" : 2,
+    "logFile" : "corunner-simple.log"
+}

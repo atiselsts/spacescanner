@@ -1,0 +1,9 @@
+{
+    "optimizationMaxTimeSec" : 10.0,
+    "copasiModelFile" : "@SELF@/../models/complex.cps",
+    "paramSweepExhaustiveMax" : 3,
+    "paramSweepGreedyMax" : 8,
+    "methods" : ["ParticleSwarm", "ParticleSwarm"],
+    "logLevel" : 2,
+    "logFile" : "corunner-complex.log"
+}

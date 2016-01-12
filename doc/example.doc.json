@@ -1,0 +1,44 @@
+//
+// Note: as comments are not supported by JSON format, this file is not directly usable!
+// Use the file "example.json" instead: it has identical contents without comments.
+//
+{
+    // http port number (default: 19000)
+    "httpPort" : 19000,
+    // COPASI model file name
+    "copasiModelFile" : "calcium_juergen.cps",
+    // whether to use-mock up functionality (default: false)
+    "dummyMode" : true,
+    // maximal CPU time for optimization in case convergence criteria and other end conditions have not been reached (default: 3600? sec)
+    "optimizationMaxTimeSec" : 60.0,
+    // for determining whether the convergence criteria of multiple solutions has been reached (default: 1e-6)
+    "optimizationConvergenceEpsilon" : 1e-6,
+    // minimal time to continue after convergence criteria has been reached (default: 60? sec )
+    "optimizationGuardTimeSec" : 60.0,
+    // compared to already found solution (default: 0.9, range: (0.0  .. 1.0])
+    "optimizationOptimalityProportion" : 0.9,
+    // interval between consectutive periodic reports (default: 5.0)
+    "periodicReportIntervalSec" : 1.0,
+    // max number of parameters to optimize using the exhaustive search strategy (default: 3)
+    "paramSweepExhaustiveMax" : 3,
+    // max number of parameters to optimize using the greedy search strategy (default: 8)
+    "paramSweepGreedyMax" : 8,
+    // whether to start by optimizing for all parameters first (default: true)
+    "paramSweepAllFirst" : true,
+    // whether to do parameter sweep trying to find a set of best parameters (default: true)
+    "paramSweepExecute" : true,
+    // how many COPASI processes to run by parallel (default: the number of CPU cores; range: [1 .. number of CPU cores])
+    "maxConcurrentOptimizations" : 16,
+    // which and how many methods to use; can contain a method more than once (default: ["ParticleSwarm"] twice)
+    "methods" : ["ParticleSwarm", "ParticleSwarm"]
+    // debug log level, higher means more messages (default: 1)
+    "logLevel" : 2,
+    // debug log file name (default: "corunner.log")
+    "logFile" : "corunner.log",
+    // optimization results file name (default: "results.log")
+    "resultsFile" : "results.csv",
+    // how many results to include in the best results file (default: 10)
+    "numBestResults" : 10,
+    // after how many finished jobs to save intermediate results (default: 10)
+    "numRunsBeforeSaveResults" : 10
+}

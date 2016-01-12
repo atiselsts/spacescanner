@@ -1,0 +1,21 @@
+{
+    "httpPort" : 19000,
+    "copasiModelFile" : "calcium_juergen.cps",
+    "dummyMode" : true,
+    "optimizationMaxTimeSec" : 60.0,
+    "optimizationConvergenceEpsilon" : 1e-6,
+    "optimizationGuardTimeSec" : 60.0,
+    "optimizationOptimalityProportion" : 0.9,
+    "periodicReportIntervalSec" : 1.0,
+    "paramSweepExhaustiveMax" : 3,
+    "paramSweepGreedyMax" : 8,
+    "paramSweepAllFirst" : true,
+    "paramSweepExecute" : true,
+    "maxConcurrentOptimizations" : 16,
+    "methods" : ["ParticleSwarm", "ParticleSwarm"],
+    "logLevel" : 2,
+    "logFile" : "corunner.log",
+    "resultsFile" : "results.csv",
+    "numBestResults" : 10,
+    "numRunsBeforeSaveResults" : 10
+}
