@@ -29,6 +29,40 @@ COPASI_SCHEMA = 'http://www.copasi.org/static/schema'
 # XML namespace
 COPASI_NS = {'copasi': COPASI_SCHEMA}
 
+REPORT_FORMAT = """\
+  <ListOfReports>
+    <Report key="optimization_report" name="Optimization" taskType="optimization" separator="&#x09;" precision="6">
+      <Header>
+        <Object cn="CN=Root,Vector=TaskList[Optimization],Object=Description"/>
+        <Object cn="String=CPU time"/>
+        <Object cn="Separator=&#x09;"/>
+        <Object cn="String=\[Best Value\]"/>
+        <Object cn="Separator=&#x09;"/>
+        <Object cn="String=\[Function Evaluations\]"/>
+        <Object cn="Separator=&#x09;"/>
+        <Object cn="String=\[Best Parameters\]"/>
+        <Object cn="Separator=&#x09;"/>
+        <Object cn="String=maximum real part"/>
+      </Header>
+      <Body>
+        <Object cn="CN=Root,Timer=CPU Time"/>
+        <Object cn="Separator=&#x09;"/>
+        <Object cn="CN=Root,Vector=TaskList[Optimization],Problem=Optimization,Reference=Best Value"/>
+        <Object cn="Separator=&#x09;"/>
+        <Object cn="CN=Root,Vector=TaskList[Optimization],Problem=Optimization,Reference=Function Evaluations"/>
+        <Object cn="Separator=&#x09;"/>
+        <Object cn="CN=Root,Vector=TaskList[Optimization],Problem=Optimization,Reference=Best Parameters"/>
+        <Object cn="Separator=&#x09;"/>
+        <Object cn="CN=Root,Vector=TaskList[Steady-State],Eigen Values=Eigenvalues of reduced system Jacobian,Reference=Maximum real part"/>
+      </Body>
+      <Footer>
+        <Object cn="String=&#x0a;"/>
+        <Object cn="CN=Root,Vector=TaskList[Optimization],Object=Result"/>
+      </Footer>
+    </Report>
+  </ListOfReports>
+"""
+
 class CopasiFile:
     def __init__(self):
         self.fileCounter = 0
@@ -110,6 +144,7 @@ class CopasiFile:
         report = self.optimizationTask.find('copasi:Report', COPASI_NS)
         if report is not None:
             report.set("target", reportFilename)
+            report.set("reference", "optimization_report")
             outf.write('    ' + str(ElementTree.tostring(report)))
 
         # 2. Include only required parameters
@@ -161,6 +196,8 @@ class CopasiFile:
                         else:
                             outf.write('  ' + str(ElementTree.tostring(sub)))
                     outf.write('  </ListOfTasks>\n')
+                elif "ListOfReports" in elem.tag:
+                    outf.write(REPORT_FORMAT)
                 else:
                     outf.write('  ' + str(ElementTree.tostring(elem)))
             outf.write('</COPASI>\n')

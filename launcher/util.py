@@ -236,6 +236,9 @@ class Matcher:
     def as_int(self, idx):
         return int(self._hit.group(idx))
 
+def startsWith(s, what):
+    return s[:len(what)] == what
+
 def getCurrentTime():
     return datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 

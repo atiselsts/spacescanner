@@ -1101,8 +1101,6 @@ To cite BioModels Database, please use: <a href="http://www.ncbi.nlm.nih.gov/pub
         <Parameter name="Random Number Generator" type="unsignedInteger" value="1"/>
         <Parameter name="Seed" type="unsignedInteger" value="0"/>
       </Method>
-      <Method name="test method" type="TestMethod">
-      </Method>
     </Task>
   </ListOfTasks>
   <ListOfReports>

@@ -59,7 +59,11 @@ else:
     PLATFORM_DIR = "linux-64" # just the 64-bit Copasi binary is included out-of-the-box
     COPASI_EXECUTABLE = "CopasiSE"
 
-COPASI_DIR = os.environ.get('COPASIDIR', os.path.join(SELF_PATH, "..", "copasi", PLATFORM_DIR))
+COPASI_DIR = os.environ.get('COPASIDIR')
+if not COPASI_DIR:
+    COPASI_DIR = os.path.join(SELF_PATH, "..", "copasi", PLATFORM_DIR)
+else:
+    COPASI_DIR = os.path.join(COPASI_DIR, "bin")
 
 # configuration settings
 DEFAULT_CONFIG = {
@@ -256,6 +260,7 @@ class Runner:
                 # too soon after start (copasi may not be launched yet), return
                 return
 
+        log(LOG_DEBUG, "checking {}".format(self.getName()))
         self.lastReportCheckTime = now
 
         try:
@@ -266,10 +271,14 @@ class Runner:
                 with open(self.reportFilename, "r") as f:
                     inValues = False
                     for line in f:
-                        if line[:8] == "CPU time":
+                        if startsWith(line, "CPU time"):
                             self.stats = []
                             inValues = True
+                            continue
                         if not inValues: continue
+
+                        if startsWith(line, "Optimization result"):
+                            break
 
                         si = StatsItem(line)
                         if si.isValid:
@@ -431,7 +440,14 @@ class StatsItem:
         self.ofValue = 0.0
         self.numOfEvaluations = 0
         self.maxRealPart = 0.0
-        numbers = line.split(" ")
+        line = line.strip()
+        if not line:
+            self.isValue = False
+            return
+        if "\t" in line:
+            numbers = line.split("\t")
+        else:
+            numbers = line.split(" ")
         try:
             self.cpuTime = float(numbers[0])
             self.ofValue = float(numbers[1])
@@ -441,7 +457,12 @@ class StatsItem:
             params = numbers[3].lstrip("(").rstrip(")").strip(" ")
             for n in params.split():
                 self.params.append(float(n))
+        except ValueError as e:
+            log(LOG_DEBUG, "value error {} in line".format(e))
+            log(LOG_DEBUG, line)
         except:
+            log(LOG_DEBUG, "unexpected error {} in line".format(sys.exc_info()[0]))
+            log(LOG_DEBUG, line)
             self.isValid = False
 
     def __str__(self):
@@ -652,7 +673,10 @@ class StrategyManager:
 
 
     def finishJob(self, job):
+        log(LOG_DEBUG, "finished {}".format(job.getName()))
         with self.jobLock:
+            if job not in self.activeJobs:
+                return
             self.activeJobs.remove(job)
             if self.bestOfValue < job.getBestOfValue():
                 # improved on the OF value! Store the result now.
