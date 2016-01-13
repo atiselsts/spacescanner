@@ -46,7 +46,7 @@ import copasifile
 
 # paths
 DEFAULT_CONFIG_FILE = "config.json"
-SELF_PATH = os.path.dirname(os.path.abspath(__file__))
+SELF_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if isWindows():
     PLATFORM_DIR = "windows"
     COPASI_EXECUTABLE = "CopasiSE.exe"
@@ -61,14 +61,14 @@ else:
 
 COPASI_DIR = os.environ.get('COPASIDIR')
 if not COPASI_DIR:
-    COPASI_DIR = os.path.join(SELF_PATH, "..", "copasi", PLATFORM_DIR)
+    COPASI_DIR = os.path.join(SELF_PATH, "copasi", PLATFORM_DIR)
 else:
     COPASI_DIR = os.path.join(COPASI_DIR, "bin")
 
 # configuration settings
 DEFAULT_CONFIG = {
     "httpPort" : 19000,
-    "copasiModelFile" : os.path.join(SELF_PATH, "..", "models", "simple-6params.cps"),
+    "copasiModelFile" : os.path.join(SELF_PATH, "models", "simple-6params.cps"),
     "dummyMode" : False,
     "optimizationMaxTimeSec" : 60,
     "optimizationConvergenceEpsilon" : 1e-6,
@@ -81,7 +81,7 @@ DEFAULT_CONFIG = {
     "paramSweepExecute" : True,
     "maxConcurrentOptimizations" : 16,
     "methods" : ["ParticleSwarm", "ParticleSwarm"],
-    "logLevel" : 1,
+    "logLevel" : 2,
     "logFile" : "corunner.log",
     "resultsFile" : "results.csv",
     "numBestResults" : 10,
@@ -397,6 +397,8 @@ class Job:
                 r.cleanup()
 
     def getBestOfValue(self):
+        if not self.runners:
+            return MIN_OF_VALUE
         return max([r.ofValue for r in self.runners])
 
     def cleanup(self):
@@ -514,14 +516,15 @@ class StrategyManager:
         self.bestOfValue = MIN_OF_VALUE
         self.bestParams = []
         self.allParamOptimizationDone = False
-        self.copasiConfig = None
+        self.copasiConfig = {"params" : []}
         self.copasiFile = None
 
 
     def cleanup(self, args):
         sys.stderr.write("<corunner>: quitting...\n")
-        with self.jobLock:
-            self.dumpResults()
+        if "params" in self.copasiConfig and self.copasiConfig["params"]:
+            with self.jobLock:
+                self.dumpResults()
         doWait = False
         time.sleep(0.01)
         with self.jobLock:
@@ -568,17 +571,15 @@ class StrategyManager:
 
 
     def loadCopasiFile(self):
+        result = {"params" : []}
         self.copasiFile = copasifile.CopasiFile()
         filename = getConfigSetting("copasiModelFile")
         filename = filename.replace("@SELF@", SELF_PATH)
         log(LOG_INFO, "<corunner>: opening COPASI model file {}".format(filename))
-        (ok, errorMsg) = self.copasiFile.read(filename)
-        if not ok:
-            log(LOG_ERROR, "error while loading COPASI model file: " + errorMsg)
-            return None
-        log(LOG_DEBUG, "querying COPASI optimization parameters")
-        params = self.copasiFile.getAllParameters()
-        return {"params" : params}
+        if self.copasiFile.read(filename):
+            log(LOG_DEBUG, "querying COPASI optimization parameters")
+            result["params"] = self.copasiFile.getAllParameters()
+        return result
 
 
     def numParameterCombinations(self):
@@ -735,7 +736,7 @@ class StrategyManager:
 
     def execute(self):
         self.copasiConfig = self.loadCopasiFile()
-        if not self.copasiConfig:
+        if "params" not in self.copasiConfig or not self.copasiConfig["params"]:
             return
 
         log(LOG_INFO, "total {} parameter combinations to try out, parameters:".format(self.numParameterCombinations()))
@@ -788,6 +789,7 @@ def main():
     global strategyManager
 
     webserver.log = log
+    copasifile.log = log
 
     configFileName = DEFAULT_CONFIG_FILE
     if len(sys.argv) > 1:
@@ -799,8 +801,8 @@ def main():
             config = json.load(f)
     except IOError as e:
         config = DEFAULT_CONFIG
-        log(LOG_ERROR, "\n<corunner>: exception occurred while loading configuration file: " + str(e))
-        log(LOG_INFO, "going to use the default configuration!\n")
+        log(LOG_ERROR, "<corunner>: exception occurred while loading configuration file: " + str(e))
+        log(LOG_ERROR, "going to use the default configuration!\n")
 
     # limit the number of runners to the number of CPU cores
     numCores = multiprocessing.cpu_count()

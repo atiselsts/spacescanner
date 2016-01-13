@@ -63,6 +63,13 @@ REPORT_FORMAT = """\
   </ListOfReports>
 """
 
+################################################
+
+def log(level, msg):
+    print(msg)
+
+################################################
+
 class CopasiFile:
     def __init__(self):
         self.fileCounter = 0
@@ -75,7 +82,8 @@ class CopasiFile:
 
     def read(self, filename):
         if not isReadable(filename):
-            return (False, "file not found or is not readable")
+            log(LOG_ERROR, "error while loading COPASI model: file not found or not readable")
+            return False
 
         self.optimizationTask = None
         self.xmlroot = ElementTree.parse(filename).getroot()
@@ -86,18 +94,18 @@ class CopasiFile:
                 if task.get("type").lower() == "optimization":
                     self.optimizationTask = task
         if self.optimizationTask is None:
-            return (False, "optimization task not found in COPASI file")
+            log(LOG_ERROR, "error while loading COPASI model: optimization task not found in COPASI file")
+            return False
 
-        return (True, "")
+        return True
 
 
     def getAllParameters(self):
-        if self.optimizationTask is None:
-            return []
-        
+        assert self.optimizationTask is not None
+
         problem = self.optimizationTask.find('copasi:Problem', COPASI_NS)
         if problem is None:
-            print("'Problem' not found in the optimization task")
+            log(LOG_ERROR, "'Problem' not found in the optimization task")
             return []
 
         self.paramDict = {}
@@ -209,9 +217,7 @@ def test():
     print("Copasi XML file manager test")
     cf = CopasiFile()
     print("opening a file")
-    (ok, msg) = cf.read("/media/atis/sysbio/complex-allparams.cps")
-    if not ok:
-        print(msg)
+    if not cf.read("/media/atis/sysbio/complex-allparams.cps"):
         return -1
     print("querying parameters")
     params = cf.getAllParameters()

@@ -1,6 +1,6 @@
 {
     "optimizationMaxTimeSec" : 10.0,
-    "copasiModelFile" : "@SELF@/../models/simple-6params.cps",
+    "copasiModelFile" : "@SELF@/models/simple-6params.cps",
     "paramSweepExhaustiveMax" : 1,
     "paramSweepGreedyMax" : 2,
     "methods" : ["ParticleSwarm", "ParticleSwarm"],

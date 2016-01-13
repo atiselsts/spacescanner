@@ -1,7 +1,7 @@
 {
     "httpPort" : 19000,
-    "copasiModelFile" : "calcium_juergen.cps",
-    "dummyMode" : true,
+    "copasiModelFile" : "@SELF@/models/simple-6params.cps",
+    "dummyMode" : false,
     "optimizationMaxTimeSec" : 60.0,
     "optimizationConvergenceEpsilon" : 1e-6,
     "optimizationGuardTimeSec" : 60.0,

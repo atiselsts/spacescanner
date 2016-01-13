@@ -5,10 +5,10 @@
 {
     // http port number (default: 19000)
     "httpPort" : 19000,
-    // COPASI model file name
-    "copasiModelFile" : "calcium_juergen.cps",
+    // COPASI model file name; @SELF@ refers to CoRunner source directory
+    "copasiModelFile" : "@SELF@/models/simple-6params.cps",
     // whether to use-mock up functionality (default: false)
-    "dummyMode" : true,
+    "dummyMode" : false,
     // maximal CPU time for optimization in case convergence criteria and other end conditions have not been reached (default: 3600? sec)
     "optimizationMaxTimeSec" : 60.0,
     // for determining whether the convergence criteria of multiple solutions has been reached (default: 1e-6)
@@ -31,7 +31,7 @@
     "maxConcurrentOptimizations" : 16,
     // which and how many methods to use; can contain a method more than once (default: ["ParticleSwarm"] twice)
     "methods" : ["ParticleSwarm", "ParticleSwarm"]
-    // debug log level, higher means more messages (default: 1)
+    // debug log level, higher means more messages (default: 2)
     "logLevel" : 2,
     // debug log file name (default: "corunner.log")
     "logFile" : "corunner.log",

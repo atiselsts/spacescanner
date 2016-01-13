@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-# get status of a run
+# get status of a job
 
 import os, sys, time, json,  urllib2
 
 def test():
-    host = "http://localhost:19000/runs/2"
+    host = "http://localhost:19000/jobs/2"
     try:
         req = urllib2.urlopen(host)
         reply = req.read()
