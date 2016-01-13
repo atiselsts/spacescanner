@@ -47,16 +47,17 @@ import copasifile
 # paths
 DEFAULT_CONFIG_FILE = "config.json"
 SELF_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# note that just 64-bit Win and Linux Copasi binaries are included out-of-the-box
 if isWindows():
-    PLATFORM_DIR = "windows"
+    PLATFORM_DIR = "WIN64"
     COPASI_EXECUTABLE = "CopasiSE.exe"
     if isCygwin():
         CYGWIN_DIR = getCygwinDir()
 elif isMac():
-    PLATFORM_DIR = "mac"
+    PLATFORM_DIR = "Darwin"
     COPASI_EXECUTABLE = "CopasiSE"
 else:
-    PLATFORM_DIR = "linux-64" # just the 64-bit Copasi binary is included out-of-the-box
+    PLATFORM_DIR = "Linux64"
     COPASI_EXECUTABLE = "CopasiSE"
 
 COPASI_DIR = os.environ.get('COPASIDIR')
