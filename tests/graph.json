@@ -1,12 +1,21 @@
 {
-    "optimizationMaxTimeSec" : 60.0,
-    "optimizationGuardTimeSec" : 20.0,
-    "optimizationConvergenceEpsilon" : 0.1,
-    "copasiModelFile" : "@SELF@/models/simple-6params.cps",
-    "paramSweepExhaustiveMax" : 3,
-    "paramSweepGreedyMax" : 8,
-    "methods" : ["ParticleSwarm", "ParticleSwarm", "ParticleSwarm", "ParticleSwarm"],
-    "logLevel" : 2,
-    "logFile" : "corunner-graph.log",
-    "paramSweepAllFirst" : false
+    "optimization" : {
+        "timeLimitSec" : 60,
+        "consensusMinDurationSec" : 20,
+        "consensusAbsoluteError" : 0.1,
+    },
+    "copasi" : {
+        "modelFile" : "@SELF@/models/simple-6params.cps",
+        "methods" : ["ParticleSwarm"],
+    },
+    "runtime" : {
+        "runsPerJob" : 4,
+        "maxParametersExhaustive" : 3,
+        "maxParametersGreedy" : 8,
+        "optimizeWithAllParameters" : false
+    },
+    "log" : {
+        "level" : 2,
+        "file" : "corunner-graph.log"
+    }
 }

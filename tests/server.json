@@ -1,16 +1,19 @@
 {
     "optimization" : {
-        "timeLimitSec" : 10
+        "timeLimitSec" : 3600,
+        "consensusMinDurationSec" : 600
     },
     "copasi" : {
         "modelFile" : "@SELF@/models/complex.cps"
     },
     "runtime" : {
+        "maxConcurrentRuns" : 8,
+        "runsPerJob" : 4,
         "maxParametersExhaustive" : 3,
         "maxParametersGreedy" : 8
     },
     "log" : {
         "level" : 2,
-        "file" : "corunner-complex.log"
+        "file" : "corunner-server.log"
     }
 }

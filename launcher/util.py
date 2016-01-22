@@ -21,15 +21,11 @@
 # Author: Atis Elsts, 2016
 #
 
-import os, sys, time, threading, re, datetime, math, signal, platform
-from subprocess import Popen, PIPE, STDOUT
+import os, sys, time, re, datetime, math, platform
 
-CORUNNER_VERSION = "0.0.1 (10 Jan 2016) (http://biosystems.lv)"
 
-LOG_FATAL = 0
-LOG_ERROR = 1
-LOG_INFO  = 2
-LOG_DEBUG = 3
+################################################
+# Version detection
 
 def isPython3():
     return sys.version_info[0] >= 3
@@ -54,6 +50,62 @@ def getCygwinDir():
         return winreg.QueryValueEx(key, "rootdir")[0]
     except:
         return "C:\\cygwin64\\"
+
+################################################
+# Constants
+
+# paths
+DEFAULT_CONFIG_FILE = "config.json"
+SELF_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# note that just 64-bit binaries are included out-of-the-box! (except for Mac)
+if isWindows():
+    PLATFORM_DIR = "WIN64"
+    COPASI_EXECUTABLE = "CopasiSE.exe"
+    if isCygwin():
+        CYGWIN_DIR = getCygwinDir()
+elif isMac():
+    PLATFORM_DIR = "Darwin"
+    COPASI_EXECUTABLE = "CopasiSE"
+else:
+    PLATFORM_DIR = "Linux64"
+    COPASI_EXECUTABLE = "CopasiSE"
+
+COPASI_DIR = os.environ.get('COPASIDIR')
+if not COPASI_DIR:
+    COPASI_DIR = os.path.join(SELF_PATH, "copasi", PLATFORM_DIR)
+else:
+    COPASI_DIR = os.path.join(COPASI_DIR, "bin")
+
+CORUNNER_VERSION = "0.0.1 (c) 2016 http://biosystems.lv"
+
+LOG_FATAL = 0
+LOG_ERROR = 1
+LOG_INFO  = 2
+LOG_DEBUG = 3
+
+# possible reasons why a copasi run was stopped
+TERMINATION_REASON_COPASI_FINISHED    = 0
+TERMINATION_REASON_CPU_TIME_LIMIT     = 1
+TERMINATION_REASON_CONVERGED          = 2
+TERMINATION_REASON_GOOD_VALUE_REACHED = 3
+TERMINATION_REASON_PROGRAM_QUITTING   = 4
+
+MIN_OF_VALUE = -1.0 # minimal objective function value
+
+################################################
+
+def reasonToStr(reason):
+    if reason == TERMINATION_REASON_COPASI_FINISHED:
+        return "COPASI finished"
+    if reason == TERMINATION_REASON_CPU_TIME_LIMIT:
+        return "CPU time limit"
+    if reason == TERMINATION_REASON_CONVERGED:
+        return "Runs converged"
+    if reason == TERMINATION_REASON_GOOD_VALUE_REACHED:
+        return "Good value reached"
+    if reason == TERMINATION_REASON_PROGRAM_QUITTING:
+        return "CoRunner interrupted"
+    return "?"
 
 def getUserInput(prompt):
     if isPython3():
@@ -111,44 +163,8 @@ def isExecutable(filename):
 def isReadable(filename):
     return os.path.isfile(filename) and os.access(filename, os.R_OK)
 
-def runSubprocess(args, runner):
-    POLL_INTERVAL = 1.0 # seconds
-
-    #sys.stdout.write("Run subprocess: " + " ".join(args) + "\n")
-    retcode = -1
-
-    try:
-        with open(os.devnull, 'w') as fp:
-            proc = Popen(args, stdout = fp, stderr = STDOUT)
-            while proc.poll() is None:
-                if runner.shouldTerminate():
-                    proc.kill()
-                time.sleep(POLL_INTERVAL)
-            retcode = proc.returncode
-    except OSError as e:
-        print("run subprocess OSError:" + str(e))
-    except CalledProcessError as e:
-        print("run subprocess CalledProcessError:" + str(e))
-        retcode = e.returncode
-    except Exception as e:
-        print("run subprocess exception:" + str(e))
-    except:
-        print("unexpected error:", sys.exc_info()[0])
-    finally:
-        #print("done, retcode = " + str(retcode))
-        return retcode
-
 def undefined(x, localVariables):
     return x not in localVariables
-
-def createBackgroundThread(function, args):
-    # make sure 'args' is a list or a tuple
-    if not (type(args) is list or type(args) is tuple):
-        args = (args,)
-    t = threading.Thread(target=function, args=args)
-    # keep it in daemon mode, in order to able to kill the app with Ctrl+C
-    t.daemon = True
-    t.start() 
 
 # extract a boolean value from http query string
 def qsExtractBool(qs, name, defaultValue = None):

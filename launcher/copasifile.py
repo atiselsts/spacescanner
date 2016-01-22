@@ -24,6 +24,7 @@
 from xml.etree import ElementTree
 
 from util import *
+import g
 
 COPASI_SCHEMA = 'http://www.copasi.org/static/schema'
 # XML namespace
@@ -65,11 +66,6 @@ REPORT_FORMAT = """\
 
 ################################################
 
-def log(level, msg):
-    print(msg)
-
-################################################
-
 class CopasiFile:
     def __init__(self):
         self.fileCounter = 0
@@ -82,7 +78,7 @@ class CopasiFile:
 
     def read(self, filename):
         if not isReadable(filename):
-            log(LOG_ERROR, "error while loading COPASI model: file not found or not readable")
+            g.log(LOG_ERROR, "error while loading COPASI model: file not found or not readable")
             return False
 
         self.optimizationTask = None
@@ -94,7 +90,7 @@ class CopasiFile:
                 if task.get("type").lower() == "optimization":
                     self.optimizationTask = task
         if self.optimizationTask is None:
-            log(LOG_ERROR, "error while loading COPASI model: optimization task not found in COPASI file")
+            g.log(LOG_ERROR, "error while loading COPASI model: optimization task not found in COPASI file")
             return False
 
         return True
@@ -105,7 +101,7 @@ class CopasiFile:
 
         problem = self.optimizationTask.find('copasi:Problem', COPASI_NS)
         if problem is None:
-            log(LOG_ERROR, "'Problem' not found in the optimization task")
+            g.log(LOG_ERROR, "'Problem' not found in the optimization task")
             return []
 
         self.paramDict = {}
@@ -217,7 +213,7 @@ def test():
     print("Copasi XML file manager test")
     cf = CopasiFile()
     print("opening a file")
-    if not cf.read("/media/atis/sysbio/complex-allparams.cps"):
+    if not cf.read("../models/complex.cps"):
         return -1
     print("querying parameters")
     params = cf.getAllParameters()

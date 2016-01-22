@@ -1,16 +1,20 @@
 {
     "optimization" : {
-        "timeLimitSec" : 30
+        "timeLimitSec" : 10
     },
     "copasi" : {
         "modelFile" : "@SELF@/models/simple-6params.cps"
     },
     "runtime" : {
         "maxParametersExhaustive" : 2,
-        "maxParametersGreedy" : 4
+        "maxParametersGreedy" : 4,
+        "parameterSweep" : false
     },
     "log" : {
-        "level" : 2,
-        "file" : "corunner-simple.log"
+        "level" : 3,
+        "file" : "corunner-debug.log"
+    },
+    "web" : {
+	"enable" : false
     }
 }

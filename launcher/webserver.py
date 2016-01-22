@@ -21,8 +21,10 @@
 # Author: Atis Elsts, 2016
 #
 
-import os, signal, select, json
+import os, signal, select, json, traceback
+
 from util import *
+import g
 
 if isPython3():
     from http.server import *
@@ -34,11 +36,6 @@ else:
     from urlparse import *
 
 enc = json.JSONEncoder()
-
-################################################
-
-def log(level, msg):
-    print(msg)
 
 ################################################
 
@@ -72,9 +69,9 @@ class InterruptibleHTTPServer(HTTPServer):
                 if self in r:
                     self._handle_request_noblock()
         except Exception as e:
-            log(LOG_ERROR, "base server exception:")
-            log(LOG_ERROR, str(e))
-            log(LOG_ERROR, traceback.format_exc())
+            g.log(LOG_ERROR, "base server exception:")
+            g.log(LOG_ERROR, str(e))
+            g.log(LOG_ERROR, traceback.format_exc())
         finally:
             self._BaseServer__shutdown_request = False
             self._BaseServer__is_shut_down.set()
@@ -93,7 +90,7 @@ class HttpServerHandler(BaseHTTPRequestHandler):
     # overrides base class function, because in some versions
     # it tries to resolve dns and fails...
     def log_message(self, format, *args):
-        log(LOG_DEBUG, "%s - - [%s] %s" %
+        g.log(LOG_DEBUG, "%s - - [%s] %s" %
                          (self.client_address[0],
                           self.log_date_time_string(),
                           format % args))

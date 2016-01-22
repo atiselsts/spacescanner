@@ -1,21 +1,37 @@
 {
-    "httpPort" : 19000,
-    "copasiModelFile" : "@SELF@/models/simple-6params.cps",
-    "dummyMode" : false,
-    "optimizationMaxTimeSec" : 60.0,
-    "optimizationConvergenceEpsilon" : 1e-6,
-    "optimizationGuardTimeSec" : 60.0,
-    "optimizationOptimalityProportion" : 0.9,
-    "periodicReportIntervalSec" : 1.0,
-    "paramSweepExhaustiveMax" : 3,
-    "paramSweepGreedyMax" : 8,
-    "paramSweepAllFirst" : true,
-    "paramSweepExecute" : true,
-    "maxConcurrentOptimizations" : 16,
-    "methods" : ["ParticleSwarm", "ParticleSwarm"],
-    "logLevel" : 2,
-    "logFile" : "corunner.log",
-    "resultsFile" : "results.csv",
-    "numBestResults" : 10,
-    "numRunsBeforeSaveResults" : 10
+    "copasi" : {
+        "modelFile" : "@SELF@/models/simple-6params.cps",
+        "methods" : ["ParticleSwarm", "ScatterSearch", "GeneticAlgorithm", "GeneticAlgorithmSR", "EvolutionaryProgram", "EvolutionaryStrategySR", "SimulatedAnnealing"],
+        "fallbackMethods" : ["GeneticAlgorithmSR", "EvolutionaryStrategySR"],
+        "parameters": []
+    },
+    "optimization" : {
+        "timeLimitSec" : 60,
+        "consensusRelativeError" : 0.01,
+        "consensusAbsoluteError" : 1e-6,
+        "consensusMinDurationSec" : 60,
+        "optimalityRelativeError" : 0.1
+    },
+    "runtime" : {
+        "maxConcurrentRuns" : 2,
+        "runsPerJob" : 2,
+        "randomiseMethodSelection" : false,
+        "maxParametersGreedy" : 8,
+        "maxParametersExhaustive" : 3,
+        "parameterSweep" : true,
+        "optimizeWithAllParameters" : true
+    },
+    "web" : {
+	"enable" : true,
+	"port" : 19000
+    },
+    "log" : {
+        "level" : 2,
+        "file" : "corunner.log"
+    },
+    "results" : {
+        "file" : "results.csv",
+        "numBest" : 10,
+        "numRunsBeforeSaving" : 10
+    }
 }

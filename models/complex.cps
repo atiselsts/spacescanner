@@ -1468,7 +1468,7 @@
         <Parameter name="ObjectiveFunction" type="key" value=""/>
       </Problem>
       <Method name="Particle Swarm" type="ParticleSwarm">
-        <Parameter name="Iteration Limit" type="unsignedInteger" value="2000"/>
+        <Parameter name="Iteration Limit" type="unsignedInteger" value="1000000"/>
         <Parameter name="Swarm Size" type="unsignedInteger" value="50"/>
         <Parameter name="Std. Deviation" type="unsignedFloat" value="1e-006"/>
         <Parameter name="Random Number Generator" type="unsignedInteger" value="1"/>
