@@ -55,7 +55,12 @@ class Process:
             return retcode
 
     def getCpuTime(self):
-        user, system = self.psutilProcess.get_cpu_times()
+        if self.psutilProcess is None:
+            return 0.0
+        if "get_cpu_times" in dir(self.psutilProcess):
+            user, system = self.psutilProcess.get_cpu_times()
+        else:
+            user, system = self.psutilProcess.cpu_times()
         return user + system
 
     def suspend(self, yes):

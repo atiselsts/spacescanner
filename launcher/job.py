@@ -117,11 +117,11 @@ class Job:
             # reset the timer
             self.convergenceTime = None
 
-        requiredMinOfValue = self.pool.strategy.getBestOfValue()
-        if requiredMinOfValue is not None:
-            requiredMinOfValue *= float(g.getConfig("optimization.optimalityRelativeError"))
-            if self.getBestOfValue() >= requiredMinOfValue:
-                g.log(LOG_INFO, "terminating {}: good-enough-value criteria reached".format(self.getName()))
+        totalBestOfValue = self.pool.strategy.getBestOfValue()
+        if totalBestOfValue is not None:
+            proportion = 1.0 - float(g.getConfig("optimization.optimalityRelativeError"))
+            if self.getBestOfValue() >= totalBestOfValue * proportion:
+                g.log(LOG_INFO, "terminating {}: good-enough-value criteria reached (required {})".format(self.getName(), totalBestOfValue * proportion))
                 for r in self.runners:
                     if r.isActive:
                         r.terminationReason = TERMINATION_REASON_GOOD_VALUE_REACHED
@@ -148,21 +148,38 @@ class Job:
 
     def dumpResults(self, f, allParams):
         cpuTime = 0
-        terminationReason = TERMINATION_REASON_PROGRAM_QUITTING
+        terminationReason = TERMINATION_REASON_MAX
+        bestRunner = None
+        bestOfValue = MIN_OF_VALUE
+
         for r in self.runners:
-            s = r.getLastStats()
-            if s.isValid:
-                cpuTime += s.cpuTime
-            # XXX: how much sense does this make?
             terminationReason = min(terminationReason, r.terminationReason)
+            cpuTime += r.currentCpuTime
+            if bestOfValue < r.ofValue:
+                bestOfValue = r.ofValue
+                bestRunner = r
+
+        bestStats = None
+        if bestRunner is not None and bestRunner.getLastStats().isValid:
+            bestStats = bestRunner.getLastStats()
 
         # OF value,CPU time,Job ID,Stop reason
         f.write("{},{},{},{},".format(
-            self.getBestOfValue(), cpuTime, self.id, reasonToStr(terminationReason)))
+            bestOfValue, cpuTime, self.id, reasonToStr(terminationReason)))
 
+        # which parameters included
         paramState = ['1' if x in self.params else '0' \
                       for x in allParams]
         f.write(",".join(paramState))
+
+        # included parameter values (use 1.0 for excluded parameters)
+        paramValues = [1.0] * len(allParams)
+        if bestStats is not None:
+            for (index, name) in enumerate(self.params):
+                paramValues[allParams.index(name)] = bestStats.params[index]
+
+        f.write("," + ",".join([str(x) for x in paramValues]))
+
         f.write("\n")
 
 

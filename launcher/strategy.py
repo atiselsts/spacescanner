@@ -109,8 +109,8 @@ class JobPool:
 
     def cleanup(self):
         with self.jobLock:
-            for r in self.activeJobs:
-                if r.cleanup():
+            for j in self.activeJobs:
+                if j.cleanup():
                     doWait = True
 
     def findJob(self, id):
@@ -249,10 +249,18 @@ class StrategyManager:
             # save intermediate result
             self.dumpResults()
 
+
     def getBestOfValue(self):
+        candidate1 = None
         if self.allParamOptimizationDone and self.bestOfValue != MIN_OF_VALUE:
-            return self.bestOfValue
-        return None
+            candidate1 = self.bestOfValue
+        candidate2 = float(g.getConfig("optimization.bestOfValue"))
+        if candidate2 == MIN_OF_VALUE:
+            candidate2 = None
+        if candidate1 is None or candidate2 is None:
+            return candidate1 if candidate2 is None else candidate2
+        return max(candidate1, candidate2)
+
 
     def getJobLists(self):
         with self.jobLock:

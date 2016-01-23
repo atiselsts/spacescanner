@@ -40,7 +40,8 @@ DEFAULT_CONFIG = {
         "consensusRelativeError" : 0.01,
         "consensusAbsoluteError" : 1e-6,
         "consensusMinDurationSec" : 60,
-        "optimalityRelativeError" : 0.1
+        "optimalityRelativeError" : 0.1,
+        "bestOfValue" : -1.0
     },
     "runtime" : {
         "maxConcurrentRuns" : 2,

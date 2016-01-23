@@ -75,6 +75,7 @@ class Runner:
         self.lastReportModificationTime = None
         self.startTime = None
         self.process = None
+        self.currentCpuTime = 0.0
 
     def getFullName(self):
         return self.job.getFullName() + "/{} (method '{}')".format(
@@ -182,18 +183,18 @@ class Runner:
 
                     if not hasTerminated and not self.terminationReason:
                         # Check for CPU time end condition (using report file)
-                        currentCpuTime = self.getLastStats().cpuTime
-                        if currentCpuTime >= maxCpuTime:
-                            g.log(LOG_INFO, "terminating {}: CPU time limit exceeded (reported {} vs. {})".format(self.getName(), currentCpuTime, maxCpuTime))
+                        self.currentCpuTime = self.getLastStats().cpuTime
+                        if self.currentCpuTime >= maxCpuTime:
+                            g.log(LOG_INFO, "terminating {}: CPU time limit exceeded (reported {} vs. {})".format(self.getName(), self.currentCpuTime, maxCpuTime))
                             self.terminationReason = TERMINATION_REASON_CPU_TIME_LIMIT
             else:
                 # no report file update
                 if not hasTerminated and not self.terminationReason:
                     # Check for CPU time end condition (using OS measurements)
                     maxCpuTime = float(g.getConfig("optimization.timeLimitSec"))
-                    currentCpuTime = self.process.getCpuTime()
-                    if currentCpuTime >= maxCpuTime:
-                        g.log(LOG_INFO, "terminating {}: CPU time limit exceeded (measured {} vs. {})".format(self.getName(), currentCpuTime, maxCpuTime))
+                    self.currentCpuTime = self.process.getCpuTime()
+                    if self.currentCpuTime >= maxCpuTime:
+                        g.log(LOG_INFO, "terminating {}: CPU time limit exceeded (measured {} vs. {})".format(self.getName(), self.currentCpuTime, maxCpuTime))
                         self.terminationReason = TERMINATION_REASON_CPU_TIME_LIMIT
 
         except OSError as e:
@@ -234,9 +235,8 @@ class StatsItem:
             self.numOfEvaluations = int(numbers[2])
             self.maxRealPart = float(numbers[-1])
             # param value list starts with "(", finishes with ")"
-            params = numbers[3].lstrip("(").rstrip(")").strip(" ")
-            for n in params.split():
-                self.params.append(float(n))
+            for i in range(4, len(numbers) - 2):
+                self.params.append(float(numbers[i]))
         except ValueError as e:
             g.log(LOG_DEBUG, "value error {} in line".format(e))
             g.log(LOG_DEBUG, line)
