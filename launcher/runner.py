@@ -170,7 +170,7 @@ class Runner:
                             continue
                         if not inValues: continue
 
-                        if startsWith(line, "Optimization result"):
+                        if startsWith(line, "Optimization Result"):
                             break
 
                         si = StatsItem(line)
@@ -223,7 +223,7 @@ class StatsItem:
         self.maxRealPart = 0.0
         line = line.strip()
         if not line:
-            self.isValue = False
+            self.isValid = False
             return
         if "\t" in line:
             numbers = line.split("\t")

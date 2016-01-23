@@ -1,7 +1,8 @@
 {
     "optimization" : {
         "timeLimitSec" : 3600,
-        "consensusMinDurationSec" : 600
+        "consensusMinDurationSec" : 300,
+        "bestOfValue" : 12.73
     },
     "copasi" : {
         "modelFile" : "@SELF@/models/complex.cps"
@@ -9,8 +10,11 @@
     "runtime" : {
         "maxConcurrentRuns" : 8,
         "runsPerJob" : 4,
-        "maxParametersExhaustive" : 3,
-        "maxParametersGreedy" : 8
+        "maxParametersExhaustive" : 0,
+        "maxParametersGreedy" : 0,
+        "maxParametersGreedyReverse" : 0,
+        "maxParametersExhaustiveReverse" : 3,
+        "optimizeWithAllParameters" : false
     },
     "log" : {
         "level" : 2,

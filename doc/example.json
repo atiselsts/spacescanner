@@ -19,6 +19,8 @@
         "randomiseMethodSelection" : false,
         "maxParametersGreedy" : 8,
         "maxParametersExhaustive" : 3,
+        "maxParametersGreedyReverse" : 0,
+        "maxParametersExhaustiveReverse" : 2,
         "parameterSweep" : true,
         "optimizeWithAllParameters" : true
     },

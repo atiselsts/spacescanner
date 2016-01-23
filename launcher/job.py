@@ -30,7 +30,7 @@ import runner
 ################################################
 # Job: manages execution of multiple COPASI instances with a single specific set of parameters.
 # Schedules the instances as to ensure that each gets approximately the same amount of CPU time.
-# May switch over to different optimization methods if the current method fails to converge.
+# May switch over to different optimization methods if the current method fails to reach consensus.
 
 class Job:
     nextJobID = 1
@@ -86,7 +86,7 @@ class Job:
         if all([r.terminationReason for r in self.runners]):
             return
 
-        # check if the runs have converged
+        # check if the runs have reached consensus
         assert len(self.runners)
         if self.convergenceTime is not None:
             ofValue = self.convergenceValue
@@ -95,22 +95,19 @@ class Job:
         if ofValue == MIN_OF_VALUE:
             isConvergedNow = False
         else:
-            epsilonAbs = float(g.getConfig("optimization.consensusAbsoluteError"))
-            epsilonRel = float(g.getConfig("optimization.consensusRelativeError"))
-            isConvergedNow = all([Job.isConverged(r.ofValue, ofValue, epsilonAbs, epsilonRel) \
-                                  for r in self.runners])
+            isConvergedNow = self.checkIfHasConsensus(ofValue)
         if isConvergedNow:
-            g.log(LOG_DEBUG, self.getName() + ": all methods converged, waiting for guard time before termination")
+            g.log(LOG_DEBUG, self.getName() + ": reached consensus, waiting for guard time before termination")
             if self.convergenceTime is None:
                 self.convergenceTime = now
                 self.convergenceValue = ofValue
 
             # if the runners have converged for long enough time, quit
             elif time.time() - self.convergenceTime >= float(g.getConfig("optimization.consensusMinDurationSec")):
-                g.log(LOG_INFO, "terminating {}: method convergence criteria reached".format(self.getName()))
+                g.log(LOG_INFO, "terminating {}: consensus reached".format(self.getName()))
                 for r in self.runners:
                     if r.isActive:
-                        r.terminationReason = TERMINATION_REASON_CONVERGED
+                        r.terminationReason = TERMINATION_REASON_CONSENSUS
                 self.convergenceTime = now
                 return
         else:
@@ -127,9 +124,20 @@ class Job:
                         r.terminationReason = TERMINATION_REASON_GOOD_VALUE_REACHED
                 return
 
+    def checkIfHasConsensus(self, ofValue):
+        epsilonAbs = float(g.getConfig("optimization.consensusAbsoluteError"))
+        epsilonRel = float(g.getConfig("optimization.consensusRelativeError"))
+        return all([Job.isConverged(r.ofValue, ofValue, epsilonAbs, epsilonRel) \
+                    for r in self.runners])
+
     def checkIfHasTerminated(self):
         # if no runners are active, quit
         if all([not r.isActive for r in self.runners]):
+            if self.checkIfHasConsensus(self.runners[0].ofValue):
+                # count COPASI termination as consensus in this case
+                for r in self.runners:
+                    if r.terminationReason == TERMINATION_REASON_COPASI_FINISHED:
+                        r.terminationReason = TERMINATION_REASON_CONSENSUS
             g.log(LOG_DEBUG, "finished {}".format(self.getName()))
             self.pool.finishJob(self)
 

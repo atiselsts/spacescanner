@@ -86,7 +86,7 @@ LOG_DEBUG = 3
 # possible reasons why a copasi run was stopped
 TERMINATION_REASON_COPASI_FINISHED    = 0
 TERMINATION_REASON_CPU_TIME_LIMIT     = 1
-TERMINATION_REASON_CONVERGED          = 2
+TERMINATION_REASON_CONSENSUS          = 2
 TERMINATION_REASON_GOOD_VALUE_REACHED = 3
 TERMINATION_REASON_PROGRAM_QUITTING   = 4
 TERMINATION_REASON_MAX                = 4
@@ -100,8 +100,8 @@ def reasonToStr(reason):
         return "COPASI finished"
     if reason == TERMINATION_REASON_CPU_TIME_LIMIT:
         return "CPU time limit"
-    if reason == TERMINATION_REASON_CONVERGED:
-        return "Runs converged"
+    if reason == TERMINATION_REASON_CONSENSUS:
+        return "Consensus reached"
     if reason == TERMINATION_REASON_GOOD_VALUE_REACHED:
         return "Good value reached"
     if reason == TERMINATION_REASON_PROGRAM_QUITTING:

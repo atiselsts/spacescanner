@@ -49,6 +49,8 @@ DEFAULT_CONFIG = {
         "randomiseMethodSelection" : True,
         "maxParametersGreedy" : 8,
         "maxParametersExhaustive" : 3,
+        "maxParametersGreedyReverse" : 0,
+        "maxParametersExhaustiveReverse" : 0,
         "parameterSweep" : True,
         "optimizeWithAllParameters" : True
     },

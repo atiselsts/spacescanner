@@ -74,6 +74,7 @@ class JobPool:
 #            while self.getNumJobs() >= self.maxNumParallelJobs:
 #                self.idle(0.1)
 
+
     def finishJob(self, j):
         with self.jobLock:
             if j not in self.activeJobs:
@@ -219,22 +220,6 @@ class StrategyManager:
         return result
 
 
-
-#    def getNumJobs(self):
-#        with self.jobLock:
-#            return len(self.activeJobs)
-
-
-
-#    def idle(self, idleTime):
-#        with self.jobLock:
-#            # copy to avoid prolonged locking
-#            jobs = copy.copy(self.activeJobs)
-#        for j in jobs:
-#            j.checkReports()
-#        time.sleep(idleTime)
-
-
     def finishJob(self, job):
         with self.jobLock:
             if self.bestOfValue < job.getBestOfValue():
@@ -300,6 +285,8 @@ class StrategyManager:
             return 1
         if bool(g.getConfig("runtime.optimizeWithAllParameters")):
             total += 1
+
+        # combinations from one parameter up to m
         currentNumParams = 1
         exhaustiveMax = int(g.getConfig("runtime.maxParametersExhaustive"))
         greedyMax = int(g.getConfig("runtime.maxParametersGreedy"))
@@ -309,6 +296,18 @@ class StrategyManager:
         while currentNumParams <= greedyMax and currentNumParams < numParams:
             total += numParams - currentNumParams + 1
             currentNumParams += 1
+
+        # combinations from n parameters down to n-m (math is the same)
+        currentNumParams = 1
+        exhaustiveMax = int(g.getConfig("runtime.maxParametersExhaustiveReverse"))
+        greedyMax = int(g.getConfig("runtime.maxParametersGreedyReverse"))
+        while currentNumParams <= exhaustiveMax and currentNumParams < numParams:
+            total += numCombinations(numParams, currentNumParams)
+            currentNumParams += 1
+        while currentNumParams <= greedyMax and currentNumParams < numParams:
+            total += numParams - currentNumParams + 1
+            currentNumParams += 1
+
         return total
 
 
@@ -322,6 +321,7 @@ class StrategyManager:
         greedyMax = int(g.getConfig("runtime.maxParametersGreedy"))
 
         params = self.copasiConfig["params"]
+        n = len(params)
 
         if not bool(g.getConfig("runtime.parameterSweep")):
             yield [params]
@@ -334,7 +334,7 @@ class StrategyManager:
             self.allParamOptimizationDone = True
 
         currentNumParams = 1
-        while currentNumParams <= exhaustiveMax and currentNumParams < len(params):
+        while currentNumParams <= exhaustiveMax and currentNumParams < n:
             # optimize all combinations of k parameters
             paramSet = []
             for it in itertools.combinations(params, currentNumParams):
@@ -346,7 +346,7 @@ class StrategyManager:
             g.log(LOG_INFO, "best set of parameters after trying all combinations of {} parameters: {}".format(currentNumParams, ",".join(self.bestParams)))
             currentNumParams += 1
 
-        while currentNumParams <= greedyMax and currentNumParams < len(params):
+        while currentNumParams <= greedyMax and currentNumParams < n:
             # add one more parameter to the best combination of the params
             paramSet = []
             bestParams = copy.copy(self.bestParams)
@@ -361,6 +361,22 @@ class StrategyManager:
 #                break
             g.log(LOG_INFO, "best set of parameters after trying greedy combinations of {} parameters: {}".format(currentNumParams, ",".join(self.bestParams)))
             currentNumParams += 1
+
+        exhaustiveMax = int(g.getConfig("runtime.maxParametersExhaustiveReverse"))
+        greedyMax = int(g.getConfig("runtime.maxParametersGreedyReverse"))
+        currentNumParams = 1
+        while currentNumParams <= exhaustiveMax and currentNumParams < n:
+            # optimize all combinations of n-k parameters
+            paramSet = []
+            for it in itertools.combinations(params, n - currentNumParams):
+                paramSet.append(list(it))
+            yield paramSet
+            g.log(LOG_INFO, "best set of parameters after trying all combinations of {} parameters: {}".format(n - currentNumParams, ",".join(self.bestParams)))
+            currentNumParams += 1
+
+        while currentNumParams <= greedyMax and currentNumParams < n:
+            # TODO
+            pass
 
         g.log(LOG_INFO, "final best set of parameters: {}".format(",".join(self.bestParams)))
 
