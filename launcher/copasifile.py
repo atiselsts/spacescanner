@@ -64,6 +64,93 @@ REPORT_FORMAT = """\
   </ListOfReports>
 """
 
+METHOD_SRES = """
+      <Method name="Evolution Strategy (SRES)" type="EvolutionaryStrategySR">
+        <Parameter name="Number of Generations" type="unsignedInteger" value="1000000"/>
+        <Parameter name="Population Size" type="unsignedInteger" value="20"/>
+        <Parameter name="Random Number Generator" type="unsignedInteger" value="1"/>
+        <Parameter name="Seed" type="unsignedInteger" value="0"/>
+        <Parameter name="Pf" type="float" value="0.475"/>
+      </Method>"""
+
+METHOD_EP = """
+      <Method name="Evolutionary Programming" type="EvolutionaryProgram">
+        <Parameter name="Number of Generations" type="unsignedInteger" value="1000000"/>
+        <Parameter name="Population Size" type="unsignedInteger" value="20"/>
+        <Parameter name="Random Number Generator" type="unsignedInteger" value="1"/>
+        <Parameter name="Seed" type="unsignedInteger" value="0"/>
+      </Method>"""
+
+METHOD_GA = """
+      <Method name="Genetic Algorithm" type="GeneticAlgorithm">
+        <Parameter name="Number of Generations" type="unsignedInteger" value="1000000"/>
+        <Parameter name="Population Size" type="unsignedInteger" value="20"/>
+        <Parameter name="Random Number Generator" type="unsignedInteger" value="1"/>
+        <Parameter name="Seed" type="unsignedInteger" value="0"/>
+      </Method>"""
+
+METHOD_GASR = """
+      <Method name="Genetic Algorithm SR" type="GeneticAlgorithmSR">
+        <Parameter name="Number of Generations" type="unsignedInteger" value="1000000"/>
+        <Parameter name="Population Size" type="unsignedInteger" value="20"/>
+        <Parameter name="Random Number Generator" type="unsignedInteger" value="1"/>
+        <Parameter name="Seed" type="unsignedInteger" value="0"/>
+        <Parameter name="Pf" type="float" value="0.475"/>
+      </Method>"""
+
+METHOD_PS = """
+      <Method name="Particle Swarm" type="ParticleSwarm">
+        <Parameter name="Iteration Limit" type="unsignedInteger" value="1000000"/>
+        <Parameter name="Swarm Size" type="unsignedInteger" value="50"/>
+        <Parameter name="Std. Deviation" type="unsignedFloat" value="1e-06"/>
+        <Parameter name="Random Number Generator" type="unsignedInteger" value="1"/>
+        <Parameter name="Seed" type="unsignedInteger" value="0"/>
+      </Method>"""
+
+METHOD_RS = """
+      <Method name="Random Search" type="RandomSearch">
+        <Parameter name="Number of Iterations" type="unsignedInteger" value="1000000"/>
+        <Parameter name="Random Number Generator" type="unsignedInteger" value="1"/>
+        <Parameter name="Seed" type="unsignedInteger" value="0"/>
+      </Method>"""
+
+METHOD_SS = """
+      <Method name="Scatter Search" type="ScatterSearch">
+        <Parameter name="Number of Iterations" type="unsignedInteger" value="1000000"/>
+      </Method>"""
+
+METHOD_SA = """
+      <Method name="Simulated Annealing" type="SimulatedAnnealing">
+        <Parameter name="Start Temperature" type="unsignedFloat" value="1"/>
+        <Parameter name="Cooling Factor" type="unsignedFloat" value="0.85"/>
+        <Parameter name="Tolerance" type="unsignedFloat" value="1e-06"/>
+        <Parameter name="Random Number Generator" type="unsignedInteger" value="1"/>
+        <Parameter name="Seed" type="unsignedInteger" value="0"/>
+      </Method>"""
+
+METHOD_SD = """
+      <Method name="Steepest Descent" type="SteepestDescent">
+        <Parameter name="Iteration Limit" type="unsignedInteger" value="1000"/>
+        <Parameter name="Tolerance" type="float" value="1e-06"/>
+      </Method>"""
+
+METHOD_TN = """
+      <Method name="Truncated Newton" type="TruncatedNewton"></Method>"""
+
+
+PREDEFINED_METHODS = {
+    "ParticleSwarm" : METHOD_PS,
+    "ScatterSearch" : METHOD_SS,
+    "GeneticAlgorithm" : METHOD_GA,
+    "GeneticAlgorithmSR" : METHOD_GASR,
+    "EvolutionaryProgram" : METHOD_EP,
+    "EvolutionaryStrategySR" : METHOD_SRES,
+    "SimulatedAnnealing" : METHOD_SA,
+    "RandomSearch" : METHOD_RS,
+    "SteepestDescent" : METHOD_SD,
+    "TruncatedNewton" : METHOD_TN
+}
+
 ################################################
 
 class CopasiFile:
@@ -139,7 +226,7 @@ class CopasiFile:
         return self.paramDict.keys()
 
 
-    def serializeOptimizationTask(self, reportFilename, outf, parameters, methods):
+    def serializeOptimizationTask(self, reportFilename, outf, parameters, methodNames):
         # start writing
         outf.write('  <Task key="{}" name="Optimization" type="optimization" scheduled="true" updateModel="true">\n'.format(self.optimizationTask.get("key")))
 
@@ -170,10 +257,16 @@ class CopasiFile:
       
         # 3. Include only required methods
         #print("methods in the file:", self.methodDict.keys())
-        for m in methods:
-            meth = self.methodDict.get(m.lower())
-            if meth is not None:
-                outf.write('        ' + str(ElementTree.tostring(meth)))
+        for m in methodNames:
+            methodFromFile = self.methodDict.get(m.lower())
+            if bool(g.getConfig("methodsParametersFromFile")) and methodFromFile is not None:
+                outf.write('        ' + str(ElementTree.tostring(methodFromFile)))
+            else:
+                predefinedMethod = PREDEFINED_METHODS.get(m)
+                if predefinedMethod is None:
+                    g.log(LOG_ERROR, "Unknown or unsupported optimization method {}".format(m))
+                else:
+                    outf.write('        ' + predefinedMethod)
 
         # finish off
         outf.write('  </Task>\n')

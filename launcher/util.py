@@ -21,7 +21,7 @@
 # Author: Atis Elsts, 2016
 #
 
-import os, sys, time, re, datetime, math, platform
+import os, sys, time, re, datetime, math, platform, json
 
 
 ################################################
@@ -91,7 +91,9 @@ TERMINATION_REASON_GOOD_VALUE_REACHED = 3
 TERMINATION_REASON_PROGRAM_QUITTING   = 4
 TERMINATION_REASON_MAX                = 4
 
-MIN_OF_VALUE = -1.0 # minimal objective function value
+MIN_OF_VALUE = float("-inf") # minimal objective function value
+
+ENC = json.JSONEncoder()
 
 ################################################
 
@@ -257,7 +259,7 @@ def startsWith(s, what):
     return s[:len(what)] == what
 
 def getCurrentTime():
-    return datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+    return datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H-%M-%S')
 
 def numCombinations(n, k):
     return math.factorial(n) / math.factorial(k) / math.factorial(n-k)

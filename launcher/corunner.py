@@ -88,6 +88,8 @@ def executeWebserver(args):
 # Execute the application
 
 def main():
+    g.corunnerStartTime = getCurrentTime()
+
     configFileName = DEFAULT_CONFIG_FILE
     if len(sys.argv) > 1:
         configFileName = sys.argv[1]
@@ -101,7 +103,7 @@ def main():
     # update log file
     with open(g.getConfig("log.file"), "a+") as f:
         f.write("============= ")
-        f.write(getCurrentTime())
+        f.write(g.corunnerStartTime)
         f.write("\n")
 
     # start the web server
@@ -112,9 +114,12 @@ def main():
     if not strategy.manager.prepare():
         return -1
     strategy.manager.execute()
+
+    # if "hang" mode is configured, do not quit until Ctrl+C is pressed
     if bool(g.getConfig("hangMode")):
         while True:
             time.sleep(1)
+
     return 0
 
 ################################################

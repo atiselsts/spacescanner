@@ -35,8 +35,6 @@ else:
     from SocketServer import *
     from urlparse import *
 
-enc = json.JSONEncoder()
-
 ################################################
 
 # Note: this is a single-threaded server, to keep things simple!
@@ -134,7 +132,7 @@ class HttpServerHandler(BaseHTTPRequestHandler):
             return
 
         if isJSON:
-            response = enc.encode(response)
+            response = ENC.encode(response)
 
         self.send_response(200)
         self.sendDefaultHeaders(response, isJSON)

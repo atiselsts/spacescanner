@@ -54,8 +54,10 @@ def executeCopasi(runner):
         break
 
     # check termination conditions at the global run level
+    g.log(LOG_DEBUG, "{}: terminated".format(runner.getName()))
     runner.isActive = False
-    runner.job.checkIfHasTerminated()
+    # disable this; do it from polling in the main thread instead
+    #runner.job.checkIfHasTerminated()
 
 ################################################
 # Runner: manages execution of single COPASI instance
@@ -124,6 +126,7 @@ class Runner:
         # keep it in daemon mode, in order to able to kill the app with Ctrl+C
         t.daemon = True
         t.start()
+        time.sleep(0.5) # XXX: need this to reliably start all processes?!
         return True
 
     def shouldTerminate(self):
@@ -153,13 +156,13 @@ class Runner:
                 return
 
         maxCpuTime = float(g.getConfig("optimization.timeLimitSec"))
-        currentCpuTime = None
         self.lastReportCheckTime = now
 
         try:
             st = os.stat(self.reportFilename)
             if self.lastReportModificationTime is None \
                     or st.st_mtime > self.lastReportModificationTime:
+                #g.log(LOG_DEBUG, "{}: read from file".format(self.getName()))
                 self.lastReportModificationTime = st.st_mtime
                 with open(self.reportFilename, "r") as f:
                     inValues = False
@@ -188,6 +191,7 @@ class Runner:
                             g.log(LOG_INFO, "terminating {}: CPU time limit exceeded (reported {} vs. {})".format(self.getName(), self.currentCpuTime, maxCpuTime))
                             self.terminationReason = TERMINATION_REASON_CPU_TIME_LIMIT
             else:
+                #g.log(LOG_DEBUG, "{}: measure".format(self.getName()))
                 # no report file update
                 if not hasTerminated and not self.terminationReason:
                     # Check for CPU time end condition (using OS measurements)
@@ -205,7 +209,7 @@ class Runner:
                 self.reportFilename, os.strerror(e.errno)))
 
         if not hasTerminated and not self.terminationReason:
-            g.log(LOG_DEBUG, "checked {}, CPU time {}".format(self.getName(), currentCpuTime))
+            g.log(LOG_DEBUG, "checked {}, CPU time {}".format(self.getName(), self.currentCpuTime))
 
 ################################################
 # Parsing statistics
@@ -232,6 +236,13 @@ class StatsItem:
         try:
             self.cpuTime = float(numbers[0])
             self.ofValue = float(numbers[1])
+            # check for NaN and +inf, but allow -inf, as it's
+            # sometimes returned as the "no solution found" value
+            if math.isnan(self.ofValue) or \
+                   (math.isinf(self.ofValue) and self.ofValue > 0.0):
+                # XXX: something went wrong, what's the best action?
+                g.log(LOG_ERROR, "invalid objective function value {}, using 0.0 instead".format(self.ofValue))
+                self.ofValue = 0.0
             self.numOfEvaluations = int(numbers[2])
             self.maxRealPart = float(numbers[-1])
             # param value list starts with "(", finishes with ")"

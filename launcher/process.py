@@ -34,7 +34,7 @@ class Process:
         self.psutilProcess = None
 
     def run(self):
-        #sys.stdout.write("Run subprocess: " + " ".join(args) + "\n")
+        #sys.stdout.write("Run subprocess: " + " ".join(self.args) + "\n")
         retcode = -1
 
         try:
@@ -56,6 +56,7 @@ class Process:
 
     def getCpuTime(self):
         if self.psutilProcess is None:
+            print "self.psutilProcess = None!"
             return 0.0
         if "get_cpu_times" in dir(self.psutilProcess):
             user, system = self.psutilProcess.get_cpu_times()

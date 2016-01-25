@@ -21,7 +21,7 @@
 # Author: Atis Elsts, 2016
 #
 
-import os, sys, time, copy, random
+import os, sys, time, copy, random, math
 
 from util import *
 import g
@@ -42,10 +42,14 @@ class Job:
         Job.nextJobID += 1
         self.methods = g.getConfig("copasi.methods")
         assert len(self.methods)
-        self.methodIndex = 0
+        self.fallbackMethods = copy.copy(g.getConfig("copasi.fallbackMethods"))
+        self.methodIndex = 0 # always start from the first method in the list
         self.runners = []
+        self.oldRunners = []
         self.convergenceTime = None
         self.convergenceValue = None
+        self.copasiFile = None
+        self.workDir = None
 
     def getFullName(self):
         return "job {} (optimization parameters: ".format(self.id) + " ".join(self.params) + ")"
@@ -54,11 +58,20 @@ class Job:
         return "job {}".format(self.id)
 
     def execute(self, workDir, copasiFile):
+        self.workDir = workDir
+        self.copasiFile = copasiFile
+
         g.log(LOG_INFO, "starting " + self.getFullName())
 
-        for id in range(int(g.getConfig("runtime.runsPerJob"))):
+        return self.createRunners()
+
+    def createRunners(self):
+        self.oldRunners.extend(self.runners)
+        self.runners = []
+        for id in range(int(g.getConfig("optimization.runsPerJob"))):
             r = runner.Runner(self, id + 1, self.methods[self.methodIndex])
-            if not r.prepare(workDir, copasiFile):
+            if not r.prepare(self.workDir, self.copasiFile):
+                g.log(LOG_ERROR, "{}: failed to create a runner".format(r.getName()))
                 return False
             self.runners.append(r)
 
@@ -68,15 +81,10 @@ class Job:
 
         return True
 
-    @staticmethod
-    def isConverged(v1, v2, epsilonAbs, epsilonRel):
-        if floatEqual(v1, v2, epsilonAbs):
-            return True
-        if v2 == 0.0:
-            return False
-        return abs(1.0 - v1/v2) < epsilonRel
-
     def checkReports(self):
+        if self.checkIfHasTerminated():
+            return
+
         now = time.time()
 
         for r in self.runners:
@@ -87,20 +95,11 @@ class Job:
             return
 
         # check if the runs have reached consensus
-        assert len(self.runners)
-        if self.convergenceTime is not None:
-            ofValue = self.convergenceValue
-        else:
-            ofValue = self.runners[0].ofValue
-        if ofValue == MIN_OF_VALUE:
-            isConvergedNow = False
-        else:
-            isConvergedNow = self.checkIfHasConsensus(ofValue)
-        if isConvergedNow:
-            g.log(LOG_DEBUG, self.getName() + ": reached consensus, waiting for guard time before termination")
+        if self.hasConsensus():
             if self.convergenceTime is None:
+                g.log(LOG_DEBUG, self.getName() + ": reached consensus, waiting for guard time before termination")
                 self.convergenceTime = now
-                self.convergenceValue = ofValue
+                self.convergenceValue = min([r.ofValue for r in self.runners])
 
             # if the runners have converged for long enough time, quit
             elif time.time() - self.convergenceTime >= float(g.getConfig("optimization.consensusMinDurationSec")):
@@ -114,32 +113,98 @@ class Job:
             # reset the timer
             self.convergenceTime = None
 
-        totalBestOfValue = self.pool.strategy.getBestOfValue()
-        if totalBestOfValue is not None:
-            proportion = 1.0 - float(g.getConfig("optimization.optimalityRelativeError"))
-            if self.getBestOfValue() >= totalBestOfValue * proportion:
+        # take the best value only for jobs with more parameters than this
+        totalBestOfValue = self.pool.strategy.getBestOfValue(len(self.params) + 1)
+        optimality = g.getConfig("optimization.optimalityRelativeError")
+        if totalBestOfValue is not None and optimality is not None:
+            proportion = 1.0 - float(optimality)
+            if self.getBestOfValue() >= proportion * totalBestOfValue:
                 g.log(LOG_INFO, "terminating {}: good-enough-value criteria reached (required {})".format(self.getName(), totalBestOfValue * proportion))
                 for r in self.runners:
                     if r.isActive:
                         r.terminationReason = TERMINATION_REASON_GOOD_VALUE_REACHED
                 return
 
-    def checkIfHasConsensus(self, ofValue):
+    # find min and max values and check that they are in 1% range
+    def hasConsensus(self):
+        values = [r.ofValue for r in self.runners]
+
         epsilonAbs = float(g.getConfig("optimization.consensusAbsoluteError"))
         epsilonRel = float(g.getConfig("optimization.consensusRelativeError"))
-        return all([Job.isConverged(r.ofValue, ofValue, epsilonAbs, epsilonRel) \
-                    for r in self.runners])
+
+        minV = min(values) if self.convergenceTime is None else self.convergenceValue
+        return Job.isConverged(minV, max(values), epsilonAbs, epsilonRel)
+
+    # returns true if either absolute difference OR relative difference is small
+    @staticmethod
+    def isConverged(v1, v2, epsilonAbs, epsilonRel):
+        if floatEqual(v1, v2, epsilonAbs):
+            return True
+        if math.isinf(v1) or math.isinf(v2) or v2 == 0.0:
+            return False
+        return abs(1.0 - v1/v2) < epsilonRel
 
     def checkIfHasTerminated(self):
         # if no runners are active, quit
-        if all([not r.isActive for r in self.runners]):
-            if self.checkIfHasConsensus(self.runners[0].ofValue):
-                # count COPASI termination as consensus in this case
-                for r in self.runners:
-                    if r.terminationReason == TERMINATION_REASON_COPASI_FINISHED:
-                        r.terminationReason = TERMINATION_REASON_CONSENSUS
-            g.log(LOG_DEBUG, "finished {}".format(self.getName()))
+        if any([r.isActive for r in self.runners]):
+            return False
+
+        self.convergenceTime = None
+        if self.hasConsensus():
+            # count COPASI termination as consensus in this case
+            for r in self.runners:
+                if r.terminationReason == TERMINATION_REASON_COPASI_FINISHED:
+                    r.terminationReason = TERMINATION_REASON_CONSENSUS
+        self.decideTermination()
+        return True
+
+    def decideTermination(self):
+        badReasons = [TERMINATION_REASON_CPU_TIME_LIMIT, TERMINATION_REASON_COPASI_FINISHED]
+        if not any([r.terminationReason in badReasons for r in self.runners]):
+            # all terminated fine (with consensus, or because asked by the user)
             self.pool.finishJob(self)
+            return
+
+        # ok, we have at least one bad termination
+        # (CPU time limit exceeded or Copasi stopped without consensus).
+        # 1) if no solution found: use a fallback method
+        # 2) else switch to the next method
+        # 3) if no more methods are available, quit
+
+        currentMethod = self.methods[self.methodIndex]
+        if currentMethod in self.fallbackMethods:
+            # remove the already-used method to avoid infinite looping between methods
+            self.fallbackMethods.remove(currentMethod)
+
+        if any([math.isinf(r.ofValue) for r in self.runners]):
+            if len(self.fallbackMethods) == 0:
+                g.log(LOG_INFO, "terminating {}: failed to evaluate the objective function".format(self.getName()))
+                self.pool.finishJob(self)
+                return
+
+            newMethod = random.choice(self.fallbackMethods)
+            # make sure the fallback methods are also in methods
+            if newMethod not in self.methods:
+                self.methods.append(newMethod)
+            self.methodIndex = self.methods.index(newMethod)
+            g.log(LOG_INFO, "switching {} to a fallback method {}".format(self.getName(), newMethod))
+            # switch to the (single, randomly chosen) fallback method
+            if not self.createRunners():
+                self.pool.finishJob(self)
+            return
+
+        # go for the next method
+        self.methodIndex += 1
+        if self.methodIndex >= len(self.methods):
+            g.log(LOG_INFO, "terminating {}: all methods exhausted without reaching consensus".format(self.getName()))
+            self.pool.finishJob(self)
+            return
+
+        g.log(LOG_INFO, "switching {} to the next method {}".format(
+            self.getName(), self.methods[self.methodIndex]))
+        if not self.createRunners():
+            self.pool.finishJob(self)
+            return
 
     def getBestOfValue(self):
         if not self.runners:
@@ -167,6 +232,10 @@ class Job:
                 bestOfValue = r.ofValue
                 bestRunner = r
 
+        # also account for CPU time of the failed methods
+        for r in self.oldRunners:
+            cpuTime += r.currentCpuTime
+
         bestStats = None
         if bestRunner is not None and bestRunner.getLastStats().isValid:
             bestStats = bestRunner.getLastStats()
@@ -189,7 +258,6 @@ class Job:
         f.write("," + ",".join([str(x) for x in paramValues]))
 
         f.write("\n")
-
 
     def getStats(self):
         reply = []

@@ -33,6 +33,7 @@ DEFAULT_CONFIG = {
         "modelFile" : os.path.join(SELF_PATH, "models", "simple-6params.cps"),
         "methods" : ["ParticleSwarm", "ScatterSearch", "GeneticAlgorithm", "GeneticAlgorithmSR", "EvolutionaryProgram", "EvolutionaryStrategySR", "SimulatedAnnealing"],
         "fallbackMethods" : ["GeneticAlgorithmSR", "EvolutionaryStrategySR"],
+        "methodsParametersFromFile" : False,
         "parameters": [] # all from copasi file
     },
     "optimization" : {
@@ -40,20 +41,16 @@ DEFAULT_CONFIG = {
         "consensusRelativeError" : 0.01,
         "consensusAbsoluteError" : 1e-6,
         "consensusMinDurationSec" : 60,
-        "optimalityRelativeError" : 0.1,
-        "bestOfValue" : -1.0
-    },
-    "runtime" : {
+        "optimalityRelativeError" : 0.1, # set to None to disable this
+        "bestOfValue" : float("-inf"),
         "maxConcurrentRuns" : 2,
-        "runsPerJob" : 2,
-        "randomiseMethodSelection" : True,
-        "maxParametersGreedy" : 8,
-        "maxParametersExhaustive" : 3,
-        "maxParametersGreedyReverse" : 0,
-        "maxParametersExhaustiveReverse" : 0,
-        "parameterSweep" : True,
-        "optimizeWithAllParameters" : True
+        "runsPerJob" : 2
     },
+    "parameters" : [
+        {"type" : "all-parameters"}, # include all parameters
+        {"type" : "exhaustive", "range" : [1, 3]}, # from 1 to 3
+        {"type" : "greedy", "range" : [4, 8]}    # from 4 to 8
+    ],
     "web" : {
 	"enable" : True,
         "port" : 19000
@@ -73,8 +70,6 @@ DEFAULT_CONFIG = {
 }
 
 config = DEFAULT_CONFIG
-
-strategyManager = None
 
 ################################################
 # Configuration file management
@@ -122,3 +117,7 @@ def log(loglevel, msg):
         with open(getConfig("log.file"), "a+") as f:
             f.write(msg)
 
+################################################
+# Other variables
+
+corunnerStartTime = None

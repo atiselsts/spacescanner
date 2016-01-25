@@ -11,12 +11,11 @@
         "consensusAbsoluteError" : 1e-6,
         "consensusMinDurationSec" : 60,
         "optimalityRelativeError" : 0.1,
-        "bestOfValue" : -1.0
+        "bestOfValue" : -inf,
+        "maxConcurrentRuns" : 2,
+        "runsPerJob" : 2
     },
     "runtime" : {
-        "maxConcurrentRuns" : 2,
-        "runsPerJob" : 2,
-        "randomiseMethodSelection" : false,
         "maxParametersGreedy" : 8,
         "maxParametersExhaustive" : 3,
         "maxParametersGreedyReverse" : 0,
