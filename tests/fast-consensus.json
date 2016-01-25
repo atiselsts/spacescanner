@@ -1,0 +1,17 @@
+{
+    "optimization" : {
+        "consensusMinDurationSec" : 5,
+        "consensusRelativeError" : 0.5
+    },
+    "copasi" : {
+        "modelFile" : "@SELF@/models/simple-6params.cps"
+    },
+    "runtime" : {
+        "parameterSweep" : false
+    },
+    "log" : {
+        "level" : 2,
+        "file" : "corunner.log"
+    }
+}
+

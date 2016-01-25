@@ -1,0 +1,17 @@
+{
+    "copasi" : {
+        "modelFile" : "@SELF@/models/simple-6params.cps",
+        "methods" : ["SteepestDescent", "SteepestDescent"],
+        "fallbackMethods" : ["GeneticAlgorithmSR", "EvolutionaryStrategySR"]
+    },
+    "optimization" : {
+        "timeLimitSec" : 10
+    },
+    "runtime" : {
+        "parameterSweep" : false
+    },
+    "log" : {
+        "level" : 2,
+        "file" : "corunner.log"
+    }
+}
