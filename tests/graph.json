@@ -3,16 +3,11 @@
         "timeLimitSec" : 60,
         "consensusMinDurationSec" : 20,
         "consensusAbsoluteError" : 0.1,
+        "runsPerJob" : 4
     },
     "copasi" : {
         "modelFile" : "@SELF@/models/simple-6params.cps",
         "methods" : ["ParticleSwarm"],
-    },
-    "runtime" : {
-        "runsPerJob" : 4,
-        "maxParametersExhaustive" : 3,
-        "maxParametersGreedy" : 8,
-        "optimizeWithAllParameters" : false
     },
     "log" : {
         "level" : 2,

@@ -1,0 +1,22 @@
+{
+    "optimization" : {
+        "timeLimitSec" : 30,
+        "consensusMinDurationSec" : 5,
+	"consensusMinProportionalDuration" : 0.15,
+        "optimalityRelativeError" : 0.5,
+        "maxConcurrentRuns" : 4,
+        "runsPerJob" : 2
+    },
+    "copasi" : {
+        "modelFile" : "@SELF@/models/complex.cps",
+        "methods" : ["GeneticAlgorithm", "EvolutionaryProgram", "GeneticAlgorithmSR", "EvolutionaryStrategySR", "ScatterSearch", "SimulatedAnnealing"]
+    },
+    "restartOnFile" : "@SELF@/processing/results-all.csv",
+    "log" : {
+        "level" : 3,
+        "file" : "corunner.log"
+    },
+    "web" : {
+	"enable" : false
+    }
+}

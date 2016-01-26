@@ -1,15 +1,15 @@
 {
     "copasi" : {
-        "modelFile" : "@SELF@/models/simple-6params.cps"
+        "modelFile" : "@SELF@/models/complex.cps"
     },
     "optimization" : {
         "timeLimitSec" : 10
     },
-    "runtime" : {
-        "parameterSweep" : false
-    },
+    "parameters" : [
+        {"type" : "all-parameters"}
+    ],
     "log" : {
-        "level" : 2,
+        "level" : 3,
         "file" : "corunner.log"
     }
 }

@@ -5,11 +5,10 @@
     "copasi" : {
         "modelFile" : "@SELF@/models/simple-6params.cps"
     },
-    "runtime" : {
-        "maxParametersExhaustive" : 2,
-        "maxParametersGreedy" : 4,
-        "parameterSweep" : false
-    },
+    "parameters" : [
+        {"type" : "exhaustive", "range" : [1, 2]},
+        {"type" : "greedy", "range" : [3, 4]}
+    ],
     "log" : {
         "level" : 3,
         "file" : "corunner-debug.log"

@@ -6,9 +6,9 @@
     "copasi" : {
         "modelFile" : "@SELF@/models/simple-6params.cps"
     },
-    "runtime" : {
-        "parameterSweep" : false
-    },
+    "parameters" : [
+        {"type" : "all-parameters"}
+    ],
     "log" : {
         "level" : 2,
         "file" : "corunner.log"

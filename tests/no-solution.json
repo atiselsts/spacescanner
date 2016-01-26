@@ -7,9 +7,9 @@
     "optimization" : {
         "timeLimitSec" : 10
     },
-    "runtime" : {
-        "parameterSweep" : false
-    },
+    "parameters" : [
+        {"type" : "all-parameters"}
+    ],
     "log" : {
         "level" : 2,
         "file" : "corunner.log"
