@@ -21,7 +21,7 @@
 # Author: Atis Elsts, 2016
 #
 
-import os, sys, time, re, datetime, math, platform, json
+import os, sys, time, re, datetime, math, platform, json, csv
 
 
 ################################################
@@ -266,3 +266,19 @@ def numCombinations(n, k):
 
 def floatEqual(f1, f2, epsilon):
     return abs(f1 - f2) <= epsilon
+
+def getNonconvergedResults(filename):
+    results = []
+    with open(filename) as f:
+        line = f.readline()
+        columns = line.strip().split(",")
+        n = (len(columns) - 4) // 2
+        paramNames = columns[4:4+n]
+        reader = csv.reader(f)
+        for row in reader:
+            if row[3] != "CPU time limit":
+                continue
+            paramsIncluded = [int(x) for i,x in enumerate(row) if 4 <= i < 4+n]
+            rowParamNames = [x for (i,x) in enumerate(paramNames) if paramsIncluded[i]]
+            results.append(rowParamNames)
+    return results

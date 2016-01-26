@@ -31,7 +31,7 @@ from util import *
 DEFAULT_CONFIG = {
     "copasi" : {
         "modelFile" : os.path.join(SELF_PATH, "models", "simple-6params.cps"),
-        "methods" : ["ParticleSwarm", "ScatterSearch", "GeneticAlgorithm", "GeneticAlgorithmSR", "EvolutionaryProgram", "EvolutionaryStrategySR", "SimulatedAnnealing"],
+        "methods" : ["ParticleSwarm", "GeneticAlgorithm", "GeneticAlgorithmSR", "EvolutionaryProgram", "EvolutionaryStrategySR", "ScatterSearch", "SimulatedAnnealing"],
         "fallbackMethods" : ["GeneticAlgorithmSR", "EvolutionaryStrategySR"],
         "methodsParametersFromFile" : False,
         "parameters": [] # all from copasi file
@@ -41,9 +41,11 @@ DEFAULT_CONFIG = {
         "consensusRelativeError" : 0.01,
         "consensusAbsoluteError" : 1e-6,
         "consensusMinDurationSec" : 60,
+        "consensusMinProportionalDuration" : 0.15, # 15% of total run's time
         "optimalityRelativeError" : 0.1, # set to None to disable this
         "bestOfValue" : float("-inf"),
-        "maxConcurrentRuns" : 2,
+        "restartFromBestValue" : True, # if yes, each next method will start from the best parameter values so far
+        "maxConcurrentRuns" : 4,
         "runsPerJob" : 2
     },
     "parameters" : [

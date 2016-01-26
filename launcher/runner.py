@@ -37,14 +37,12 @@ def executeCopasi(runner):
     # a pseudo-loop for simpler error handling
     while True:
         if bool(g.getConfig("testMode")):
-            runner.isActive = True
             time.sleep(1.0)
             runner.ofValue = random.random() * 100
             runner.isActive = False
             break
 
         g.log(LOG_DEBUG, "executing " + " ".join(runner.process.args))
-        runner.isActive = True
         runner.isError = runner.process.run()
 
         # check report in order to update OF value (even if nonzero return value)
@@ -87,7 +85,7 @@ class Runner:
         return self.job.getName() + "/{} (method '{}')".format(
             self.id, self.methodName)
 
-    def prepare(self, workDir, copasiFile):
+    def prepare(self, workDir, copasiFile, startParamValues):
         filename = "job{}_runner{}".format(self.job.id, self.id)
 
         # Use separate directory for each run to avoid too many files per directory
@@ -102,7 +100,7 @@ class Runner:
         self.inputFilename = os.path.join(dirname, "input_" + filename + ".cps")
         self.reportFilename = os.path.join(dirname, "output_" + filename + ".log")
         if not copasiFile.createCopy(self.inputFilename, self.reportFilename,
-                                     self.job.params, [self.methodName]):
+                                     self.job.params, [self.methodName], startParamValues):
             return False
 
         # clean up the report file
@@ -125,8 +123,12 @@ class Runner:
         t = threading.Thread(target=executeCopasi, args=(self,))
         # keep it in daemon mode, in order to able to kill the app with Ctrl+C
         t.daemon = True
+        self.isActive = True
         t.start()
-        time.sleep(0.5) # XXX: need this to reliably start all processes?!
+        # wait to exec to be completed: otherwise Popen() in Python 2.7 can lock up
+        time.sleep(0.0)
+        while self.isActive and self.process.process is None:
+            time.sleep(0.1)
         return True
 
     def shouldTerminate(self):
@@ -209,7 +211,7 @@ class Runner:
                 self.reportFilename, os.strerror(e.errno)))
 
         if not hasTerminated and not self.terminationReason:
-            g.log(LOG_DEBUG, "checked {}, CPU time {}".format(self.getName(), self.currentCpuTime))
+            g.log(LOG_DEBUG, "checked {}, CPU time: {}".format(self.getName(), self.currentCpuTime))
 
 ################################################
 # Parsing statistics

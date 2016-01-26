@@ -56,7 +56,6 @@ class Process:
 
     def getCpuTime(self):
         if self.psutilProcess is None:
-            print "self.psutilProcess = None!"
             return 0.0
         if "get_cpu_times" in dir(self.psutilProcess):
             user, system = self.psutilProcess.get_cpu_times()

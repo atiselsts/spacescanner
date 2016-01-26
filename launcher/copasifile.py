@@ -226,7 +226,24 @@ class CopasiFile:
         return self.paramDict.keys()
 
 
-    def serializeOptimizationTask(self, reportFilename, outf, parameters, methodNames):
+    def writeParam(self, outf, param, startParamValues):
+        xml = self.paramDict[param]
+        if startParamValues is None or param not in startParamValues:
+            outf.write('          ' + str(ElementTree.tostring(xml)))
+            return
+
+        outf.write(' <ParameterGroup name="OptimizationItem">\n')
+        for sub in xml.iterfind("*", COPASI_NS):
+            if "ParameterGroup" in sub.tag: continue
+            if sub.get("name") == "StartValue":
+                outf.write('          <Parameter name="StartValue" type="float" value="{}"/>\n'.format(startParamValues[param]))
+            else:
+                outf.write('          ' + str(ElementTree.tostring(sub)))
+
+        outf.write(' </ParameterGroup>\n')
+
+
+    def serializeOptimizationTask(self, reportFilename, outf, parameters, methodNames, startParamValues):
         # start writing
         outf.write('  <Task key="{}" name="Optimization" type="optimization" scheduled="true" updateModel="true">\n'.format(self.optimizationTask.get("key")))
 
@@ -251,7 +268,7 @@ class CopasiFile:
         outf.write(' <ParameterGroup name="OptimizationItemList">\n')
         for p in parameters:
             if p in self.paramDict:
-                outf.write('          ' + str(ElementTree.tostring(self.paramDict[p])))
+                self.writeParam(outf, p, startParamValues)
         outf.write(' </ParameterGroup>\n')
         outf.write(' </Problem>\n')
       
@@ -272,7 +289,7 @@ class CopasiFile:
         outf.write('  </Task>\n')
 
 
-    def createCopy(self, configFilename, reportFilename, parameters, methods):
+    def createCopy(self, configFilename, reportFilename, parameters, methods, startParamValues):
         if self.optimizationTask is None:
             return False
 
@@ -289,7 +306,7 @@ class CopasiFile:
                     for sub in elem.iterfind("*", COPASI_NS):
                         if "ListOfTasks" in sub.tag: continue
                         if sub == self.optimizationTask:
-                            self.serializeOptimizationTask(reportFilename, outf, parameters, methods)
+                            self.serializeOptimizationTask(reportFilename, outf, parameters, methods, startParamValues)
                         else:
                             outf.write('  ' + str(ElementTree.tostring(sub)))
                     outf.write('  </ListOfTasks>\n')
@@ -312,7 +329,7 @@ def test():
     params = cf.getAllParameters()
     print("parameter names: ", params)
     print("writing a copy")
-    cf.createCopy("./input.cps", "./output.log", [params[0], params[-1]], ["ParticleSwarm"])
+    cf.createCopy("./input.cps", "./output.log", [params[0], params[-1]], ["ParticleSwarm"], None)
     print("all done")
 
 if __name__ == "__main__":

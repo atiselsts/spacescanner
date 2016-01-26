@@ -50,6 +50,7 @@ class Job:
         self.convergenceValue = None
         self.copasiFile = None
         self.workDir = None
+        self.startTime = time.time()
 
     def getFullName(self):
         return "job {} (optimization parameters: ".format(self.id) + " ".join(self.params) + ")"
@@ -68,9 +69,15 @@ class Job:
     def createRunners(self):
         self.oldRunners.extend(self.runners)
         self.runners = []
+
+        bestParams = None
+        if self.oldRunners and bool(g.getConfig("optimization.restartFromBestValue")):
+            # get best params
+            bestParams = self.getBestParams()
+
         for id in range(int(g.getConfig("optimization.runsPerJob"))):
             r = runner.Runner(self, id + 1, self.methods[self.methodIndex])
-            if not r.prepare(self.workDir, self.copasiFile):
+            if not r.prepare(self.workDir, self.copasiFile, bestParams):
                 g.log(LOG_ERROR, "{}: failed to create a runner".format(r.getName()))
                 return False
             self.runners.append(r)
@@ -102,13 +109,17 @@ class Job:
                 self.convergenceValue = min([r.ofValue for r in self.runners])
 
             # if the runners have converged for long enough time, quit
-            elif time.time() - self.convergenceTime >= float(g.getConfig("optimization.consensusMinDurationSec")):
-                g.log(LOG_INFO, "terminating {}: consensus reached".format(self.getName()))
-                for r in self.runners:
-                    if r.isActive:
-                        r.terminationReason = TERMINATION_REASON_CONSENSUS
-                self.convergenceTime = now
-                return
+            else:
+                timeConverged = time.time() - self.convergenceTime
+                minAbsoluteTime = float(g.getConfig("optimization.consensusMinDurationSec"))
+                minRelativeTime = (time.time() - self.startTime) * float(g.getConfig("optimization.consensusMinProportionalDuration"))
+                if timeConverged >= minAbsoluteTime and timeConverged >= minRelativeTime:
+                    g.log(LOG_INFO, "terminating {}: consensus reached".format(self.getName()))
+                    for r in self.runners:
+                        if r.isActive:
+                            r.terminationReason = TERMINATION_REASON_CONSENSUS
+                    self.convergenceTime = now
+                    return # do not check other criteria
         else:
             # reset the timer
             self.convergenceTime = None
@@ -207,9 +218,27 @@ class Job:
             return
 
     def getBestOfValue(self):
-        if not self.runners:
-            return MIN_OF_VALUE
-        return max([r.ofValue for r in self.runners])
+        value = MIN_OF_VALUE
+        if self.oldRunners:
+             value = max([r.ofValue for r in self.oldRunners])
+        if self.runners:
+             value = max(value, max([r.ofValue for r in self.runners]))
+        return value
+
+    def getBestParams(self):
+        if not self.oldRunners:
+            return None
+        best = self.oldRunners[0]
+        for r in self.oldRunners[1:]:
+            if r.ofValue > best.ofValue:
+                best = r
+        stats = best.getLastStats()
+        if not stats.isValid:
+            return None
+        result = {}
+        for i,p in enumerate(self.params):
+            result[p] = stats.params[i]
+        return result
 
     def cleanup(self):
         isUnfinished = False

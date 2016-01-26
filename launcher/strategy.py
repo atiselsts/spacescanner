@@ -27,111 +27,7 @@ import threading, shutil, atexit, tempfile
 from util import *
 import g
 import copasifile
-import job
-
-# the hash is unique for jobs as each job has an unique set of parameters
-def getParamSetHash(parameters, allParameters):
-    paramState = [2**i for i,x in enumerate(allParameters) if x in parameters]
-    return sum(paramState)
-
-###############################################################
-# Pool is a group of jobs without mutual dependencies
-# which all can be executed simulataneously (but are not required to)
-
-class JobPool:
-    def __init__(self, strategy, parameterSets):
-        self.strategy = strategy
-        self.parameterSets = parameterSets
-        self.currentParametersIndex = 0
-        self.jobLock = threading.Lock()
-        self.activeJobs = []
-        numUsableCores = max(1, int(g.getConfig("optimization.maxConcurrentRuns")))
-        numRunnersPerJob = max(1, int(g.getConfig("optimization.runsPerJob")))
-        self.maxNumParallelJobs = int(math.ceil(float(numUsableCores) / numRunnersPerJob))
-        self.bestOfValue = MIN_OF_VALUE
-        self.bestParams = []
-
-    def start(self):
-        # try to start n jobs at once
-        for _ in range(self.maxNumParallelJobs):
-            self.nextJob()
-
-    def nextJob(self):
-        if self.currentParametersIndex >= len(self.parameterSets):
-            return
-
-        params = self.parameterSets[self.currentParametersIndex]
-        self.currentParametersIndex += 1
-
-        # check if a job with parameters has already been around
-        hash = getParamSetHash(params, self.strategy.copasiConfig["params"])
-        if hash in self.strategy.startedJobs:
-            g.log(LOG_DEBUG, "skipping a job, parameter set already processed: {}".format(params))
-            return
-        self.strategy.startedJobs.add(hash)
-
-        # setup a new job
-        j = job.Job(self, params)
-
-        # add it to the list of active jobs
-        with self.jobLock:
-            self.activeJobs.append(j)
-
-        # execute the job
-        if not j.execute(self.strategy.workDir, self.strategy.copasiFile):
-            g.log(LOG_DEBUG, "failed to execute {}".format(self.getName()))
-            self.finishJob(j)
-
-            # while the number is not under the limit, wait for some job to terminate
-#            while self.getNumJobs() >= self.maxNumParallelJobs:
-#                self.idle(0.1)
-
-
-    def finishJob(self, j):
-        g.log(LOG_DEBUG, "finished {}".format(j.getName()))
-        with self.jobLock:
-            if j not in self.activeJobs:
-                return
-            self.activeJobs.remove(j)
-            if self.bestOfValue < j.getBestOfValue():
-                # improved on the OF value! Store the result now.
-                self.bestOfValue = j.getBestOfValue()
-                self.bestParams = copy.copy(j.params)
-            self.strategy.finishJob(j)
-
-    def refresh(self):
-        with self.jobLock:
-            # copy to avoid prolonged locking
-            jobs = copy.copy(self.activeJobs)
-        for j in jobs:
-            j.checkReports()
-        with self.jobLock:
-            numToRun = self.maxNumParallelJobs - len(self.activeJobs)
-        while numToRun > 0:
-            numToRun -= 1
-            self.nextJob()
-
-    def isDepleted(self):
-        with self.jobLock:
-            if len(self.activeJobs):
-                return False
-        return self.currentParametersIndex >= len(self.parameterSets)
-
-    def getJobLists(self):
-        with self.jobLock:
-            return [x.id for x in self.activeJobs]
-
-    def cleanup(self):
-        with self.jobLock:
-            for j in self.activeJobs:
-                if j.cleanup():
-                    doWait = True
-
-    def findJob(self, id):
-        for x in self.activeJobs:
-            if x.id == id:
-                return x
-        return None
+import jobpool
 
 
 ###############################################################
@@ -144,6 +40,8 @@ PARAM_SEL_GREEDY     = 4
 PARAM_SEL_GREEDY_REVERSE = 5
 
 class ParamSelection(object):
+    instanceOfExplicit = None
+
     def __init__(self, type, strategy, start, end):
         self.type = type
         self.allParameters = strategy.copasiConfig["params"]
@@ -151,7 +49,6 @@ class ParamSelection(object):
         self.strategy = strategy
         self.start = start
         self.end = end
-        self.explicitParameters = []
         self.isReverse = start > end
         if self.start >= self.n:
             self.start = self.n - 1
@@ -183,13 +80,21 @@ class ParamSelection(object):
             if end < 0:
                 end = numParams - end
             if start == 0 or end == 0:
-                g.log(LOG_ERROR, "paremeter selection ranges must contain numbers in the range [1 .. n]")
+                g.log(LOG_ERROR, "parameter selection ranges must contain numbers in the range [1 .. n]")
                 return None
 
         if specification["type"] == "all-parameters":
             x = ParamSelectionAll(strategy)
         elif specification["type"] == "explicit":
-            x = ParamSelectionExplicit(strategy)
+            # use a singleton instance
+            if ParamSelection.instanceOfExplicit is None:
+                ParamSelection.instanceOfExplicit = ParamSelectionExplicit(strategy)
+            x = ParamSelection.instanceOfExplicit
+            if specification.get("parameters"):
+                x.explicitParameterSets.append(["'" + p + "'" for p in specification["parameters"]])
+            else:
+                g.log(LOG_ERROR, "'explicit' parameter range must contain a list of parameter names")
+                return None
         elif specification["type"] == "exhaustive":
             x = ParamSelectionExhaustive(strategy, start, end)
         elif specification["type"] == "greedy":
@@ -199,10 +104,6 @@ class ParamSelection(object):
                 x = ParamSelectionGreedy(strategy, start, end)
         else:
             return None
-
-        if "parameters" in specification:
-            for p in specification["parameters"]:
-                x.explicitParameters.append("'" + p + "'")
 
         return x
 
@@ -221,12 +122,19 @@ class ParamSelectionAll(ParamSelection):
 class ParamSelectionExplicit(ParamSelection):
     def __init__(self, strategy):
         super(ParamSelectionExplicit, self).__init__(PARAM_SEL_EXPLICIT, strategy, 0, 0)
+        self.explicitParameterSets = []
 
     def getParameterSets(self):
-        yield [self.explicitParameters]
+        yield self.explicitParameterSets
 
     def getNumCombinations(self):
-        return 1
+        return len(self.explicitParameterSets)
+
+    def __str__(self):
+        return "[{" + "}, {".join([str(x) for x in self.explicitParameterSets]) + "}]"
+
+    def __repr__(self):
+        return str(self)
 
 
 class ParamSelectionExhaustive(ParamSelection):
@@ -329,7 +237,7 @@ class StrategyManager:
         if "params" not in self.copasiConfig or not self.copasiConfig["params"]:
             return False
 
-        self.jobsByBestOfValue = [[] for _ in range(len(self.copasiConfig["params"]))]
+        self.jobsByBestOfValue = [[] for _ in range(1 + len(self.copasiConfig["params"]))]
         return True
 
 
@@ -407,10 +315,6 @@ class StrategyManager:
 
     def finishJob(self, job):
         with self.jobLock:
-#            if self.bestOfValue < job.getBestOfValue():
-                # improved on the OF value! Store the result now.
-#                self.bestOfValue = job.getBestOfValue()
-#                self.bestParams = copy.copy(job.params)
             self.finishedJobs[job.id] = job
             numFinishedJobs = len(self.finishedJobs)
 
@@ -479,13 +383,27 @@ class StrategyManager:
 
     def execute(self):
         parameterSelections = []
-        for spec in g.getConfig("parameters"):
-            x = ParamSelection.create(spec, self)
-            if x is None:
-                g.log(LOG_ERROR, "invalid parameter specification: {}".format(ENC.encode(spec)))
-                continue
-            parameterSelections.append(x)
-        parameterSelections.sort(key = lambda x: x.getSortOrder())
+        if g.getConfig("restartOnFile"):
+            filename = g.getConfig("restartOnFile").replace("@SELF@", SELF_PATH)
+            parameterSets = getNonconvergedResults(filename)
+            for ps in parameterSets:
+                spec = {"type" : "explicit", "parameters" : ps}
+                x = ParamSelection.create(spec, self)
+                if x not in parameterSelections:
+                    parameterSelections.append(x)
+        elif g.getConfig("parameters"):
+            for spec in g.getConfig("parameters"):
+                x = ParamSelection.create(spec, self)
+                if x is None:
+                    g.log(LOG_ERROR, "invalid parameter specification: {}".format(ENC.encode(spec)))
+                    continue
+                if x not in parameterSelections:
+                    parameterSelections.append(x)
+        else:
+            # add the default optimization target: all parameters
+            g.log(LOG_INFO, "optimizing only for all parameters")
+            spec = {"type" : "all-parameters"}
+            parameterSelections.append(ParamSelection.create(spec, self))
 
         numCombinations = 0
         for sel in parameterSelections:
@@ -494,10 +412,11 @@ class StrategyManager:
         g.log(LOG_INFO, "total {} parameter combination(s) to try out, parameters: {}".format(numCombinations, " ".join(self.copasiConfig["params"])))
         g.log(LOG_INFO, "methods enabled: '" + "' '".join(g.getConfig("copasi.methods")) + "'")
 
+        parameterSelections.sort(key = lambda x: x.getSortOrder())
         for sel in parameterSelections:
             for params in sel.getParameterSets():
                 g.log(LOG_DEBUG, "made a new pool of {} jobs".format(len(params)))
-                pool = JobPool(self, params)
+                pool = jobpool.JobPool(self, params)
                 with self.jobLock:
                     self.activeJobPool = pool
 
