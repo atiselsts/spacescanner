@@ -276,7 +276,7 @@ class CopasiFile:
         #print("methods in the file:", self.methodDict.keys())
         for m in methodNames:
             methodFromFile = self.methodDict.get(m.lower())
-            if bool(g.getConfig("methodsParametersFromFile")) and methodFromFile is not None:
+            if bool(g.getConfig("methodParametersFromFile")) and methodFromFile is not None:
                 outf.write('        ' + str(ElementTree.tostring(methodFromFile)))
             else:
                 predefinedMethod = PREDEFINED_METHODS.get(m)

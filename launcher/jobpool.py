@@ -44,9 +44,9 @@ class JobPool:
         self.currentParametersIndex = 0
         self.jobLock = threading.Lock()
         self.activeJobs = []
-        numUsableCores = max(1, int(g.getConfig("optimization.maxConcurrentRuns")))
-        numRunnersPerJob = max(1, int(g.getConfig("optimization.runsPerJob")))
-        self.maxNumParallelJobs = int(math.ceil(float(numUsableCores) / numRunnersPerJob))
+        self.numUsableCores = max(1, int(g.getConfig("optimization.maxConcurrentRuns")))
+        self.numRunnersPerJob = max(1, int(g.getConfig("optimization.runsPerJob")))
+        self.maxNumParallelJobs = int(math.ceil(float(self.numUsableCores) / self.numRunnersPerJob))
         self.bestOfValue = MIN_OF_VALUE
         self.bestParams = []
 
@@ -69,8 +69,11 @@ class JobPool:
             return
         self.strategy.startedJobs.add(hash)
 
+        with self.jobLock:
+            numFreeCores = max(1, self.numUsableCores - len(self.activeJobs) * self.numRunnersPerJob)
+
         # setup a new job
-        j = job.Job(self, params)
+        j = job.Job(self, params, numFreeCores)
 
         # add it to the list of active jobs
         with self.jobLock:

@@ -1,0 +1,18 @@
+{
+    "optimization" : {
+        "timeLimitSec" : 30,
+        "runsPerJob" : 3,
+        "consensusMinDurationSec" : 180
+    },
+    "copasi" : {
+        "modelFile" : "@SELF@/models/simple-6params.cps"
+    },
+    "parameters" : [
+	{"type" : "explicit", "parameters" : ["Pyruvate kinase"]},
+	{"type" : "explicit", "parameters" : ["Glucose in"]}
+    ],
+    "log" : {
+        "level" : 3,
+        "file" : "corunner.log"
+    }
+}

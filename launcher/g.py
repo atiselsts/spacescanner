@@ -33,7 +33,8 @@ DEFAULT_CONFIG = {
         "modelFile" : os.path.join(SELF_PATH, "models", "simple-6params.cps"),
         "methods" : ["ParticleSwarm", "GeneticAlgorithm", "GeneticAlgorithmSR", "EvolutionaryProgram", "EvolutionaryStrategySR", "ScatterSearch", "SimulatedAnnealing"],
         "fallbackMethods" : ["GeneticAlgorithmSR", "EvolutionaryStrategySR"],
-        "methodsParametersFromFile" : False,
+        "randomizeMethodSelection" : False,
+        "methodParametersFromFile" : False,
         "parameters": [] # all from copasi file
     },
     "optimization" : {

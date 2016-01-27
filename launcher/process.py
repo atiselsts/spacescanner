@@ -24,6 +24,9 @@
 import os, psutil, time, threading, signal, sys
 from subprocess import Popen, PIPE, STDOUT
 
+from util import *
+import g
+
 class Process:
     POLL_INTERVAL = 1.0 # seconds
 
@@ -34,7 +37,7 @@ class Process:
         self.psutilProcess = None
 
     def run(self):
-        #sys.stdout.write("Run subprocess: " + " ".join(self.args) + "\n")
+        #g.log(LOG_DEBUG, "Run subprocess: " + " ".join(self.args) + "\n")
         retcode = -1
 
         try:
@@ -47,12 +50,12 @@ class Process:
                     time.sleep(Process.POLL_INTERVAL)
                 retcode = self.process.returncode
         except Exception as e:
-            print("run subprocess exception:" + str(e))
+            g.log(LOG_ERROR, "run subprocess exception: " + str(e))
         except:
-            print("unexpected error:", sys.exc_info()[0])
-        finally:
-            #print("done, retcode = " + str(retcode))
-            return retcode
+            g.log(LOG_ERROR, "run subprocess unexpected error: {}".format(sys.exc_info()[0]))
+
+        #g.log(LOG_DEBUG, "subprocess done, return code: " + str(retcode))
+        return retcode
 
     def getCpuTime(self):
         if self.psutilProcess is None:
@@ -65,8 +68,10 @@ class Process:
 
     def suspend(self, yes):
         if yes:
+            g.log(LOG_DEBUG, "suspending process " + " ".join(self.args))
             self.psutilProcess.suspend()
         else:
+            g.log(LOG_DEBUG, "resuming process " + " ".join(self.args))
             self.psutilProcess.resume()
 
 def createBackgroundThread(function, args):

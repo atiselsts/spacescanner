@@ -67,9 +67,10 @@ class Runner:
         self.id = id
         self.methodName = methodName
         self.ofValue = MIN_OF_VALUE
-        self.stats = []
+        self.stats = StatsItem("")
         self.isError = False
         self.isActive = False
+        self.isSuspended = False
         self.terminationReason = TERMINATION_REASON_COPASI_FINISHED
         self.lastReportCheckTime = None
         self.lastReportModificationTime = None
@@ -135,14 +136,32 @@ class Runner:
         return self.terminationReason != 0
 
     def getLastStats(self):
-        if not self.stats:
-            return StatsItem("")
-        return self.stats[-1]
+        return self.stats
+
+    def suspend(self, yes):
+        if yes != self.isSuspended:
+            self.isSuspended = yes
+            self.process.suspend(yes)
+
+    def getAllStats(self):
+        result = []
+        with open(self.reportFilename, "r") as f:
+            inValues = False
+            for line in f:
+                if startsWith(line, "CPU time"):
+                    inValues = True
+                    continue
+                if not inValues: continue
+
+                if startsWith(line, "Optimization Result"):
+                    break
+
+                si = StatsItem(line)
+                if si.isValid:
+                    result.append(si)
+        return result
 
     def cleanup(self):
-        # XXX: return a bit of memory to the system by deleting old statistics?
-        #if self.stats:
-        #    self.stats = [self.stats[-1]]
         pass
 
     def checkReport(self, hasTerminated, now):
@@ -164,13 +183,12 @@ class Runner:
             st = os.stat(self.reportFilename)
             if self.lastReportModificationTime is None \
                     or st.st_mtime > self.lastReportModificationTime:
-                #g.log(LOG_DEBUG, "{}: read from file".format(self.getName()))
                 self.lastReportModificationTime = st.st_mtime
                 with open(self.reportFilename, "r") as f:
+                    self.stats.isValid = False
                     inValues = False
                     for line in f:
                         if startsWith(line, "CPU time"):
-                            self.stats = []
                             inValues = True
                             continue
                         if not inValues: continue
@@ -180,9 +198,9 @@ class Runner:
 
                         si = StatsItem(line)
                         if si.isValid:
-                            self.stats.append(si)
+                            self.stats = si
 
-                if len(self.stats):
+                if self.stats.isValid:
                     self.ofValue = self.getLastStats().ofValue
                     g.log(LOG_INFO, "{}: new OF value {}".format(self.getName(), self.ofValue))
 
@@ -193,7 +211,6 @@ class Runner:
                             g.log(LOG_INFO, "terminating {}: CPU time limit exceeded (reported {} vs. {})".format(self.getName(), self.currentCpuTime, maxCpuTime))
                             self.terminationReason = TERMINATION_REASON_CPU_TIME_LIMIT
             else:
-                #g.log(LOG_DEBUG, "{}: measure".format(self.getName()))
                 # no report file update
                 if not hasTerminated and not self.terminationReason:
                     # Check for CPU time end condition (using OS measurements)
@@ -212,6 +229,7 @@ class Runner:
 
         if not hasTerminated and not self.terminationReason:
             g.log(LOG_DEBUG, "checked {}, CPU time: {}".format(self.getName(), self.currentCpuTime))
+
 
 ################################################
 # Parsing statistics
