@@ -1,8 +1,8 @@
 # CoRunner: [Copasi](http://copasi.org) optimization run launcher ##
 
-Given a Copasi configuration file
-with an optimization task, optimization parameters, and methods,
-**CoRunner** determines the minimal subset of parameters that gives "good enough" results.
+[![Build Status](https://travis-ci.org/atiselsts/corunner.svg)](https://travis-ci.org/atiselsts/corunner/branches)
+
+Given a Copasi configuration file with an optimization task, optimization parameters, and methods, **CoRunner** determines the minimal subset of parameters that gives "good enough" results.
 
 **CoRunner** at the moment supports greedy and exhaustive search strategies.
 "Smarter" search strategies are planned as future additions.
