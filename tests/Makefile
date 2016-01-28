@@ -26,7 +26,7 @@ test-no-solution:
 	@rm -f corunner.log
 	$(PYTHON) $(CORUNNER) test-no-solution.json
 	@grep "switching job 1 to a fallback method ParticleSwarm" corunner.log
-	@grep "terminating job 1: all fallback methods exhausted without reaching consensus" corunner.log
+	@grep "terminating job 1" corunner.log
 	@echo ..done
 	@echo ""
 

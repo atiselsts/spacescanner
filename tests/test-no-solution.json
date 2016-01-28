@@ -5,7 +5,8 @@
         "fallbackMethods" : ["ParticleSwarm"]
     },
     "optimization" : {
-        "timeLimitSec" : 10
+        "timeLimitSec" : 10,
+        "consensusMinDurationSec" : 10
     },
     "parameters" : [
         {"type" : "explicit", "parameters" : ["GAPD"]}

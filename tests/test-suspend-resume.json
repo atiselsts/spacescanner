@@ -1,13 +1,13 @@
 {
     "optimization" : {
-        "timeLimitSec" : 30,
+        "timeLimitSec" : 20,
         "runsPerJob" : 3,
-        "consensusMinDurationSec" : 180,
-        "methods" : ["ParticleSwarm"],
-        "fallbackMethods" : []
+        "consensusMinDurationSec" : 20
     },
     "copasi" : {
-        "modelFile" : "@SELF@/models/simple-6params.cps"
+        "modelFile" : "@SELF@/models/simple-6params.cps",
+        "methods" : ["ParticleSwarm"],
+        "fallbackMethods" : []
     },
     "parameters" : [
 	{"type" : "explicit", "parameters" : ["Pyruvate kinase"]},

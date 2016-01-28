@@ -3,7 +3,10 @@
         "modelFile" : "@SELF@/models/complex.cps"
     },
     "optimization" : {
-        "timeLimitSec" : 10
+        "timeLimitSec" : 10,
+        "consensusMinDurationSec" : 10,
+        "consensusRelativeError" : 0.0,
+        "consensusAbsoluteError" : -1.0
     },
     "parameters" : [
         {"type" : "all-parameters"}

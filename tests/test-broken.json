@@ -5,6 +5,7 @@
         "fallbackMethods" : []
     },
     "log" : {
-        "level" : 2
+        "level" : 2,
+        "file" : "corunner.log"
     }
 }

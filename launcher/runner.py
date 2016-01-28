@@ -179,7 +179,6 @@ class Runner:
                 # too soon after start (copasi may not be launched yet), return
                 return
 
-        maxCpuTime = float(g.getConfig("optimization.timeLimitSec"))
         self.lastReportCheckTime = now
 
         try:
@@ -207,21 +206,15 @@ class Runner:
                     self.ofValue = self.getLastStats().ofValue
                     g.log(LOG_INFO, "{}: new OF value {}".format(self.getName(), self.ofValue))
 
-                    if not hasTerminated and not self.terminationReason:
-                        # Check for CPU time end condition (using report file)
-                        self.currentCpuTime = self.getLastStats().cpuTime
-                        if self.currentCpuTime >= maxCpuTime:
-                            g.log(LOG_INFO, "terminating {}: CPU time limit exceeded (reported {} vs. {})".format(self.getName(), self.currentCpuTime, maxCpuTime))
-                            self.terminationReason = TERMINATION_REASON_CPU_TIME_LIMIT
+                    # Check for CPU time end condition using the report file
+                    self.currentCpuTime = self.getLastStats().cpuTime
             else:
-                # no report file update
-                if not hasTerminated and not self.terminationReason:
-                    # Check for CPU time end condition (using OS measurements)
-                    maxCpuTime = float(g.getConfig("optimization.timeLimitSec"))
-                    self.currentCpuTime = self.process.getCpuTime()
-                    if self.currentCpuTime >= maxCpuTime:
-                        g.log(LOG_INFO, "terminating {}: CPU time limit exceeded (measured {} vs. {})".format(self.getName(), self.currentCpuTime, maxCpuTime))
-                        self.terminationReason = TERMINATION_REASON_CPU_TIME_LIMIT
+                # no report file update; check for CPU time end condition using OS measurements
+                if not hasTerminated:
+                    try:
+                        self.currentCpuTime = self.process.getCpuTime()
+                    except psutil.NoSuchProcess:
+                        pass # has already quit
 
         except OSError as e:
             g.log(LOG_ERROR, "accessing report file {} failed: {}".format(

@@ -100,30 +100,47 @@ class Job:
         return True
 
     def checkReports(self):
-        if self.checkIfHasTerminated():
+        if not any([r.isActive for r in self.runners]):
+            # if no runners are active, quit
+            self.convergenceTime = None
+            if self.hasConsensus():
+                # count COPASI termination as consensus in this case
+                # XXX: note that this does *not* overwrite "time limit exceeded" exit code!
+                for r in self.runners:
+                    if r.terminationReason == TERMINATION_REASON_COPASI_FINISHED:
+                        r.terminationReason = TERMINATION_REASON_CONSENSUS
+            self.decideTermination()
             return
 
         now = time.time()
-
+        cpuTimeLimit = float(g.getConfig("optimization.timeLimitSec"))
+        maxCpuTime = 0
         numActiveRunners = 0
         with runner.reportLock:
             for r in self.runners:
                 if r.isActive:
                     numActiveRunners += 1
                     r.checkReport(hasTerminated = False, now = now)
+                    maxCpuTime = max(maxCpuTime, r.currentCpuTime)
+
+        consensusReached = self.hasConsensus()
+
+        doKillOnTimeLimit = maxCpuTime >= cpuTimeLimit and not consensusReached
 
         if all([r.terminationReason for r in self.runners]):
             return
 
-        if any([r.terminationReason == TERMINATION_REASON_CPU_TIME_LIMIT for r in self.runners]):
+        if doKillOnTimeLimit:
             # kill all jobs immediately
             for r in self.runners:
                 if r.isActive:
                     r.terminationReason = TERMINATION_REASON_CPU_TIME_LIMIT
+                    g.log(LOG_INFO, "terminating {}: CPU time limit exceeded (measured {} vs. {})".format(r.getName(), r.currentCpuTime, cpuTimeLimit))
+
             return
 
         # check if the runs have reached consensus
-        if self.hasConsensus():
+        if consensusReached:
             if self.convergenceTime is None:
                 g.log(LOG_DEBUG, self.getName() + ": reached consensus, waiting for guard time before termination")
                 self.convergenceTime = now
@@ -186,31 +203,14 @@ class Job:
             minV = self.convergenceValue
         # if this is not the first method, also should use max from the previous
         maxV = self.getBestOfValue()
-        return Job.isConverged(minV, maxV, epsilonAbs, epsilonRel)
 
-    # returns true if either the absolute difference OR relative difference are small
-    @staticmethod
-    def isConverged(v1, v2, epsilonAbs, epsilonRel):
-        if floatEqual(v1, v2, epsilonAbs):
+        # returns true if either the absolute difference OR relative difference are small
+        if floatEqual(minV, maxV, epsilonAbs):
             return True
-        if math.isinf(v1) or math.isinf(v2) or v2 == 0.0:
+        # XXX: avoid division by zero; this means relative convergence will always fail on 0.0
+        if math.isinf(minV) or math.isinf(maxV) or maxV == 0.0:
             return False
-        return abs(1.0 - v1/v2) < epsilonRel
-
-    def checkIfHasTerminated(self):
-        # if no runners are active, quit
-        if any([r.isActive for r in self.runners]):
-            return False
-
-        self.convergenceTime = None
-        if self.hasConsensus():
-            # count COPASI termination as consensus in this case
-            # XXX: note that this does *not* overwrite "time limit exceeded" exit code!
-            for r in self.runners:
-                if r.terminationReason == TERMINATION_REASON_COPASI_FINISHED:
-                    r.terminationReason = TERMINATION_REASON_CONSENSUS
-        self.decideTermination()
-        return True
+        return abs(1.0 - minV / maxV) < epsilonRel
 
     def decideTermination(self):
         badReasons = [TERMINATION_REASON_CPU_TIME_LIMIT, TERMINATION_REASON_COPASI_FINISHED]
@@ -219,8 +219,8 @@ class Job:
             self.pool.finishJob(self)
             return
 
-        # ok, we have at least one bad termination
-        # (CPU time limit exceeded or Copasi stopped without consensus).
+        # So we have at least one bad termination where either the CPU time limit
+        # was exceeded or Copasi stopped without consensus. Actions now:
         # 1) if no solution found: use a fallback method
         # 2) else switch to the next method
         # 3) if no more methods are available, quit
