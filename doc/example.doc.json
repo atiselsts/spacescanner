@@ -3,42 +3,69 @@
 // Use the file "example.json" instead: it has identical contents without comments.
 //
 {
-    // http port number (default: 19000)
-    "httpPort" : 19000,
-    // COPASI model file name; @SELF@ refers to CoRunner source directory
-    "copasiModelFile" : "@SELF@/models/simple-6params.cps",
-    // whether to use-mock up functionality (default: false)
-    "dummyMode" : false,
-    // maximal CPU time for optimization in case convergence criteria and other end conditions have not been reached (default: 3600? sec)
-    "optimizationMaxTimeSec" : 60.0,
-    // for determining whether the convergence criteria of multiple solutions has been reached (default: 1e-6)
-    "optimizationConvergenceEpsilon" : 1e-6,
-    // minimal time to continue after convergence criteria has been reached (default: 60? sec )
-    "optimizationGuardTimeSec" : 60.0,
-    // compared to already found solution (default: 0.9, range: (0.0  .. 1.0])
-    "optimizationOptimalityProportion" : 0.9,
-    // interval between consectutive periodic reports (default: 5.0)
-    "periodicReportIntervalSec" : 1.0,
-    // max number of parameters to optimize using the exhaustive search strategy (default: 3)
-    "paramSweepExhaustiveMax" : 3,
-    // max number of parameters to optimize using the greedy search strategy (default: 8)
-    "paramSweepGreedyMax" : 8,
-    // whether to start by optimizing for all parameters first (default: true)
-    "paramSweepAllFirst" : true,
-    // whether to do parameter sweep trying to find a set of best parameters (default: true)
-    "paramSweepExecute" : true,
-    // how many COPASI processes to run by parallel (default: the number of CPU cores; range: [1 .. number of CPU cores])
-    "maxConcurrentOptimizations" : 16,
-    // which and how many methods to use; can contain a method more than once (default: ["ParticleSwarm"] twice)
-    "methods" : ["ParticleSwarm", "ParticleSwarm"]
-    // debug log level, higher means more messages (default: 2)
-    "logLevel" : 2,
-    // debug log file name (default: "corunner.log")
-    "logFile" : "corunner.log",
-    // optimization results file name (default: "results.log")
-    "resultsFile" : "results.csv",
-    // how many results to include in the best results file (default: 10)
-    "numBestResults" : 10,
-    // after how many finished jobs to save intermediate results (default: 10)
-    "numRunsBeforeSaveResults" : 10
+    "copasi" : {
+	// COPASI model file name; @SELF@ refers to CoRunner source directory
+        "modelFile" : "@SELF@/models/simple-6params.cps",
+	// which and how many methods to use; can contain a method more than once
+        "methods" : ["ParticleSwarm", "GeneticAlgorithm", "GeneticAlgorithmSR", "EvolutionaryProgram", "EvolutionaryStrategySR", "ScatterSearch", "SimulatedAnnealing"],
+	// which and how many methods to use when a method fails to evaluate the objective function in given time
+        "fallbackMethods" : ["GeneticAlgorithmSR", "EvolutionaryStrategySR"],
+	// whether to pick methods from the configuration randomly or in order (default: false)
+        "randomizeMethodSelection" : false,
+	// whether to use optimization method parameters from COPASI model file (default: false)
+        "methodParametersFromFile" : false,
+    },
+    "optimization" : {
+	// maximal CPU time for optimization in case convergence criteria and other end conditions have not been reached (default: 600 sec)
+        "timeLimitSec" : 60,
+	// for determining whether the convergence criteria of multiple solutions has been reached (default: 1%)
+        "consensusRelativeError" : 0.01,
+	// for determining whether the convergence criteria of multiple solutions has been reached (default: 1e-6)
+        "consensusAbsoluteError" : 1e-6,
+	// minimal time to continue after convergence criteria has been reached (default: 300 sec )
+        "consensusMinDurationSec" : 30,
+	// minimal time to continue after convergence criteria has been reached as proportion of runtime so-far (default: 15%)
+        "consensusMinProportionalDuration" : 0.15,
+	// compared to already found solution (default: 0.9, range: (0.0  .. 1.0])
+        "optimalityRelativeError" : 0.1,
+	// known best value of an already found solution
+        "bestOfValue" : -Infinity,
+	// restart each subsequent method from the best point in the search space so far (default: true)
+        "restartFromBestValue" : true,
+	// how many COPASI processes to run by parallel (default: max(4, the number of CPU cores); range: [1 .. number of CPU cores])
+        "maxConcurrentRuns" : 4,
+	// how many paraller COPASI exectutions to per single job (i.e. a single set of parameters)
+        "runsPerJob" : 2
+    },
+    // .csv file name on which to restart optimization runs, trying to complete timeouted jobs (default: null)
+    "restartOnFile" : null,
+    // parameter ranges which to use for optimization
+    "parameters" : [
+	// an optimization all parameters included (default)
+        {"type" : "all-parameters"},
+ 	// an optimization with exhaustive selection of 1 to 3 parameters (default)
+        {"type" : "exhaustive", "range" : [1, 3]},
+	// an optimization with greedy selection of 4 to 8 parameters (default)
+        {"type" : "greedy", "range" : [4, 8]}
+    ],
+    "web" : {
+	// whether to run the web interface (default: true)
+	// WARNING: access control is not supported by CoRunner!
+	// Enable this only in trusted environment.
+	"enable" : true,
+	// http port number (default: 19000)
+	"port" : 19000
+    },
+    "log" : {
+	// debug log level; from 0 to 4, higher means more messages (default: 2)
+        "level" : 2,
+	// debug log file name (default: "corunner.log")
+        "file" : "corunner.log"
+    },
+    "results" : {
+	// optimization results file name (default: "results-<datetime>.csv")
+        "file" : "results.csv",
+	// after how many finished jobs to save intermediate results (default: 10)
+        "numRunsBeforeSaving" : 10
+    }
 }

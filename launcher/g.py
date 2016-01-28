@@ -38,10 +38,10 @@ DEFAULT_CONFIG = {
         "parameters": [] # all from copasi file
     },
     "optimization" : {
-        "timeLimitSec" : 60,
+        "timeLimitSec" : 600,
         "consensusRelativeError" : 0.01,
         "consensusAbsoluteError" : 1e-6,
-        "consensusMinDurationSec" : 60,
+        "consensusMinDurationSec" : 300,
         "consensusMinProportionalDuration" : 0.15, # 15% of total run's time
         "optimalityRelativeError" : 0.1, # set to None to disable this
         "bestOfValue" : float("-inf"),
@@ -64,7 +64,6 @@ DEFAULT_CONFIG = {
     },
     "results" : {
         "file" : "results.csv",
-        "numBest" : 10,
         "numRunsBeforeSaving" : 10
     },
     # the rest are undocumented, for testing only

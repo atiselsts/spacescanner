@@ -2,7 +2,9 @@
     "optimization" : {
         "timeLimitSec" : 30,
         "runsPerJob" : 3,
-        "consensusMinDurationSec" : 180
+        "consensusMinDurationSec" : 180,
+        "methods" : ["ParticleSwarm"],
+        "fallbackMethods" : []
     },
     "copasi" : {
         "modelFile" : "@SELF@/models/simple-6params.cps"
