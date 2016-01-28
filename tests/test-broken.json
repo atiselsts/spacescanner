@@ -1,0 +1,10 @@
+{
+    "copasi" : {
+        "modelFile" : "@SELF@/tests/broken.cps",
+        "methods" : ["ParticleSwarm"],
+        "fallbackMethods" : []
+    },
+    "log" : {
+        "level" : 2
+    }
+}

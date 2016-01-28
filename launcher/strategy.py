@@ -230,11 +230,14 @@ class StrategyManager:
 
         self.lastNumJobsDumped = 0
 
-        self.copasiConfig = {"params" : []}
-        self.copasiFile = None
+        self.copasiConfig = None
+        self.copasiFile = self.loadCopasiFile()
+        if not self.copasiFile:
+            return False
 
-        self.copasiConfig = self.loadCopasiFile()
-        if "params" not in self.copasiConfig or not self.copasiConfig["params"]:
+        g.log(LOG_DEBUG, "querying COPASI optimization parameters")
+        self.copasiConfig = {"params" : self.copasiFile.getAllParameters()}
+        if not self.copasiConfig["params"]:
             return False
 
         self.jobsByBestOfValue = [[] for _ in range(1 + len(self.copasiConfig["params"]))]
@@ -243,7 +246,7 @@ class StrategyManager:
 
     def cleanup(self, args):
         sys.stderr.write("<corunner>: quitting...\n")
-        if "params" in self.copasiConfig and self.copasiConfig["params"]:
+        if self.copasiConfig is not None and self.copasiConfig.get("params"):
             self.dumpResults()
         doWait = False
         time.sleep(0.01)
@@ -281,19 +284,6 @@ class StrategyManager:
                 job.dumpResults(f, allParams)
         g.log(LOG_INFO, '<corunner>: results of finished jobs saved in "' + filename + '"')
 
-#        if int(g.getConfig("results.numBest")) > 0:
-#            (name, ext) = os.path.splitext(filename)
-#            bestResultsFilename = name + "-best" + ext
-#            with open(bestResultsFilename, "w") as f:
-#                self.dumpCsvFileHeader(f)
-#                n = 0
-#                for job in jobsByBestOfValue:
-#                    job.dumpResults(f, allParams)
-#                    n += 1
-#                    if n >= int(g.getConfig("results.numBest")):
-#                        break
-#            g.log(LOG_INFO, '<corunner>: best results additionally saved in "' + bestResultsFilename + '"')
-
 
     def dumpCsvFileHeader(self, f):
         f.write("OF value,CPU time,Job ID,Stop reason,")
@@ -302,15 +292,13 @@ class StrategyManager:
 
 
     def loadCopasiFile(self):
-        result = {"params" : []}
-        self.copasiFile = copasifile.CopasiFile()
+        copasiFile = copasifile.CopasiFile()
         filename = g.getConfig("copasi.modelFile")
         filename = filename.replace("@SELF@", SELF_PATH)
         g.log(LOG_INFO, "<corunner>: opening COPASI model file {}".format(filename))
-        if self.copasiFile.read(filename):
-            g.log(LOG_DEBUG, "querying COPASI optimization parameters")
-            result["params"] = self.copasiFile.getAllParameters()
-        return result
+        if not copasiFile.read(filename):
+            return None
+        return copasiFile
 
 
     def finishJob(self, job):

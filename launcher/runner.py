@@ -30,6 +30,8 @@ import process
 # how often to check if the report file has been modified
 MIN_REPORT_CHECK_INTERVAL = 1.0
 
+reportLock = threading.Lock()
+
 ################################################
 # Helper function for executing Copasi binary
 
@@ -46,7 +48,8 @@ def executeCopasi(runner):
         runner.isError = runner.process.run()
 
         # check report in order to update OF value (even if nonzero return value)
-        runner.checkReport(hasTerminated = True, now = time.time())
+        with reportLock:
+            runner.checkReport(hasTerminated = True, now = time.time())
 
         # exit the loop without an error
         break

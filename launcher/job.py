@@ -21,15 +21,13 @@
 # Author: Atis Elsts, 2016
 #
 
-import os, sys, time, copy, random, math, threading
+import os, sys, time, copy, random, math, threading, itertools
 
 from util import *
 import g
 import runner
 
-jobLock = threading.Lock()
-
-LOAD_BALANCE_INTERVAL = 10.0 # secomds
+LOAD_BALANCE_INTERVAL = 10.0 # seconds
 
 ################################################
 # Job: manages execution of multiple COPASI instances with a single specific set of parameters.
@@ -37,14 +35,12 @@ LOAD_BALANCE_INTERVAL = 10.0 # secomds
 # May switch over to different optimization methods if the current method fails to reach consensus.
 
 class Job:
-    nextJobID = 1
+    nextJobID = itertools.count(1)
 
     def __init__(self, pool, params, numFreeCores):
         self.pool = pool
         self.params = params
-        with jobLock:
-            self.id = Job.nextJobID
-            Job.nextJobID += 1
+        self.id = Job.nextJobID.next()
         self.methods = copy.copy(g.getConfig("copasi.methods"))
         assert len(self.methods)
         self.fallbackMethods = copy.copy(g.getConfig("copasi.fallbackMethods"))
@@ -110,10 +106,11 @@ class Job:
         now = time.time()
 
         numActiveRunners = 0
-        for r in self.runners:
-            if r.isActive:
-                numActiveRunners += 1
-                r.checkReport(hasTerminated = False, now = now)
+        with runner.reportLock:
+            for r in self.runners:
+                if r.isActive:
+                    numActiveRunners += 1
+                    r.checkReport(hasTerminated = False, now = now)
 
         if all([r.terminationReason for r in self.runners]):
             return
@@ -149,7 +146,7 @@ class Job:
             self.convergenceTime = None
 
         # take the best value only for jobs with more parameters than this
-        totalBestOfValue = self.pool.strategy.getBestOfValue(len(self.params) + 1)
+        totalBestOfValue = self.pool.strategy.getBestOfValue(-1)
         optimality = g.getConfig("optimization.optimalityRelativeError")
         if totalBestOfValue is not None and optimality is not None:
             proportion = 1.0 - float(optimality)
@@ -235,9 +232,13 @@ class Job:
         assert (self.currentMethod in self.methods)
         self.methods.remove(self.currentMethod)
 
-        if self.isUsingFallback or any([math.isinf(r.ofValue) for r in self.runners]):
+        anyNotFound = any([math.isinf(r.ofValue) for r in self.runners])
+        if anyNotFound or self.isUsingFallback:
             if len(self.fallbackMethods) == 0:
-                g.log(LOG_INFO, "terminating {}: failed to evaluate the objective function".format(self.getName()))
+                if anyNotFound:
+                    g.log(LOG_INFO, "terminating {}: failed to evaluate the objective function".format(self.getName()))
+                else:
+                    g.log(LOG_INFO, "terminating {}: all fallback methods exhausted without reaching consensus".format(self.getName()))
                 self.pool.finishJob(self)
                 return
 

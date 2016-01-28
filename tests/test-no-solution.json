@@ -1,14 +1,14 @@
 {
     "copasi" : {
         "modelFile" : "@SELF@/models/simple-6params.cps",
-        "methods" : ["SteepestDescent", "SteepestDescent"],
-        "fallbackMethods" : ["GeneticAlgorithmSR", "EvolutionaryStrategySR"]
+        "methods" : ["TruncatedNewton", "SteepestDescent"],
+        "fallbackMethods" : ["ParticleSwarm"]
     },
     "optimization" : {
         "timeLimitSec" : 10
     },
     "parameters" : [
-        {"type" : "all-parameters"}
+        {"type" : "explicit", "parameters" : ["GAPD"]}
     ],
     "log" : {
         "level" : 2,

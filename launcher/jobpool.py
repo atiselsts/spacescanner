@@ -36,7 +36,7 @@ def getParamSetHash(parameters, allParameters):
 
 #####################################################################
 # Pool is a group of jobs without mutual dependencies
-# which all can be executed simulataneously (but are not required to)
+# which all can be executed simultaneously (but are not required to)
 class JobPool:
     def __init__(self, strategy, parameterSets):
         self.strategy = strategy
@@ -130,8 +130,9 @@ class JobPool:
                     doWait = True
 
     def findJob(self, id):
-        for x in self.activeJobs:
-            if x.id == id:
-                return x
+        with self.jobLock:
+            for x in self.activeJobs:
+                if x.id == id:
+                    return x
         return None
 

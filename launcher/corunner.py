@@ -106,13 +106,15 @@ def main():
         f.write(g.corunnerStartTime)
         f.write("\n")
 
+    # read COPASI model file etc.
+    if not strategy.manager.prepare():
+        return -1
+
     # start the web server
     if bool(g.getConfig("web.enable")):
         process.createBackgroundThread(executeWebserver, None)
 
     # start the selected parameter sweep strategy
-    if not strategy.manager.prepare():
-        return -1
     strategy.manager.execute()
 
     # if "hang" mode is configured, do not quit until Ctrl+C is pressed

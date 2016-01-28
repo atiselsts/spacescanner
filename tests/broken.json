@@ -1,5 +1,0 @@
-{
-    "copasi" : {
-        "modelFile" : "@SELF@/tests/broken.cps"
-    }
-}

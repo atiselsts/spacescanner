@@ -7,11 +7,10 @@
         "modelFile" : "@SELF@/models/simple-6params.cps"
     },
     "parameters" : [
-        {"type" : "all-parameters"}
+        {"type" : "explicit", "parameters" : ["GAPD"]}
     ],
     "log" : {
         "level" : 2,
         "file" : "corunner.log"
     }
 }
-
