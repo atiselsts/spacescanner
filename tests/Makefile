@@ -36,6 +36,7 @@ test-param-ranges:
 	$(PYTHON) $(CORUNNER) test-param-ranges.json
 	@grep "total 18 parameter combination(s) to try out" corunner.log
 	@grep "starting job 1 (optimization parameters: 'Hexokinase' 'Phosphofructokinase' 'Glucose in')" corunner.log
+	@grep "terminating job 18" corunner.log
 	@grep "results of finished jobs saved" corunner.log
 	@echo ..done
 	@echo ""
@@ -44,7 +45,7 @@ test-solution-timeout:
 	@echo Testing behavior on solution timeout...
 	@rm -f corunner.log
 	$(PYTHON) $(CORUNNER) test-solution-timeout.json
-	@grep "terminating job 1* (method 'RandomSearch'): CPU time limit exceeded" corunner.log
+	@grep -e "terminating job 1/. (method 'RandomSearch'): CPU time limit exceeded" corunner.log
 	@echo ..done
 	@echo ""
 
@@ -52,10 +53,10 @@ test-solution-timeout-allmethods:
 	@echo Testing behavior on solution timeout with method switching...
 	@rm -f corunner.log
 	$(PYTHON) $(CORUNNER) test-solution-timeout-allmethods.json
-	@grep "terminating job 1* (method 'ParticleSwarm'): CPU time limit exceeded" corunner.log
-	@grep "terminating job 1* (method 'GeneticAlgorithm'): CPU time limit exceeded" corunner.log
-	@grep "terminating job 1* (method 'GeneticAlgorithmSR'): CPU time limit exceeded" corunner.log
-	@grep "terminating job 1* (method 'EvolutionaryStrategySR'): CPU time limit exceeded" corunner.log
+	@grep -e "terminating job 1/. (method 'ParticleSwarm'): CPU time limit exceeded" corunner.log
+	@grep -e "terminating job 1/. (method 'GeneticAlgorithm'): CPU time limit exceeded" corunner.log
+	@grep -e "terminating job 1/. (method 'GeneticAlgorithmSR'): CPU time limit exceeded" corunner.log
+	@grep -e "terminating job 1/. (method 'EvolutionaryStrategySR'): CPU time limit exceeded" corunner.log
 	@echo ..done
 	@echo ""
 
@@ -63,8 +64,8 @@ test-suspend-resume:
 	@echo Testing load balancing functionality when there are more jobs than cores...
 	@rm -f corunner.log
 	$(PYTHON) $(CORUNNER) test-suspend-resume.json
-	@grep "resuming process *job2/input_job2_runner3.cps" corunner.log
-	@grep "suspending process *job2/input_job2_runner3.cps" corunner.log
+	@grep -e "resuming process .*job2/input_job2_runner3.cps" corunner.log
+	@grep -e "suspending process .*job2/input_job2_runner3.cps" corunner.log
 	@echo ..done
 	@echo ""
 
