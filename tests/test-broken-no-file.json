@@ -1,6 +1,6 @@
 {
     "copasi" : {
-        "modelFile" : "@SELF@/tests/broken.cps",
+        "modelFile" : "@SELF@/tests/no-such-file.cps",
         "methods" : ["ParticleSwarm"],
         "fallbackMethods" : []
     },

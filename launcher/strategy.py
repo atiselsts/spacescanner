@@ -236,7 +236,7 @@ class StrategyManager:
             return False
 
         g.log(LOG_DEBUG, "querying COPASI optimization parameters")
-        self.copasiConfig = {"params" : self.copasiFile.getAllParameters()}
+        self.copasiConfig = {"params" : self.copasiFile.queryParameters()}
         if not self.copasiConfig["params"]:
             return False
 

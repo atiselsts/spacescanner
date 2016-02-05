@@ -1,0 +1,11 @@
+{
+    "copasi" : {
+        "modelFile" : "@SELF@/tests/broken-bad-parameter.cps",
+        "methods" : ["ParticleSwarm"],
+        "fallbackMethods" : []
+    },
+    "log" : {
+        "level" : 2,
+        "file" : "corunner.log"
+    }
+}

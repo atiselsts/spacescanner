@@ -160,6 +160,7 @@ class CopasiFile:
         self.optimizationTask = None
         self.paramDict = {}
         self.methodDict = {}
+        self.objectiveFunction = None
 
         ElementTree.register_namespace('', COPASI_SCHEMA)
 
@@ -176,14 +177,25 @@ class CopasiFile:
             for task in tasklist.findall('copasi:Task', COPASI_NS):
                 if task.get("type").lower() == "optimization":
                     self.optimizationTask = task
+
         if self.optimizationTask is None:
             g.log(LOG_ERROR, "error while loading COPASI model: optimization task not found in COPASI file")
+            return False
+
+        self.loadParameters()
+
+        if len(self.paramDict) == 0:
+            g.log(LOG_ERROR, "error while loading COPASI model: optimization parameters not defined in COPASI file")
+            return False
+
+        if not self.objectiveFunction:
+            g.log(LOG_ERROR, "error while loading COPASI model: objective function not defined in COPASI file")
             return False
 
         return True
 
 
-    def getAllParameters(self):
+    def loadParameters(self):
         assert self.optimizationTask is not None
 
         problem = self.optimizationTask.find('copasi:Problem', COPASI_NS)
@@ -218,11 +230,18 @@ class CopasiFile:
                                         v = v[v.find("[")+1:v.find("]")]
                                     self.paramDict["'" + v + "'"] = paramGroup2
 
+        self.objectiveFunction = None
+        for paramText in problem.findall('copasi:ParameterText', COPASI_NS):
+           if paramText.get("name").lower() == "objectiveexpression":
+               self.objectiveFunction = paramText.text.strip()
+
         # parse methods as well
         for method in self.optimizationTask.findall('copasi:Method', COPASI_NS):
             mtype = method.get("type").lower()
             self.methodDict[mtype] = method
 
+
+    def queryParameters(self):
         return self.paramDict.keys()
 
 
@@ -326,7 +345,7 @@ def test():
     if not cf.read("../models/complex.cps"):
         return -1
     print("querying parameters")
-    params = cf.getAllParameters()
+    params = cf.queryParameters()
     print("parameter names: ", params)
     print("writing a copy")
     cf.createCopy("./input.cps", "./output.log", [params[0], params[-1]], ["ParticleSwarm"], None)

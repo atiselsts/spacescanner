@@ -1,0 +1,11 @@
+{
+    "copasi" : {
+        "modelFile" : "@SELF@/tests/broken-no-of.cps",
+        "methods" : ["ParticleSwarm"],
+        "fallbackMethods" : []
+    },
+    "log" : {
+        "level" : 2,
+        "file" : "corunner.log"
+    }
+}

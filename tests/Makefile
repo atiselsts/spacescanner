@@ -2,16 +2,6 @@ PYTHON = python
 CORUNNER = ../launcher/corunner.py
 
 all: test-broken test-fast-consensus test-no-solution test-param-ranges test-solution-timeout test-solution-timeout-allmethods test-suspend-resume cleanup
-	@true
-
-test-broken:
-	@echo Testing a broken mode file...
-	@rm -f corunner.log
-	$(PYTHON) $(CORUNNER) test-broken.json
-	@grep "terminating job 1: failed to evaluate the objective function" corunner.log
-	@grep "terminating job 2: failed to evaluate the objective function" corunner.log
-	@echo ..done
-	@echo ""
 
 test-fast-consensus:
 	@echo Testing a fast consensus...
@@ -66,6 +56,46 @@ test-suspend-resume:
 	$(PYTHON) $(CORUNNER) test-suspend-resume.json
 	@grep -e "resuming process .*job2/input_job2_runner3.cps" corunner.log
 	@grep -e "suspending process .*job2/input_job2_runner3.cps" corunner.log
+	@echo ..done
+	@echo ""
+
+test-broken: test-broken-1 test-broken-2 test-broken-3 test-broken-4 test-broken-5
+	@true
+
+test-broken-1:
+	@echo Testing a broken mode file...
+	@rm -f corunner.log
+	$(PYTHON) $(CORUNNER) test-broken-bad-parameter.json
+	@grep "terminating job 1: failed to evaluate the objective function" corunner.log
+	@grep "terminating job 2: failed to evaluate the objective function" corunner.log
+	@echo ..done
+	@echo ""
+
+test-broken-2:
+	@rm -f corunner.log
+	$(PYTHON) $(CORUNNER) test-broken-no-optimization.json
+	@grep "error while loading COPASI model: optimization task not found in COPASI file" corunner.log
+	@echo ..done
+	@echo ""
+
+test-broken-3:
+	@rm -f corunner.log
+	$(PYTHON) $(CORUNNER) test-broken-no-of.json
+	@grep "error while loading COPASI model: objective function not defined in COPASI file" corunner.log
+	@echo ..done
+	@echo ""
+
+test-broken-4:
+	@rm -f corunner.log
+	$(PYTHON) $(CORUNNER) test-broken-no-parameters.json
+	@grep "error while loading COPASI model: optimization parameters not defined in COPASI file" corunner.log
+	@echo ..done
+	@echo ""
+
+test-broken-5:
+	@rm -f corunner.log
+	$(PYTHON) $(CORUNNER) test-broken-no-file.json
+	@grep "error while loading COPASI model: file not found or not readable" corunner.log
 	@echo ..done
 	@echo ""
 
