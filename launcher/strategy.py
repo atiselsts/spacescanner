@@ -217,9 +217,32 @@ class StrategyManager:
         pass
        
     def prepare(self):
-        self.workDir = tempfile.mkdtemp()
+        dirname = os.path.join(SELF_PATH, "results")
+        try:
+            os.mkdir(dirname)
+        except:
+            pass
+
+        self.taskName = g.getConfig("taskName")
+        if not self.taskName:
+            self.taskName = os.path.splitext(os.path.basename(g.getConfig("copasi.modelFile")))[0]
+        self.taskName += "-" + g.corunnerStartTime
+        self.workDir = os.path.join(dirname, self.taskName)
+        try:
+            os.mkdir(self.workDir)
+        except:
+            pass
+
+        try:
+            # copy the used configuration file as a reference
+            shutil.copyfile(g.configFileName, os.path.join(self.workDir, "config.json"))
+        except:
+            pass # assume the file does not exist; print a warning?
+
         if isCygwin():
+            # remove the first part from the path and normalize it to make Copasi happy
             self.workDir = os.path.normpath(os.path.join(CYGWIN_DIR, self.workDir[1:]))
+
         g.log(LOG_INFO, "<corunner>: working directory is " + self.workDir)
         atexit.register(self.cleanup, self)
 
@@ -248,21 +271,22 @@ class StrategyManager:
         sys.stderr.write("<corunner>: quitting...\n")
         if self.copasiConfig is not None and self.copasiConfig.get("params"):
             self.dumpResults()
-        doWait = False
         time.sleep(0.01)
         with self.jobLock:
             if self.activeJobPool is not None:
                 self.activeJobPool.cleanup()
                 self.activeJobPool = None
-        if doWait:
-            time.sleep(1.0)
-        shutil.rmtree(self.workDir)
 
 
     def dumpResults(self):
         filename = g.getConfig("results.file")
+        # do not allow put the results in other directories because of security reasons
+        if filename != os.path.basename(filename):
+            g.log(LOG_INFO, "output file name should not include path, ignoring all but the last element in it")
+            filename = os.path.basename(filename)
         (name, ext) = os.path.splitext(filename)
-        filename = name + "-" + g.corunnerStartTime + ext
+        filename = name + "-" + self.taskName + ext
+        filename = os.path.join(self.workDir, filename)
 
         with self.jobLock:
             if len(self.finishedJobs) <= self.lastNumJobsDumped:
@@ -271,8 +295,13 @@ class StrategyManager:
             self.lastNumJobsDumped = len(self.finishedJobs)
 
         allJobsByBestOfValue = []
+        numberOfBestCombinations = int(g.getConfig("results.numberOfBestCombinations"))
         for joblist in self.jobsByBestOfValue:
-            for job in joblist:
+            if numberOfBestCombinations:
+                lst = joblist[:numberOfBestCombinations]
+            else:
+                lst = joblist
+            for job in lst:
                 allJobsByBestOfValue.append(job)
         allJobsByBestOfValue.sort(key=lambda x: x.getBestOfValue(), reverse=True)
 
@@ -312,10 +341,8 @@ class StrategyManager:
             self.jobsByBestOfValue[len(job.params)].sort(
                 key=lambda x: x.getBestOfValue(), reverse=True)
 
-        numSaveAfter = int(g.getConfig("results.numRunsBeforeSaving"))
-        if numFinishedJobs % numSaveAfter == 0:
-            # save intermediate result
-            self.dumpResults()
+        # save the intermediate results after each finished job
+        self.dumpResults()
 
 
     def getBestOfValue(self, minNumParameters):

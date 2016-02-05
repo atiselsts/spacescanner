@@ -34,7 +34,8 @@
         "file" : "corunner.log"
     },
     "results" : {
-        "file" : "results.csv",
-        "numRunsBeforeSaving" : 10
-    }
+        "filename" : "results.csv",
+	"numberOfBestCombinations" : 0
+    },
+    "taskName" : null
 }

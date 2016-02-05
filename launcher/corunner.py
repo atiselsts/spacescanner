@@ -89,12 +89,9 @@ def executeWebserver(args):
 
 def main():
     g.corunnerStartTime = getCurrentTime()
-
-    configFileName = DEFAULT_CONFIG_FILE
     if len(sys.argv) > 1:
-        configFileName = sys.argv[1]
-
-    g.loadConfig(configFileName)
+        g.configFileName = sys.argv[1]
+    g.loadConfig()
 
     if not g.getConfig("copasi.methods"):
         g.log(LOG_ERROR, "cannot execute optimizations: no methods defined in CoRunner configuration file")

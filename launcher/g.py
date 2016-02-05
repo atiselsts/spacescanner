@@ -31,7 +31,7 @@ from util import *
 DEFAULT_CONFIG = {
     "copasi" : {
         "modelFile" : os.path.join(SELF_PATH, "models", "simple-6params.cps"),
-        "methods" : ["ParticleSwarm", "GeneticAlgorithm", "GeneticAlgorithmSR", "EvolutionaryProgram", "EvolutionaryStrategySR", "ScatterSearch", "SimulatedAnnealing"],
+        "methods" : ["ParticleSwarm", "GeneticAlgorithm", "GeneticAlgorithmSR", "EvolutionaryProgram", "EvolutionaryStrategySR"],
         "fallbackMethods" : ["GeneticAlgorithmSR", "EvolutionaryStrategySR"],
         "randomizeMethodSelection" : False,
         "methodParametersFromFile" : False,
@@ -64,14 +64,17 @@ DEFAULT_CONFIG = {
     },
     "results" : {
         "file" : "results.csv",
-        "numRunsBeforeSaving" : 10
+        "numberOfBestCombinations" : 0
     },
+    "taskName" : None,
     # the rest are undocumented, for testing only
     "testMode" : False,
     "hangMode" : False
 }
 
 config = DEFAULT_CONFIG
+
+configFileName = DEFAULT_CONFIG_FILE
 
 ################################################
 # Configuration file management
@@ -92,8 +95,9 @@ def getConfig(name, default = None, useHardcodedConfig = True):
         value, ok = get(path, DEFAULT_CONFIG)
     return value if ok else default
 
-def loadConfig(configFileName):
+def loadConfig():
     global config
+    global configFileName
 
     # load configuration
     try:

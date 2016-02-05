@@ -124,10 +124,12 @@ class JobPool:
             return [x.id for x in self.activeJobs]
 
     def cleanup(self):
+        isUnfinished = False
         with self.jobLock:
             for j in self.activeJobs:
                 if j.cleanup():
-                    doWait = True
+                    isUnfinished = True
+        return isUnfinished
 
     def findJob(self, id):
         with self.jobLock:

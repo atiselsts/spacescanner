@@ -263,7 +263,7 @@ class CopasiFile:
 
 
     def serializeOptimizationTask(self, reportFilename, outf, parameters, methodNames, startParamValues):
-        # start writing
+        # Note: 'scheduled' is always set to true, as is 'update model' to save the final parameter values in the .cps file.
         outf.write('  <Task key="{}" name="Optimization" type="optimization" scheduled="true" updateModel="true">\n'.format(self.optimizationTask.get("key")))
 
         # 1. Fix report target file name
@@ -280,7 +280,11 @@ class CopasiFile:
         for elem in problem.iterfind("*", COPASI_NS):
             if "Problem" in elem.tag: continue
             if "ParameterGroup" not in elem.tag or elem.get("name").lower() != "optimizationitemlist":
-                outf.write('    ' + str(ElementTree.tostring(elem)))
+                if "Parameter" in elem.tag and elem.get("name").lower() == "randomize start values":
+                    # never randomize them
+                    outf.write('    <Parameter name="Randomize Start Values" type="bool" value="0"/>\n')
+                else:
+                    outf.write('    ' + str(ElementTree.tostring(elem)))
                 continue
 
         #print("parameters in the file:", self.paramDict.keys())
@@ -327,6 +331,8 @@ class CopasiFile:
                         if sub == self.optimizationTask:
                             self.serializeOptimizationTask(reportFilename, outf, parameters, methods, startParamValues)
                         else:
+                            # make sure all other tasks are unscheduled
+                            sub.attrib["scheduled"] = "false"
                             outf.write('  ' + str(ElementTree.tostring(sub)))
                     outf.write('  </ListOfTasks>\n')
                 elif "ListOfReports" in elem.tag:

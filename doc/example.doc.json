@@ -63,9 +63,11 @@
         "file" : "corunner.log"
     },
     "results" : {
-	// optimization results file name (default: "results-<datetime>.csv")
-        "file" : "results.csv",
-	// after how many finished jobs to save intermediate results (default: 10)
-        "numRunsBeforeSaving" : 10
-    }
+	// optimization results file name (default: "results-<taskname>-<datetime>.csv")
+        "filename" : "results.csv",
+	// how many of the best parameter combinations to include in results for each number of parameters; 0 means unlimited (default: unlimited)
+	"numberOfBestCombinations" : 0
+    },
+    // the global name of this optimization task
+    "taskName" : null
 }
