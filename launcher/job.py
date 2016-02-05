@@ -100,15 +100,18 @@ class Job:
         return True
 
     def checkReports(self):
+        # if no runners are active, quit
         if not any([r.isActive for r in self.runners]):
-            # if no runners are active, quit
+            if self.convergenceTime is not None:
+                minAbsoluteTime = float(g.getConfig("optimization.consensusMinDurationSec"))
+                # XXX: do not check the relative time here
+                if self.hasConsensus() and time.time() - self.convergenceTime > minAbsoluteTime:
+                    # count COPASI termination as consensus in this case
+                    # XXX: note that this does *not* overwrite "time limit exceeded" exit code!
+                    for r in self.runners:
+                        if r.terminationReason == TERMINATION_REASON_COPASI_FINISHED:
+                            r.terminationReason = TERMINATION_REASON_CONSENSUS
             self.convergenceTime = None
-            if self.hasConsensus():
-                # count COPASI termination as consensus in this case
-                # XXX: note that this does *not* overwrite "time limit exceeded" exit code!
-                for r in self.runners:
-                    if r.terminationReason == TERMINATION_REASON_COPASI_FINISHED:
-                        r.terminationReason = TERMINATION_REASON_CONSENSUS
             self.decideTermination()
             return
 

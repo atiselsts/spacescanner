@@ -50,10 +50,10 @@ class ParamSelection(object):
         self.start = start
         self.end = end
         self.isReverse = start > end
-        if self.start >= self.n:
-            self.start = self.n - 1
-        if self.end >= self.n:
-            self.end = self.n - 1
+        if self.start > self.n:
+            self.start = self.n
+        if self.end > self.n:
+            self.end = self.n
 
     def getSortOrder(self):
         # first by type, the by lower bound

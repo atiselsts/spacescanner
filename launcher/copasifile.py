@@ -223,7 +223,7 @@ class CopasiFile:
                         for (k,v) in val:
                             if 0:
                                 if k.lower() == "parameter":
-                                    self.paramDict[v] = paramGroup2
+                                    self.paramDict["'" + v + "'"] = paramGroup2
                             else:
                                 if k.lower() == "vector":
                                     if "[" in v and "]" in v:
@@ -294,7 +294,7 @@ class CopasiFile:
                 self.writeParam(outf, p, startParamValues)
         outf.write(' </ParameterGroup>\n')
         outf.write(' </Problem>\n')
-      
+
         # 3. Include only required methods
         #print("methods in the file:", self.methodDict.keys())
         for m in methodNames:
