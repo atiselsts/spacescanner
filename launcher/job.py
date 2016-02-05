@@ -135,8 +135,7 @@ class Job:
             for r in self.runners:
                 if r.isActive:
                     r.terminationReason = TERMINATION_REASON_CPU_TIME_LIMIT
-                    g.log(LOG_INFO, "terminating {}: CPU time limit exceeded (measured {} vs. {})".format(r.getName(), r.currentCpuTime, cpuTimeLimit))
-
+                    g.log(LOG_INFO, "terminating {}: CPU time limit exceeded ({} vs. {})".format(r.getName(), r.currentCpuTime, cpuTimeLimit))
             return
 
         # check if the runs have reached consensus
@@ -329,10 +328,11 @@ class Job:
             bestStats = bestRunner.getLastStats()
 
         # OF value,CPU time,Job ID,Stop reason
-        f.write("{},{},{},{},".format(
-            bestOfValue, cpuTime, self.id, reasonToStr(terminationReason)))
+        f.write("{},{},{},{},{},".format(
+            bestOfValue, cpuTime, self.id,
+            len(self.params), reasonToStr(terminationReason)))
 
-        # which parameters included
+        # which parameters are included
         paramState = ['1' if x in self.params else '0' \
                       for x in allParams]
         f.write(",".join(paramState))

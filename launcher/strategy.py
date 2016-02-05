@@ -286,7 +286,7 @@ class StrategyManager:
 
 
     def dumpCsvFileHeader(self, f):
-        f.write("OF value,CPU time,Job ID,Stop reason,")
+        f.write("OF value,CPU time,Job ID,Number of parameters,Stop reason,")
         f.write(",".join([x.strip("'") for x in self.copasiConfig["params"]] * 2))
         f.write("\n")
 
