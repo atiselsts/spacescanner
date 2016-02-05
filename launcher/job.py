@@ -115,6 +115,13 @@ class Job:
             self.decideTermination()
             return
 
+        if not all([r.isActive for r in self.runners]):
+            # some but not all have quit; quit the others with "time limit exceeded"
+            for r in self.runners:
+                if r.isActive and not r.terminationReason:
+                    r.terminationReason = TERMINATION_REASON_CPU_TIME_LIMIT
+            return
+
         now = time.time()
         cpuTimeLimit = float(g.getConfig("optimization.timeLimitSec"))
         maxCpuTime = 0
