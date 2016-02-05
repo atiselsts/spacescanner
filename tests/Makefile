@@ -67,7 +67,6 @@ test-broken-1:
 	@rm -f corunner.log
 	$(PYTHON) $(CORUNNER) test-broken-bad-parameter.json
 	@grep "terminating job 1: failed to evaluate the objective function" corunner.log
-	@grep "terminating job 2: failed to evaluate the objective function" corunner.log
 	@echo ..done
 	@echo ""
 
