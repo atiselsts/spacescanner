@@ -8,9 +8,5 @@
     },
     "copasi" : {
         "modelFile" : "@SELF@/models/complex.cps"
-    },
-    "log" : {
-        "level" : 2,
-        "file" : "corunner-server.log"
     }
 }

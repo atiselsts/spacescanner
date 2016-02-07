@@ -88,20 +88,8 @@ def executeWebserver(args):
 # Execute the application
 
 def main():
-    g.corunnerStartTime = getCurrentTime()
-    if len(sys.argv) > 1:
-        g.configFileName = sys.argv[1]
-    g.loadConfig()
-
-    if not g.getConfig("copasi.methods"):
-        g.log(LOG_ERROR, "cannot execute optimizations: no methods defined in CoRunner configuration file")
+    if not g.prepare():
         return -1
-
-    # update log file
-    with open(g.getConfig("log.file"), "a+") as f:
-        f.write("============= ")
-        f.write(g.corunnerStartTime)
-        f.write("\n")
 
     # read COPASI model file etc.
     if not strategy.manager.prepare():

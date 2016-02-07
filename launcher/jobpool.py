@@ -80,7 +80,7 @@ class JobPool:
             self.activeJobs.append(j)
 
         # execute the job
-        if not j.execute(self.strategy.workDir, self.strategy.copasiFile):
+        if not j.execute(g.workDir, self.strategy.copasiFile):
             g.log(LOG_DEBUG, "failed to execute {}".format(j.getName()))
             self.finishJob(j)
 

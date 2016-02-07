@@ -59,11 +59,11 @@ test-suspend-resume:
 	@echo ..done
 	@echo ""
 
-test-broken: test-broken-1 test-broken-2 test-broken-3 test-broken-4 test-broken-5
+test-broken: test-broken-1 test-broken-2 test-broken-3 test-broken-4 test-broken-5 test-broken-6
 	@true
 
 test-broken-1:
-	@echo Testing a broken mode file...
+	@echo Testing broken configurations...
 	@rm -f corunner.log
 	$(PYTHON) $(CORUNNER) test-broken-bad-parameter.json
 	@grep "terminating job 1: failed to evaluate the objective function" corunner.log
@@ -98,6 +98,13 @@ test-broken-5:
 	@echo ..done
 	@echo ""
 
+test-broken-6:
+	@rm -f corunner.log
+	$(PYTHON) $(CORUNNER) test-broken-no-such-parameter.json
+	@grep "parameter range contains nonexistent parameter name" corunner.log
+	@echo ..done
+	@echo ""
+
 cleanup:
 	@echo Cleaning up...
-	@rm -f results*
+	@rm -f corunner.log

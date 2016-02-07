@@ -59,6 +59,8 @@ def executeCopasi(runner):
     runner.isActive = False
     # disable this; do it from polling in the main thread instead
     #runner.job.checkIfHasTerminated()
+    # overwrite the .cps file with best parameter values
+    runner.cleanup()
 
 ################################################
 # Runner: manages execution of single COPASI instance
@@ -80,6 +82,9 @@ class Runner:
         self.startTime = None
         self.process = None
         self.currentCpuTime = 0.0
+        self.inputFilename = None
+        self.reportFilename = None
+        self.copasiFile = None
 
     def getFullName(self):
         return self.job.getFullName() + "/{} (method '{}')".format(
@@ -103,6 +108,7 @@ class Runner:
 
         self.inputFilename = os.path.join(dirname, "input_" + filename + ".cps")
         self.reportFilename = os.path.join(dirname, "output_" + filename + ".log")
+        self.copasiFile = copasiFile
         if not copasiFile.createCopy(self.inputFilename, self.reportFilename,
                                      self.job.params, [self.methodName], startParamValues):
             return False
@@ -165,7 +171,13 @@ class Runner:
         return result
 
     def cleanup(self):
-        pass
+        stats = self.getLastStats()
+        if stats.isValid:
+            # overwrite the input file with parameter values corresponding to the best result so far
+            paramsDict = dict(zip(self.job.params, stats.params))
+            self.copasiFile.createCopy(self.inputFilename, self.reportFilename,
+                                       self.job.params, [self.methodName],
+                                       paramsDict)
 
     def checkReport(self, hasTerminated, now):
         assert self.isActive

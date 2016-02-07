@@ -76,7 +76,7 @@ if not COPASI_DIR:
 else:
     COPASI_DIR = os.path.join(COPASI_DIR, "bin")
 
-CORUNNER_VERSION = "0.0.1 (c) 2016 http://biosystems.lv"
+CORUNNER_VERSION = "0.1.0 (c) 2016 http://biosystems.lv"
 
 LOG_FATAL = 0
 LOG_ERROR = 1
@@ -273,12 +273,12 @@ def getNonconvergedResults(filename):
         line = f.readline()
         columns = line.strip().split(",")
         n = (len(columns) - 4) // 2
-        paramNames = columns[4:4+n]
+        paramNames = columns[-n:]
         reader = csv.reader(f)
         for row in reader:
-            if row[3] != "CPU time limit":
+            if row[5] != "CPU time limit":
                 continue
-            paramsIncluded = [int(x) for i,x in enumerate(row) if 4 <= i < 4+n]
+            paramsIncluded = [int(x) for x in row[-n*2:n]]
             rowParamNames = [x for (i,x) in enumerate(paramNames) if paramsIncluded[i]]
             results.append(rowParamNames)
     return results

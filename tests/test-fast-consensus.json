@@ -9,8 +9,7 @@
     "parameters" : [
         {"type" : "explicit", "parameters" : ["GAPD"]}
     ],
-    "log" : {
-        "level" : 2,
-        "file" : "corunner.log"
+    "output" : {
+        "logfile" : "corunner.log"
     }
 }

@@ -29,12 +29,9 @@
 	"enable" : true,
 	"port" : 19000
     },
-    "log" : {
-        "level" : 2,
-        "file" : "corunner.log"
-    },
-    "results" : {
+    "output" : {
         "filename" : "results.csv",
+        "loglevel" : 2,
 	"numberOfBestCombinations" : 0
     },
     "taskName" : null

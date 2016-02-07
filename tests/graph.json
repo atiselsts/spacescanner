@@ -8,9 +8,5 @@
     "copasi" : {
         "modelFile" : "@SELF@/models/simple-6params.cps",
         "methods" : ["ParticleSwarm"],
-    },
-    "log" : {
-        "level" : 2,
-        "file" : "corunner-graph.log"
     }
 }

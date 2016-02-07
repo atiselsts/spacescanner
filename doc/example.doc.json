@@ -56,15 +56,11 @@
 	// http port number (default: 19000)
 	"port" : 19000
     },
-    "log" : {
-	// debug log level; from 0 to 4, higher means more messages (default: 2)
-        "level" : 2,
-	// debug log file name (default: "corunner.log")
-        "file" : "corunner.log"
-    },
-    "results" : {
+    "output" : {
 	// optimization results file name (default: "results-<taskname>-<datetime>.csv")
         "filename" : "results.csv",
+	// debug log level; from 0 to 4, higher means more messages (default: 2)
+        "loglevel" : 2,
 	// how many of the best parameter combinations to include in results for each number of parameters; 0 means unlimited (default: unlimited)
 	"numberOfBestCombinations" : 0
     },

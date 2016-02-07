@@ -12,9 +12,8 @@
         "methods" : ["GeneticAlgorithm", "EvolutionaryProgram", "GeneticAlgorithmSR", "EvolutionaryStrategySR", "ScatterSearch", "SimulatedAnnealing"]
     },
     "restartOnFile" : "@SELF@/processing/results-all.csv",
-    "log" : {
-        "level" : 3,
-        "file" : "corunner.log"
+    "output" : {
+        "loglevel" : 3
     },
     "web" : {
 	"enable" : false

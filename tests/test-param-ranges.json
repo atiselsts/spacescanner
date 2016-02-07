@@ -13,9 +13,8 @@
         {"type" : "greedy", "range" : [1, 2]},
         {"type" : "explicit", "parameters" : ["Hexokinase", "Phosphofructokinase", "Glucose in"]}
     ],
-    "log" : {
-        "level" : 2,
-        "file" : "corunner.log"
+    "output" : {
+        "logfile" : "corunner.log"
     },
     "testMode" : true
 }

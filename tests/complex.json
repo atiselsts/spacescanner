@@ -9,9 +9,5 @@
     "parameters" : [
         {"type" : "exhaustive", "range" : [1, 3]},
         {"type" : "greedy", "range" : [4, 8]}
-    ],
-    "log" : {
-        "level" : 2,
-        "file" : "corunner-complex.log"
-    }
+    ]
 }

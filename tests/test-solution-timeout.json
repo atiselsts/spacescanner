@@ -11,10 +11,9 @@
         "consensusAbsoluteError" : -1.0
     },
     "parameters" : [
-        {"type" : "all-parameters"}
+        {"type" : "all"}
     ],
-    "log" : {
-        "level" : 2,
-        "file" : "corunner.log"
+    "output" : {
+        "logfile" : "corunner.log"
     }
 }

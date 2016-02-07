@@ -338,8 +338,8 @@ class Job:
             bestStats = bestRunner.getLastStats()
 
         # OF value,CPU time,Job ID,Stop reason
-        f.write("{},{},{},{},{},".format(
-            bestOfValue, cpuTime, self.id,
+        f.write("{},{},{},{},{},{},".format(
+            bestOfValue, cpuTime, self.id, self.currentMethod,
             len(self.params), reasonToStr(terminationReason)))
 
         # which parameters are included

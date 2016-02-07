@@ -4,10 +4,13 @@
         "consensusMinDurationSec" : 5
     },
     "copasi" : {
-        "modelFile" : "@SELF@/tests/broken-bad-parameter.cps",
+        "modelFile" : "@SELF@/models/complex.cps",
         "methods" : ["ParticleSwarm"],
         "fallbackMethods" : []
     },
+    "parameters" : [
+        {"type" : "explicit", "parameters" : ["Nonexistent parameter", "Phosphofructokinase", "Hexokinase"]}
+    ],
     "output" : {
         "logfile" : "corunner.log"
     }

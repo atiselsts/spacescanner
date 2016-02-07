@@ -21,7 +21,7 @@
 # Author: Atis Elsts, 2016
 #
 
-import os, sys, json, multiprocessing
+import os, sys, shutil, json, multiprocessing
 from util import *
 
 ################################################
@@ -58,14 +58,13 @@ DEFAULT_CONFIG = {
 	"enable" : True,
         "port" : 19000
     },
-    "log" : {
-        "level" : 2,
-        "file" : "corunner.log"
-    },
-    "results" : {
-        "file" : "results.csv",
+    "output" : {
+        "filename" : "results.csv",
+        "loglevel" : 2,
+        "logfile" : None, # default "corunner.log" in the results directory
         "numberOfBestCombinations" : 0
     },
+    "restartOnFile" : None,
     "taskName" : None,
     # the rest are undocumented, for testing only
     "testMode" : False,
@@ -73,8 +72,11 @@ DEFAULT_CONFIG = {
 }
 
 config = DEFAULT_CONFIG
-
 configFileName = DEFAULT_CONFIG_FILE
+corunnerStartTime = None
+workDir = None
+taskName = None
+logFileName = None
 
 ################################################
 # Configuration file management
@@ -95,9 +97,12 @@ def getConfig(name, default = None, useHardcodedConfig = True):
         value, ok = get(path, DEFAULT_CONFIG)
     return value if ok else default
 
-def loadConfig():
+def loadConfig(filename):
     global config
     global configFileName
+
+    if filename:
+        configFileName = filename
 
     # load configuration
     try:
@@ -108,22 +113,79 @@ def loadConfig():
         log(LOG_ERROR, "<corunner>: exception occurred while loading configuration file: " + str(e))
         log(LOG_ERROR, "going to use the default configuration!\n")
 
-    # limit the number of runners to the number of CPU cores
+    # see if the number of runners is below the number of CPU cores
     numCores = multiprocessing.cpu_count()
-    config["maxConcurrentOptimizations"] = \
-        min(numCores, config.get("maxConcurrentOptimizations", numCores))
+    numMaxRuns = int(getConfig("optimization.maxConcurrentRuns", numCores))
+    if numMaxRuns > numCores:
+        log(LOG_INFO, "warning: reducing the number of maximal concurrent optimizations rune to the number of CPU cores: {}".format(numCores))
+        config["optimization"]["maxConcurrentRuns"] = numCores
 
 ################################################
 # Logging
 
 def log(loglevel, msg):
-    if loglevel <= int(getConfig("log.level", 1)):
+    if loglevel <= int(getConfig("output.loglevel", 2)):
         msg += "\n"
         sys.stderr.write(msg)
-        with open(getConfig("log.file"), "a+") as f:
-            f.write(msg)
+        if logFileName is not None:
+            with open(logFileName, "a+") as f:
+                f.write(msg)
 
 ################################################
-# Other variables
+# Startup
 
-corunnerStartTime = None
+def prepare():
+    global workDir
+    global taskName
+    global corunnerStartTime
+    global logFileName
+
+    corunnerStartTime = getCurrentTime()
+
+    loadConfig(sys.argv[1] if len(sys.argv) > 1 else None)
+
+    if not getConfig("copasi.methods"):
+        log(LOG_ERROR, "cannot execute optimizations: no methods defined in CoRunner configuration file")
+        return False
+
+    dirname = os.path.join(SELF_PATH, "results")
+    try:
+        os.mkdir(dirname)
+    except:
+        pass
+
+    taskName = getConfig("taskName")
+    if not taskName:
+        taskName = os.path.splitext(os.path.basename(getConfig("copasi.modelFile")))[0]
+    taskName += "-" + corunnerStartTime
+
+    workDir = os.path.join(dirname, taskName)
+    try:
+        os.mkdir(workDir)
+    except:
+        pass
+
+    if getConfig("output.logfile", None):
+        logFileName = getConfig("output.logfile")
+    else:
+        logFileName = os.path.join(workDir, "corunner.log")
+
+    # update the log file
+    with open(logFileName, "a+") as f:
+        f.write("============= ")
+        f.write(corunnerStartTime)
+        f.write("\n")
+
+    try:
+        # copy the used configuration file as a reference
+        shutil.copyfile(configFileName, os.path.join(workDir, "config.json"))
+    except:
+        # the file probably does not exist; print a warning
+        log(LOG_INFO, "failed to copy CoRunner configuration file to " + workDir)
+
+    if isCygwin():
+        # remove the first part from the path and normalize it to make Copasi happy
+        workDir = os.path.normpath(os.path.join(CYGWIN_DIR, workDir[1:]))
+
+    log(LOG_INFO, "<corunner>: working directory is " + workDir)
+    return True

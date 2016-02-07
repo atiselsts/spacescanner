@@ -6,15 +6,15 @@
     },
     "copasi" : {
         "modelFile" : "@SELF@/models/simple-6params.cps",
-        "methods" : ["ParticleSwarm"],
+        "methods" : ["GeneticAlgorithm"],
         "fallbackMethods" : []
     },
     "parameters" : [
 	{"type" : "explicit", "parameters" : ["Pyruvate kinase"]},
 	{"type" : "explicit", "parameters" : ["Glucose in"]}
     ],
-    "log" : {
-        "level" : 3,
-        "file" : "corunner.log"
+    "output" : {
+        "logfile" : "corunner.log",
+	"loglevel" : 3
     }
 }

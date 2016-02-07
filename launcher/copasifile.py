@@ -309,7 +309,7 @@ class CopasiFile:
                     outf.write('        ' + predefinedMethod)
 
         # finish off
-        outf.write('  </Task>\n')
+        outf.write('\n  </Task>\n')
 
 
     def createCopy(self, configFilename, reportFilename, parameters, methods, startParamValues):

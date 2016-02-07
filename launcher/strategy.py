@@ -22,7 +22,7 @@
 #
 
 import os, sys, time, copy, itertools, random, math
-import threading, shutil, atexit, tempfile
+import threading, atexit, tempfile
 
 from util import *
 import g
@@ -83,7 +83,7 @@ class ParamSelection(object):
                 g.log(LOG_ERROR, "parameter selection ranges must contain numbers in the range [1 .. n]")
                 return None
 
-        if specification["type"] == "all-parameters":
+        if specification["type"] == "all":
             x = ParamSelectionAll(strategy)
         elif specification["type"] == "explicit":
             # use a singleton instance
@@ -91,7 +91,14 @@ class ParamSelection(object):
                 ParamSelection.instanceOfExplicit = ParamSelectionExplicit(strategy)
             x = ParamSelection.instanceOfExplicit
             if specification.get("parameters"):
-                x.explicitParameterSets.append(["'" + p + "'" for p in specification["parameters"]])
+                names = []
+                for p in specification["parameters"]:
+                    p = "'" + p + "'"
+                    if p not in strategy.copasiConfig["params"]:
+                        g.log(LOG_ERROR, "'explicit' parameter range contains nonexistent parameter name {}".format(p))
+                        return None
+                    names.append(p)
+                x.explicitParameterSets.append(names)
             else:
                 g.log(LOG_ERROR, "'explicit' parameter range must contain a list of parameter names")
                 return None
@@ -144,11 +151,12 @@ class ParamSelectionExhaustive(ParamSelection):
     def getParameterSets(self):
         # optimize all combinations of k parameters
         step = -1 if self.isReverse else 1
+        paramCombinations = []
         for k in range(self.start, self.end + step, step):
-            paramCombinations = []
             for it in itertools.combinations(self.allParameters, k):
                 paramCombinations.append(list(it))
-            yield paramCombinations
+        # return all of them at once
+        yield paramCombinations
 
     def getNumCombinations(self):
         r = 0
@@ -217,33 +225,6 @@ class StrategyManager:
         pass
        
     def prepare(self):
-        dirname = os.path.join(SELF_PATH, "results")
-        try:
-            os.mkdir(dirname)
-        except:
-            pass
-
-        self.taskName = g.getConfig("taskName")
-        if not self.taskName:
-            self.taskName = os.path.splitext(os.path.basename(g.getConfig("copasi.modelFile")))[0]
-        self.taskName += "-" + g.corunnerStartTime
-        self.workDir = os.path.join(dirname, self.taskName)
-        try:
-            os.mkdir(self.workDir)
-        except:
-            pass
-
-        try:
-            # copy the used configuration file as a reference
-            shutil.copyfile(g.configFileName, os.path.join(self.workDir, "config.json"))
-        except:
-            pass # assume the file does not exist; print a warning?
-
-        if isCygwin():
-            # remove the first part from the path and normalize it to make Copasi happy
-            self.workDir = os.path.normpath(os.path.join(CYGWIN_DIR, self.workDir[1:]))
-
-        g.log(LOG_INFO, "<corunner>: working directory is " + self.workDir)
         atexit.register(self.cleanup, self)
 
         self.jobLock = threading.Lock()
@@ -272,21 +253,25 @@ class StrategyManager:
         if self.copasiConfig is not None and self.copasiConfig.get("params"):
             self.dumpResults()
         time.sleep(0.01)
+        isUnfinished = False
         with self.jobLock:
             if self.activeJobPool is not None:
-                self.activeJobPool.cleanup()
+                isUnfinished = self.activeJobPool.cleanup()
                 self.activeJobPool = None
+        if isUnfinished:
+            sys.stderr.write("<corunner>: some jobs still running, waiting for cleanup...\n")
+            time.sleep(2.0)
 
 
     def dumpResults(self):
-        filename = g.getConfig("results.file")
+        filename = g.getConfig("output.filename")
         # do not allow put the results in other directories because of security reasons
         if filename != os.path.basename(filename):
             g.log(LOG_INFO, "output file name should not include path, ignoring all but the last element in it")
             filename = os.path.basename(filename)
         (name, ext) = os.path.splitext(filename)
-        filename = name + "-" + self.taskName + ext
-        filename = os.path.join(self.workDir, filename)
+        filename = name + "-" + g.taskName + ext
+        filename = os.path.join(g.workDir, filename)
 
         with self.jobLock:
             if len(self.finishedJobs) <= self.lastNumJobsDumped:
@@ -295,7 +280,7 @@ class StrategyManager:
             self.lastNumJobsDumped = len(self.finishedJobs)
 
         allJobsByBestOfValue = []
-        numberOfBestCombinations = int(g.getConfig("results.numberOfBestCombinations"))
+        numberOfBestCombinations = int(g.getConfig("output.numberOfBestCombinations"))
         for joblist in self.jobsByBestOfValue:
             if numberOfBestCombinations:
                 lst = joblist[:numberOfBestCombinations]
@@ -315,8 +300,10 @@ class StrategyManager:
 
 
     def dumpCsvFileHeader(self, f):
-        f.write("OF value,CPU time,Job ID,Number of parameters,Stop reason,")
-        f.write(",".join([x.strip("'") for x in self.copasiConfig["params"]] * 2))
+        f.write("OF value,CPU time,Job ID,Method,Number of parameters,Stop reason,")
+        paramNames = [x.strip("'") for x in self.copasiConfig["params"]]
+        f.write(",".join([x + " included" for x in paramNames]))
+        f.write("," + ",".join(paramNames))
         f.write("\n")
 
 
@@ -417,7 +404,7 @@ class StrategyManager:
         else:
             # add the default optimization target: all parameters
             g.log(LOG_INFO, "optimizing only for all parameters")
-            spec = {"type" : "all-parameters"}
+            spec = {"type" : "all"}
             parameterSelections.append(ParamSelection.create(spec, self))
 
         numCombinations = 0

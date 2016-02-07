@@ -10,9 +10,8 @@
         {"type" : "exhaustive", "range" : [1, 2]},
         {"type" : "greedy", "range" : [3, 4]}
     ],
-    "log" : {
-        "level" : 3,
-        "file" : "corunner-debug.log"
+    "output" : {
+        "loglevel" : 3
     },
     "web" : {
 	"enable" : false
