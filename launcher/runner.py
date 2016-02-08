@@ -21,7 +21,7 @@
 # Author: Atis Elsts, 2016
 #
 
-import os, sys, time, copy, random, threading
+import os, sys, time, copy, random, threading, psutil
 
 from util import *
 import g
