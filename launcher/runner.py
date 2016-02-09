@@ -237,6 +237,12 @@ class Runner:
 
         if not hasTerminated and not self.terminationReason:
             g.log(LOG_DEBUG, "checked {}, CPU time: {}".format(self.getName(), self.currentCpuTime))
+            # XXX: reuse consensus time for this
+            maxTimeWithNoValue = float(g.getConfig("optimization.consensusMinDurationSec"))
+            if now - self.startTime > maxTimeWithNoValue and \
+               (not self.stats.isValid or self.ofValue == MIN_OF_VALUE):
+                g.log(LOG_DEBUG, "terminating {}, CPU time: {}".format(self.getName(), self.currentCpuTime))
+                self.terminationReason = TERMINATION_REASON_CPU_TIME_LIMIT
 
 
 ################################################
@@ -250,7 +256,7 @@ class StatsItem:
         self.isValid = True
         self.params = []
         self.cpuTime = 0.0
-        self.ofValue = 0.0
+        self.ofValue = MIN_OF_VALUE
         self.numOfEvaluations = 0
         self.maxRealPart = 0.0
         line = line.strip()
@@ -269,8 +275,8 @@ class StatsItem:
             if math.isnan(self.ofValue) or \
                    (math.isinf(self.ofValue) and self.ofValue > 0.0):
                 # XXX: something went wrong, what's the best action?
-                g.log(LOG_ERROR, "invalid objective function value {}, using 0.0 instead".format(self.ofValue))
-                self.ofValue = 0.0
+                g.log(LOG_ERROR, "invalid objective function value {}, using -infinity instead".format(self.ofValue))
+                self.ofValue = MIN_OF_VALUE
             self.numOfEvaluations = int(numbers[2])
             self.maxRealPart = float(numbers[-1])
             # param value list starts with "(", finishes with ")"
