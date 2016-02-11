@@ -239,7 +239,7 @@ class Runner:
             g.log(LOG_DEBUG, "checked {}, CPU time: {}".format(self.getName(), self.currentCpuTime))
             # XXX: reuse consensus time for this
             maxTimeWithNoValue = float(g.getConfig("optimization.consensusMinDurationSec")) + 10.0
-            if now - self.startTime > maxTimeWithNoValue and \
+            if self.job.timeDiffExceeded(now - self.startTime, maxTimeWithNoValue) and \
                (not self.stats.isValid or self.ofValue == MIN_OF_VALUE):
                 g.log(LOG_DEBUG, "terminating {}: no value found in CPU time: {}".format(self.getName(), self.currentCpuTime))
                 self.terminationReason = TERMINATION_REASON_CPU_TIME_LIMIT

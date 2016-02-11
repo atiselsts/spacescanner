@@ -57,6 +57,7 @@ class Job:
         # XXX: note that the number of free cores can increase during job's
         # lifetime, but the code will not react to that, keeping maxCores constant
         self.maxCores = maxCores
+        self.loadBalanceFactor = float(g.getConfig("optimization.runsPerJob")) / maxCores
 
     def getFullName(self):
         return "job {} (optimization parameters: ".format(self.id) + " ".join(self.params) + ")"
@@ -99,13 +100,16 @@ class Job:
 
         return True
 
+    def timeDiffExceeded(self, measuredDiff, requiredDiff):
+        return measuredDiff > requiredDiff * self.loadBalanceFactor
+
     def checkReports(self):
         # if no runners are active, quit
         if not any([r.isActive for r in self.runners]):
             if self.convergenceTime is not None:
                 minAbsoluteTime = float(g.getConfig("optimization.consensusMinDurationSec"))
                 # XXX: do not check the relative time here
-                if self.hasConsensus() and time.time() - self.convergenceTime > minAbsoluteTime:
+                if self.hasConsensus() and timeDiffExceeded(time.time() - self.convergenceTime, minAbsoluteTime):
                     # count COPASI termination as consensus in this case
                     # XXX: note that this does *not* overwrite "time limit exceeded" exit code!
                     for r in self.runners:
@@ -160,7 +164,7 @@ class Job:
                 timeConverged = time.time() - self.convergenceTime
                 minAbsoluteTime = float(g.getConfig("optimization.consensusMinDurationSec"))
                 minRelativeTime = (time.time() - self.startTime) * float(g.getConfig("optimization.consensusMinProportionalDuration"))
-                if timeConverged >= minAbsoluteTime and timeConverged >= minRelativeTime:
+                if timeDiffExceeded(timeConverged, minAbsoluteTime) and timeConverged > minRelativeTime:
                     g.log(LOG_INFO, "terminating {}: consensus reached".format(self.getName()))
                     for r in self.runners:
                         if r.isActive:
