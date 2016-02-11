@@ -69,11 +69,14 @@ class JobPool:
             return
         self.strategy.startedJobs.add(hash)
 
+        numFreeCores = self.numUsableCores
         with self.jobLock:
-            numFreeCores = max(1, self.numUsableCores - len(self.activeJobs) * self.numRunnersPerJob)
+            for j in self.activeJobs:
+                numFreeCores -= j.maxCores
+        numFreeCores = max(1, numFreeCores)
 
         # setup a new job
-        j = job.Job(self, params, numFreeCores)
+        j = job.Job(self, params, min(numFreeCores, self.numRunnersPerJob))
 
         # add it to the list of active jobs
         with self.jobLock:

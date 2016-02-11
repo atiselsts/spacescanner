@@ -37,7 +37,7 @@ LOAD_BALANCE_INTERVAL = 10.0 # seconds
 class Job:
     nextJobID = itertools.count(1)
 
-    def __init__(self, pool, params, numFreeCores):
+    def __init__(self, pool, params, maxCores):
         self.pool = pool
         self.params = params
         self.id = Job.nextJobID.next()
@@ -56,7 +56,7 @@ class Job:
         self.lastBalanceTime = self.startTime - LOAD_BALANCE_INTERVAL
         # XXX: note that the number of free cores can increase during job's
         # lifetime, but the code will not react to that, keeping maxCores constant
-        self.maxCores = numFreeCores
+        self.maxCores = maxCores
 
     def getFullName(self):
         return "job {} (optimization parameters: ".format(self.id) + " ".join(self.params) + ")"
