@@ -109,7 +109,7 @@ class Job:
             if self.convergenceTime is not None:
                 minAbsoluteTime = float(g.getConfig("optimization.consensusMinDurationSec"))
                 # XXX: do not check the relative time here
-                if self.hasConsensus() and timeDiffExceeded(time.time() - self.convergenceTime, minAbsoluteTime):
+                if self.hasConsensus() and self.timeDiffExceeded(time.time() - self.convergenceTime, minAbsoluteTime):
                     # count COPASI termination as consensus in this case
                     # XXX: note that this does *not* overwrite "time limit exceeded" exit code!
                     for r in self.runners:
@@ -164,7 +164,7 @@ class Job:
                 timeConverged = time.time() - self.convergenceTime
                 minAbsoluteTime = float(g.getConfig("optimization.consensusMinDurationSec"))
                 minRelativeTime = (time.time() - self.startTime) * float(g.getConfig("optimization.consensusMinProportionalDuration"))
-                if timeDiffExceeded(timeConverged, minAbsoluteTime) and timeConverged > minRelativeTime:
+                if self.timeDiffExceeded(timeConverged, minAbsoluteTime) and timeConverged > minRelativeTime:
                     g.log(LOG_INFO, "terminating {}: consensus reached".format(self.getName()))
                     for r in self.runners:
                         if r.isActive:
