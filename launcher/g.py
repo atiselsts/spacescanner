@@ -50,7 +50,7 @@ DEFAULT_CONFIG = {
         "runsPerJob" : 2
     },
     "parameters" : [
-        {"type" : "all-parameters"}, # include all parameters
+        {"type" : "all"}, # include all parameters
         {"type" : "exhaustive", "range" : [1, 3]}, # from 1 to 3
         {"type" : "greedy", "range" : [4, 8]}    # from 4 to 8
     ],
