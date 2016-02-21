@@ -272,13 +272,13 @@ def getNonconvergedResults(filename):
     with open(filename) as f:
         line = f.readline()
         columns = line.strip().split(",")
-        n = (len(columns) - 4) // 2
+        n = (len(columns) - 6) // 2
         paramNames = columns[-n:]
         reader = csv.reader(f)
         for row in reader:
             if row[5] != "CPU time limit":
                 continue
-            paramsIncluded = [int(x) for x in row[-n*2:n]]
+            paramsIncluded = [int(x) for x in row[-n*2:-n]]
             rowParamNames = [x for (i,x) in enumerate(paramNames) if paramsIncluded[i]]
             results.append(rowParamNames)
     return results
