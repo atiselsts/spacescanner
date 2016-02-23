@@ -122,9 +122,9 @@ class JobPool:
                 return False
         return self.currentParametersIndex >= len(self.parameterSets)
 
-    def getJobLists(self):
+    def getJobList(self):
         with self.jobLock:
-            return [x.id for x in self.activeJobs]
+            return copy.copy(self.activeJobs)
 
     def cleanup(self):
         isUnfinished = False

@@ -44,27 +44,6 @@ import process
 import strategy
 
 ################################################
-
-class StatsManager:
-    @staticmethod
-    def getResourceList(qs):
-        reply = {}
-        reply["methods"] = g.getConfig("copasi.methods")
-        reply["parameters"] = strategy.manager.copasiConfig["params"]
-        (active, finished) = strategy.manager.getJobLists()
-        reply["activeJobs"] = active
-        reply["finishedJobs"] = finished
-        return reply
-
-    @staticmethod
-    def getResource(qs, resourceName):
-        try:
-            id = int(resourceName)
-        except:
-            return {"error" : "invalid resource ID"}
-        return strategy.manager.getJobStats(id)
-
-################################################
 # Execute the web server (in a separate thread)
 
 def executeWebserver(args):
@@ -72,7 +51,7 @@ def executeWebserver(args):
         port = int(g.getConfig("web.port"))
         g.log(LOG_INFO, "<corunner>: starting webserver, port: " + str(port))
         server = webserver.InterruptibleHTTPServer(('', port), webserver.HttpServerHandler)
-        server.statsManager = StatsManager()
+#        server.statsManager = StatsManager()
         # report ok and enter the main loop
         g.log(LOG_DEBUG, "<corunner>: webserver started, listening to port {}".format(port))
         server.serve_forever()
@@ -85,27 +64,54 @@ def executeWebserver(args):
 
 
 ################################################
-# Execute the application
 
-def main():
-    if not g.prepare():
-        return -1
+def start(configFileName, doAsync, fromWeb):
+    if not g.prepare(configFileName):
+        return None
 
     # read COPASI model file etc.
-    if not strategy.manager.prepare():
-        return -1
+    strategyManager = strategy.StrategyManager()
+    if not strategyManager.prepare():
+        return None
 
     # start the web server
-    if bool(g.getConfig("web.enable")):
+    if not fromWeb and  bool(g.getConfig("web.enable")):
         process.createBackgroundThread(executeWebserver, None)
 
     # start the selected parameter sweep strategy
-    strategy.manager.execute()
+    if doAsync:
+        process.createBackgroundThread(lambda s: s.execute(), strategyManager)
+    else:
+        strategyManager.execute()
+
+    return strategyManager
+
+
+################################################
+# Should replace this with daemonization
+
+def wait():
+    while True:
+        time.sleep(1)
+
+################################################
+# Execute the application
+
+def main():
+    # web-only mode
+    if len(sys.argv) > 1 and sys.argv[1] == "web":
+        # start the web server (XXX: comnfigurable port number?)
+        process.createBackgroundThread(executeWebserver, None)
+        wait()
+        return 0
+
+    # normal mode
+    if not start(sys.argv[1] if len(sys.argv) > 1 else None, doAsync = False, fromWeb = False):
+        return -1
 
     # if "hang" mode is configured, do not quit until Ctrl+C is pressed
     if bool(g.getConfig("hangMode")):
-        while True:
-            time.sleep(1)
+        wait()
 
     return 0
 

@@ -282,3 +282,8 @@ def getNonconvergedResults(filename):
             rowParamNames = [x for (i,x) in enumerate(paramNames) if paramsIncluded[i]]
             results.append(rowParamNames)
     return results
+
+def jsonFixInfinity(x, defaultValue):
+    if math.isnan(x) or math.isinf(x):
+        return defaultValue
+    return x

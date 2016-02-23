@@ -35,6 +35,8 @@ else:
     from SocketServer import *
     from urlparse import *
 
+import corunner
+
 ################################################
 
 # Note: this is a single-threaded server, to keep things simple!
@@ -47,6 +49,7 @@ class InterruptibleHTTPServer(HTTPServer):
         if not hasattr(self, '_BaseServer__shutdown_request'):
             self._BaseServer__shutdown_request = False
         InterruptibleHTTPServer.serverInstance = self
+        self.strategyManager = None
 
     # Overrides BaseServer function to get a better control over interrupts
     def serve_forever(self, poll_interval = 0.5):
@@ -96,6 +99,17 @@ class HttpServerHandler(BaseHTTPRequestHandler):
     def end(self):
         self.wfile.close()
 
+    def saveInFile(self, contents, filename):
+        dirname = os.path.join(SELF_PATH, "tmpweb")
+        try:
+            os.mkdir(dirname)
+        except:
+            pass
+        filename = os.path.join(dirname, filename)
+        with open(filename, "w") as f:
+            f.write(contents.encode("UTF-8"))
+        return filename
+
     def sendDefaultHeaders(self, contents, isJSON = True):
         if isJSON:
             self.send_header('Content-Type', 'application/json')
@@ -107,10 +121,9 @@ class HttpServerHandler(BaseHTTPRequestHandler):
         if contents != None:
             self.send_header('Content-Length', len(contents))
 
-    def serveError(self, qs):
-        contents = ""
-        self.send_response(404)
-        self.sendDefaultHeaders(contents)
+    def serveError(self, qs, code=404, message=""):
+        self.send_response(code)
+        self.sendDefaultHeaders(message)
         self.end_headers()
         self.end()
 
@@ -118,15 +131,27 @@ class HttpServerHandler(BaseHTTPRequestHandler):
         self.wfile.write(toBytes(response))
         self.end()
 
-    def processGet(self, path, qs):
+    def do_GET(self):
+        o = urlparse(self.path)
+        qs = parse_qs(o.query)
+
         isJSON = True
-        sm = InterruptibleHTTPServer.serverInstance.statsManager
-        if path == '/status' or path == "/":
-            response = sm.getResourceList(qs)
-        elif path[:7] == '/latest':
-            response = sm.getResource(qs, None)
-        elif path[:5] == '/jobs':
-            response = sm.getResource(qs, path[6:])
+        sm = InterruptibleHTTPServer.serverInstance.strategyManager
+        if o.path == '/status' or o.path == "/":
+            # all jobs
+            response = sm.ioGetJobList(qs)
+        elif o.path[:4] == '/job':
+            # specific job
+            response = sm.ioGetJob(qs, o.path[5:])
+        elif o.path[:7] == '/config':
+            response = sm.ioGetConfig(qs)
+        elif o.path[:8] == '/results':
+            response = sm.ioGetResults(qs)
+            isJSON = False # the results are in .csv format
+        elif o.path == '/stopall':
+            response = sm.ioStopAll(qs)
+        elif o.path[:5] == '/stop':
+            response = sm.ioStop(qs, o.path[6:])
         else:
             self.serveError(qs)
             return
@@ -141,16 +166,59 @@ class HttpServerHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.serveBody(response, qs)
 
-    def do_GET(self):
-        o = urlparse(self.path)
-        qs = parse_qs(o.query)
+    def postModel(self, qs):
+        contentLength = int(self.headers.get('content-length', 0))
+        received = self.rfile.read(contentLength).decode("utf-8")
 
-        self.processGet(o.path, qs)
+        # error if running
+        sm = InterruptibleHTTPServer.serverInstance.strategyManager
+        if sm is not None and sm.isActive():
+            return self.serveError(qs, 503, "Already running")
+
+        # write the model
+        filename = self.saveInFile(received, "model.cps")
+
+        self.respondToPost(200, filename, False) # these req/resp are not in json format
+
+    def postConfig(self, qs):
+        contentLength = int(self.headers.get('content-length', 0))
+        received = self.rfile.read(contentLength).decode("utf-8")
+
+        # error if running
+        sm = InterruptibleHTTPServer.serverInstance.strategyManager
+        if sm is not None and sm.isActive():
+            return self.serveError(qs, 503, "Already running")
+
+        # else start running
+        filename = self.saveInFile(received, "config.json")
+        sm = corunner.start(
+            filename, doAsync = True, fromWeb = True)
+        if sm is None:
+            return self.serveError(qs, 500, "Cannot start CoRunner optimizations")
+
+        InterruptibleHTTPServer.serverInstance.strategyManager = sm
+        self.respondToPost(200, {"status" : "OK"}, True)
+
+    def respondToPost(self, code, response, isJSON):
+        print("respond to post:")
+        print(response)
+        if isJSON:
+            response = ENC.encode(response)
+        self.send_response(200)
+        self.sendDefaultHeaders(response, isJSON)
+        self.end_headers()
+        self.serveBody(response, qs = {})
 
     def do_POST(self):
         o = urlparse(self.path)
         qs = parse_qs(o.query)
-        self.serveError(qs)
+   
+        if o.path == "/model":
+            self.postModel(qs)
+        elif o.path == "/start":
+            self.postConfig(qs)
+        else:
+            self.serveError(qs)
 
     def do_OPTIONS(self):
         self.send_response(200)

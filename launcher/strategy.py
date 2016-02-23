@@ -231,8 +231,11 @@ class StrategyManager:
         self.activeJobPool = None
         self.finishedJobs = {}
         self.startedJobs = set()
+        self.doQuitFlag = False
 
         self.lastNumJobsDumped = 0
+        # job counter, starting from 1
+        self.nextJobID = itertools.count(1)
 
         self.copasiConfig = None
         self.copasiFile = self.loadCopasiFile()
@@ -247,9 +250,13 @@ class StrategyManager:
         self.jobsByBestOfValue = [[] for _ in range(1 + len(self.copasiConfig["params"]))]
         return True
 
+    def isActive(self):
+        with self.jobLock:
+            return self.activeJobPool is not None
 
     def cleanup(self, args):
         sys.stderr.write("<corunner>: quitting...\n")
+        self.doQuitFlag = True
         if self.copasiConfig is not None and self.copasiConfig.get("params"):
             self.dumpResults()
         time.sleep(0.01)
@@ -263,7 +270,7 @@ class StrategyManager:
             time.sleep(2.0)
 
 
-    def dumpResults(self):
+    def dumpResults(self, totalLimit = 0, perParamLimit = 0):
         filename = g.getConfig("output.filename")
         # do not allow put the results in other directories because of security reasons
         if filename != os.path.basename(filename):
@@ -276,11 +283,14 @@ class StrategyManager:
         with self.jobLock:
             if len(self.finishedJobs) <= self.lastNumJobsDumped:
                 # all finished jobs already were saved, nothing to do
-                return
+                return filename
             self.lastNumJobsDumped = len(self.finishedJobs)
 
         allJobsByBestOfValue = []
-        numberOfBestCombinations = int(g.getConfig("output.numberOfBestCombinations"))
+        if perParamLimit == 0:
+            numberOfBestCombinations = int(g.getConfig("output.numberOfBestCombinations"))
+        else:
+            numberOfBestCombinations = perParamLimit
         for joblist in self.jobsByBestOfValue:
             if numberOfBestCombinations:
                 lst = joblist[:numberOfBestCombinations]
@@ -292,12 +302,17 @@ class StrategyManager:
 
         allParams = self.copasiConfig["params"]
 
+        cnt = 0
         with open(filename, "w") as f:
             self.dumpCsvFileHeader(f)
             for job in allJobsByBestOfValue:
                 job.dumpResults(f, allParams)
-        g.log(LOG_INFO, '<corunner>: results of finished jobs saved in "' + filename + '"')
+                cnt += 1
+                if totalLimit and cnt >= totalLimit:
+                    break
 
+        g.log(LOG_INFO, '<corunner>: results of finished jobs saved in "' + filename + '"')
+        return filename
 
     def dumpCsvFileHeader(self, f):
         f.write("OF value,CPU time,Job ID,Method,Number of parameters,Stop reason,")
@@ -352,18 +367,23 @@ class StrategyManager:
         return joblist[0].params
 
 
-    def getJobLists(self):
+    def ioGetJobList(self, qs):
+        response = []
         with self.jobLock:
-            #finished = [x.id for x in self.jobsByBestOfValue]
-            finished = self.finishedJobs.keys()
-            if self.activeJobPool is None:
-                active = []
-            else:
-                active = self.activeJobPool.getJobLists()
-        return (active, finished)
+            for id in self.finishedJobs:
+                response.append(self.finishedJobs[id].getStatsBrief())
+            if self.activeJobPool:
+                with self.activeJobPool.jobLock:
+                    for job in self.activeJobPool.activeJobs:
+                        response.append(job.getStatsBrief())
+        return response
 
 
-    def getJobStats(self, id):
+    def ioGetJob(self, qs, name):
+        try:
+            id = int(name)
+        except:
+            return {"error" : "invalid job ID"}
         job = None
         with self.jobLock:
             if id in self.finishedJobs:
@@ -374,7 +394,53 @@ class StrategyManager:
         if job is None:
             return {"error" : "job with ID {} not found".format(id)}
 
-        return job.getStats()
+        return job.getStatsFull()
+
+
+    def ioGetConfig(self, qs):
+        return g.config
+
+
+    def ioGetResults(self, qs):
+        totalLimit = int(qs.get("totallimit", 0))
+        perParamLimit = int(qs.get("perparamlimit", 0))
+        filename = self.dumpResults(totalLimit, perParamLimit)
+        contents = ""
+        try: 
+            with open(filename) as f:
+                contents = f.read()
+        except IOError as e:
+            g.log(LOG_DEBUG, "failed to read result .csv file " + filename)
+
+        return contents
+
+
+    def ioStop(self, qs, name):
+        try:
+            id = int(name)
+        except:
+            return {"error" : "invalid job ID"}
+
+        job = None
+        with self.jobLock:
+            if id in self.finishedJobs:
+                job = self.finishedJobs[id]
+            else:
+                if self.activeJobPool is not None:
+                    job = self.activeJobPool.findJob(id)
+        if job is None:
+            return {"error" : "job with ID {} not found".format(id)}
+        job.cleanup()
+        return {"status" : "OK"}
+
+
+    def ioStopAll(self, qs):
+        self.doQuitFlag = True
+        with self.jobLock:
+            if self.activeJobPool is not None:
+                self.activeJobPool.cleanup()
+                self.activeJobPool = None
+        return {"status" : "OK"}
 
 
     def finishActivePool(self):
@@ -425,13 +491,11 @@ class StrategyManager:
                 pool.start()
                 while True:
                     time.sleep(1.0)
+                    if self.doQuitFlag:
+                        return True
                     pool.refresh()
                     if pool.isDepleted():
                         self.finishActivePool()
-                        break
+                        break               
 
         return True
-
-
-####################################
-manager = StrategyManager()

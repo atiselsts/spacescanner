@@ -38,10 +38,17 @@ reportLock = threading.Lock()
 def executeCopasi(runner):
     # a pseudo-loop for simpler error handling
     while True:
-        if bool(g.getConfig("testMode")):
-            time.sleep(1.0)
-            runner.ofValue = random.random() * 100
-            runner.isActive = False
+        if bool(g.getConfig("webTestMode")):
+            if runner.job.id < 3:
+                time.sleep(1.0)
+                runner.ofValue = random.random() * 100
+                runner.isActive = False
+            else:
+                # wait for the strategy to quit
+                while not runner.job.pool.strategy.doQuitFlag:
+                    time.sleep(1.0)
+                    runner.ofValue += random.random()
+                runner.isActive = False
             break
 
         g.log(LOG_DEBUG, "executing " + " ".join(runner.process.args))
@@ -154,20 +161,25 @@ class Runner:
 
     def getAllStats(self):
         result = []
-        with open(self.reportFilename, "r") as f:
-            inValues = False
-            for line in f:
-                if startsWith(line, "CPU time"):
-                    inValues = True
-                    continue
-                if not inValues: continue
+        try:
+            with open(self.reportFilename, "r") as f:
+                inValues = False
+                for line in f:
+                    if startsWith(line, "CPU time"):
+                        inValues = True
+                        continue
+                    if not inValues: continue
 
-                if startsWith(line, "Optimization Result"):
-                    break
+                    if startsWith(line, "Optimization Result"):
+                        break
 
-                si = StatsItem(line)
-                if si.isValid:
-                    result.append(si)
+                    si = StatsItem(line)
+                    if si.isValid:
+                        result.append(si)
+
+        except IOError as e:
+            g.log(LOG_DEBUG, "failed to read a report file " + self.reportFilename)
+
         return result
 
     def cleanup(self):

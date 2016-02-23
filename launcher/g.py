@@ -104,6 +104,8 @@ def loadConfig(filename):
     if filename:
         configFileName = filename
 
+    print("load config from file " + configFileName)
+
     # load configuration
     try:
         with open(configFileName, "r") as f:
@@ -134,7 +136,7 @@ def log(loglevel, msg):
 ################################################
 # Startup
 
-def prepare():
+def prepare(configFileName):
     global workDir
     global taskName
     global corunnerStartTime
@@ -142,7 +144,7 @@ def prepare():
 
     corunnerStartTime = getCurrentTime()
 
-    loadConfig(sys.argv[1] if len(sys.argv) > 1 else None)
+    loadConfig(configFileName)
 
     if not getConfig("copasi.methods"):
         log(LOG_ERROR, "cannot execute optimizations: no methods defined in CoRunner configuration file")

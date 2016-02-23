@@ -21,7 +21,7 @@
 # Author: Atis Elsts, 2016
 #
 
-import os, sys, time, copy, random, math, threading, itertools
+import os, sys, time, copy, random, math, threading
 
 from util import *
 import g
@@ -35,12 +35,10 @@ LOAD_BALANCE_INTERVAL = 10.0 # seconds
 # May switch over to different optimization methods if the current method fails to reach consensus.
 
 class Job:
-    nextJobID = itertools.count(1)
-
     def __init__(self, pool, params, maxCores):
         self.pool = pool
         self.params = params
-        self.id = Job.nextJobID.next()
+        self.id = pool.strategy.nextJobID.next()
         self.methods = copy.copy(g.getConfig("copasi.methods"))
         assert len(self.methods)
         self.fallbackMethods = copy.copy(g.getConfig("copasi.fallbackMethods"))
@@ -317,13 +315,16 @@ class Job:
                 isUnfinished = True
         return isUnfinished
 
-    def dumpResults(self, f, allParams):
+    def getStatus(self):
         cpuTime = 0
         terminationReason = TERMINATION_REASON_MAX
         bestRunner = None
         bestOfValue = MIN_OF_VALUE
+        isTerminated = True
 
         for r in self.runners:
+            if r.isActive:
+                isTerminated = False
             terminationReason = min(terminationReason, r.terminationReason)
             cpuTime += r.currentCpuTime
             if bestOfValue < r.ofValue:
@@ -340,6 +341,11 @@ class Job:
         bestStats = None
         if bestRunner is not None and bestRunner.getLastStats().isValid:
             bestStats = bestRunner.getLastStats()
+
+        return (bestOfValue, bestStats, cpuTime, isTerminated, terminationReason)
+
+    def dumpResults(self, f, allParams):
+        (bestOfValue, bestStats, cpuTime, _, terminationReason) = self.getStatus()
 
         # OF value,CPU time,Job ID,Stop reason
         f.write("{},{},{},{},{},{},".format(
@@ -361,7 +367,10 @@ class Job:
 
         f.write("\n")
 
-    def getStats(self):
+    def unquoteParams(self):
+        return [x.strip("'") for x in self.params]
+
+    def getStatsFull(self):
         reply = []
         for methodID in range(len(self.runners)):
             runner = self.runners[methodID]
@@ -369,10 +378,20 @@ class Job:
             ofValues = []
             for s in runner.getAllStats():
                 cpuTimes.append(s.cpuTime)
-                if math.isnan(s.ofValue) or math.isinf(s.ofValue):
-                    ofValues.append(0.0)
-                else:
-                    ofValues.append(s.ofValue)
+                ofValues.append(jsonFixInfinity(s.ofValue, 0.0))
             reply.append({"id" : methodID, "values" : ofValues, "time" : cpuTimes})
 
-        return {"data" : reply, "methods" : self.methods}
+        return {"data" : reply, "methods" : self.methods, "parameters": self.unquoteParams()}
+
+    def getStatsBrief(self):
+        (bestOfValue, _, cpuTime, isTerminated, terminationReason) = self.getStatus()
+
+        return {
+            "id" : self.id,
+            "of" : jsonFixInfinity(bestOfValue, 0.0),
+            "cpu" : cpuTime,
+            "over" : isTerminated,
+            "reason" : reasonToStr(terminationReason),
+            "method" : self.currentMethod,
+            "parameters" : self.unquoteParams()
+        }
