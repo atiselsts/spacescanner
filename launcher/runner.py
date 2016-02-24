@@ -161,6 +161,18 @@ class Runner:
 
     def getAllStats(self):
         result = []
+
+        if bool(g.getConfig("webTestMode")):
+            r = 0.0
+            t = 0.0
+            random.seed(0)
+            for i in range(20):
+                r += random.random()
+                t += random.random()
+                si = StatsItem("{} {} 1 ( 74.24 ) -1.81914".format(r, t))
+                result.append(si)
+            return result
+
         try:
             with open(self.reportFilename, "r") as f:
                 inValues = False

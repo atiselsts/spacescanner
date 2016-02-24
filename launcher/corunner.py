@@ -46,12 +46,12 @@ import strategy
 ################################################
 # Execute the web server (in a separate thread)
 
-def executeWebserver(args):
+def executeWebserver(strategyManager):
     try:
         port = int(g.getConfig("web.port"))
         g.log(LOG_INFO, "<corunner>: starting webserver, port: " + str(port))
         server = webserver.InterruptibleHTTPServer(('', port), webserver.HttpServerHandler)
-#        server.statsManager = StatsManager()
+        server.strategyManager = strategyManager
         # report ok and enter the main loop
         g.log(LOG_DEBUG, "<corunner>: webserver started, listening to port {}".format(port))
         server.serve_forever()
@@ -65,30 +65,43 @@ def executeWebserver(args):
 
 ################################################
 
-def start(configFileName, doAsync, fromWeb):
+def start(configFileName):
     if not g.prepare(configFileName):
+        return
+
+    # read COPASI model file etc.
+    strategyManager = strategy.StrategyManager()
+    if not strategyManager.prepare(isDummy = False):
+        return
+
+    # start the web server
+    if bool(g.getConfig("web.enable")):
+        process.createBackgroundThread(executeWebserver, strategyManager)
+
+    # start the selected parameter sweep strategy
+    strategyManager.execute()
+
+################################################
+
+def startFromWeb(configFileName):
+    if not g.prepare(configFileName):
+        g.log(LOG_ERROR, "Preparing from config file failed: " + configFileName)
         return None
 
     # read COPASI model file etc.
     strategyManager = strategy.StrategyManager()
-    if not strategyManager.prepare():
+    if not strategyManager.prepare(isDummy = False):
+        g.log(LOG_ERROR, "Preparing for execution failed")
         return None
 
-    # start the web server
-    if not fromWeb and  bool(g.getConfig("web.enable")):
-        process.createBackgroundThread(executeWebserver, None)
-
-    # start the selected parameter sweep strategy
-    if doAsync:
-        process.createBackgroundThread(lambda s: s.execute(), strategyManager)
-    else:
-        strategyManager.execute()
+    # start the selected parameter sweep strategy asynchronously
+    process.createBackgroundThread(lambda s: s.execute(), strategyManager)
 
     return strategyManager
 
 
 ################################################
-# Should replace this with daemonization
+# Should replace this with daemonization?
 
 def wait():
     while True:
@@ -98,20 +111,22 @@ def wait():
 # Execute the application
 
 def main():
-    # web-only mode
     if len(sys.argv) > 1 and sys.argv[1] == "web":
-        # start the web server (XXX: comnfigurable port number?)
-        process.createBackgroundThread(executeWebserver, None)
+        # web-only mode; create an empty strategy and wait for input commands
+        strategyManager = strategy.StrategyManager()
+        strategyManager.prepare(isDummy = True)
+        g.config["output"]["loglevel"] = 3
+        # start the web server (XXX: configurable port number?)
+        process.createBackgroundThread(executeWebserver, strategyManager)
         wait()
-        return 0
+    else:
+        # normal mode
+        if not start(sys.argv[1] if len(sys.argv) > 1 else None):
+            return -1
 
-    # normal mode
-    if not start(sys.argv[1] if len(sys.argv) > 1 else None, doAsync = False, fromWeb = False):
-        return -1
-
-    # if "hang" mode is configured, do not quit until Ctrl+C is pressed
-    if bool(g.getConfig("hangMode")):
-        wait()
+        # if "hang" mode is configured, do not quit until Ctrl+C is pressed
+        if bool(g.getConfig("hangMode")):
+            wait()
 
     return 0
 

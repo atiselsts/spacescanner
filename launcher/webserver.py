@@ -21,7 +21,7 @@
 # Author: Atis Elsts, 2016
 #
 
-import os, signal, select, json, traceback
+import os, signal, select, json, traceback, cgi
 
 from util import *
 import g
@@ -110,9 +110,11 @@ class HttpServerHandler(BaseHTTPRequestHandler):
             f.write(contents.encode("UTF-8"))
         return filename
 
-    def sendDefaultHeaders(self, contents, isJSON = True):
+    def sendDefaultHeaders(self, contents, isJSON = True, contentType = None):
         if isJSON:
             self.send_header('Content-Type', 'application/json')
+        elif contentType:
+            self.send_header('Content-Type', contentType)
         else:
             self.send_header('Content-Type', 'text/plain')
         # disable caching
@@ -136,10 +138,72 @@ class HttpServerHandler(BaseHTTPRequestHandler):
         qs = parse_qs(o.query)
 
         isJSON = True
+        contentType = "text/plain"
         sm = InterruptibleHTTPServer.serverInstance.strategyManager
-        if o.path == '/status' or o.path == "/":
-            # all jobs
-            response = sm.ioGetJobList(qs)
+        if o.path == '/index.html' or o.path == "/":
+            isJSON = False
+            contentType = "text/html"
+            try:
+                with open(os.path.join(SELF_PATH, "web", "index.html")) as f:
+                    response = f.read()
+            except:
+                self.serveError(qs)
+                return
+        elif o.path[-4:] == ".css":
+            isJSON = False
+            contentType = "text/css"
+            try:
+                with open(os.path.join(SELF_PATH, "web", o.path[1:])) as f:
+                    response = f.read()
+            except:
+                self.serveError(qs)
+                return
+        elif o.path[-3:] == ".js":
+            isJSON = False
+            contentType = "application/js"
+            try:
+                with open(os.path.join(SELF_PATH, "web", o.path[1:])) as f:
+                    response = f.read()
+            except:
+                self.serveError(qs)
+                return
+        elif o.path[-4:] == ".png":
+            isJSON = False
+            contentType = "image/png"
+            try:
+                with open(os.path.join(SELF_PATH, "web", o.path[1:])) as f:
+                    response = f.read()
+            except:
+                self.serveError(qs)
+                return
+        elif o.path[-4:] == ".jpg":
+            isJSON = False
+            contentType = "image/jpg"
+            try:
+                with open(os.path.join(SELF_PATH, "web", o.path[1:])) as f:
+                    response = f.read()
+            except:
+                self.serveError(qs)
+                return
+        elif "font" in o.path:
+            isJSON = False
+            contentType = "font/opentype"
+            try:
+                with open(os.path.join(SELF_PATH, "web", o.path[1:])) as f:
+                    response = f.read()
+            except:
+                self.serveError(qs)
+                return
+
+        elif o.path == '/status':
+            # active jobs
+            response = {"jobs" : sm.ioGetActiveJobs(qs),
+                        "isExecutable" : sm.isExecutable,
+                        "resultsPresent" : sm.getNumFinishedJobs() > 0}
+        elif o.path == '/allstatus':
+            response = sm.ioGetAllJobs(qs)
+        elif o.path == '/activestatus':
+            response = sm.ioGetActiveJobs(qs)
         elif o.path[:4] == '/job':
             # specific job
             response = sm.ioGetJob(qs, o.path[5:])
@@ -148,6 +212,7 @@ class HttpServerHandler(BaseHTTPRequestHandler):
         elif o.path[:8] == '/results':
             response = sm.ioGetResults(qs)
             isJSON = False # the results are in .csv format
+            contentType = "text/csv"
         elif o.path == '/stopall':
             response = sm.ioStopAll(qs)
         elif o.path[:5] == '/stop':
@@ -160,25 +225,47 @@ class HttpServerHandler(BaseHTTPRequestHandler):
             response = ENC.encode(response)
 
         self.send_response(200)
-        self.sendDefaultHeaders(response, isJSON)
+        self.sendDefaultHeaders(response, isJSON, contentType)
         # to enable cross-site scripting
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.serveBody(response, qs)
 
-    def postModel(self, qs):
-        contentLength = int(self.headers.get('content-length', 0))
-        received = self.rfile.read(contentLength).decode("utf-8")
 
+    def postModel(self, qs):
         # error if running
         sm = InterruptibleHTTPServer.serverInstance.strategyManager
         if sm is not None and sm.isActive():
             return self.serveError(qs, 503, "Already running")
 
+        contentLength = int(self.headers.get('content-length', 0))
+        received = ""
+
+        # Parse the form data posted
+        form = cgi.FieldStorage(
+            fp = self.rfile, 
+            headers = self.headers,
+            environ = {'REQUEST_METHOD' : 'POST',
+                       'CONTENT_TYPE': self.headers['Content-Type'],
+                   })
+        for field in form.keys():
+            field_item = form[field]
+            if field_item.filename:
+                # The field contains an uploaded file
+                received = field_item.file.read(contentLength).decode("utf-8")
+                break
+
+        if not received:
+            return self.serveError(qs, 400, "No valid file data received")
+
         # write the model
         filename = self.saveInFile(received, "model.cps")
+        # check if the model is all right
+        InterruptibleHTTPServer.serverInstance.strategyManager.prepare(isDummy = False)
 
-        self.respondToPost(200, filename, False) # these req/resp are not in json format
+        # self.respondToPost(200, filename, False) # these req/resp are not in json format
+        self.respondToPost(200, {"filename" : filename})
+
 
     def postConfig(self, qs):
         contentLength = int(self.headers.get('content-length', 0))
@@ -191,15 +278,15 @@ class HttpServerHandler(BaseHTTPRequestHandler):
 
         # else start running
         filename = self.saveInFile(received, "config.json")
-        sm = corunner.start(
-            filename, doAsync = True, fromWeb = True)
+        sm = corunner.startFromWeb(filename)
         if sm is None:
             return self.serveError(qs, 500, "Cannot start CoRunner optimizations")
-
+        # set it only if not none
         InterruptibleHTTPServer.serverInstance.strategyManager = sm
-        self.respondToPost(200, {"status" : "OK"}, True)
 
-    def respondToPost(self, code, response, isJSON):
+        self.respondToPost(200, {"status" : "OK"})
+
+    def respondToPost(self, code, response, isJSON = True):
         print("respond to post:")
         print(response)
         if isJSON:

@@ -6,7 +6,7 @@
 
 'use strict';
 
-var firstTest = test1;
+var firstTest = testJson;
 
 var fs = require('fs');
 var sleep = require('sleep');
@@ -66,8 +66,9 @@ function test2()
 	success: function (returnData) {
 	    console.log("start command: " + JSON.stringify(returnData));
 
+	    // sleep a bit 
 	    console.log("sleeping...")
-	    sleep.sleep(10);
+	    sleep.sleep(7);
 	    test3();
 	},
 	error: function (data, textStatus, xhr) {
@@ -76,7 +77,7 @@ function test2()
     });
 }
 
-// sleep a bit 
+// get status of active jobs
 function test3()
 {
     // get job lists
@@ -87,11 +88,31 @@ function test3()
 	dataType: "json",
 	crossDomain: true,
 	success: function (returnData) {
-	    console.log("jobs: " + JSON.stringify(returnData));
+	    console.log("active jobs: " + JSON.stringify(returnData));
+	    test3a();
+	},
+	error: function (data, textStatus, xhr) {
+	    console.log("get active jobs error: " + data + " " + textStatus);
+	}
+    });
+}
+
+// get status of all jobs
+function test3a()
+{
+    // get job lists
+    $.ajax({
+	type: "GET",
+	url: "http://localhost:19000/allstatus",
+	contentType: "application/json",
+	dataType: "json",
+	crossDomain: true,
+	success: function (returnData) {
+	    console.log("all jobs: " + JSON.stringify(returnData));
 	    test4();
 	},
 	error: function (data, textStatus, xhr) {
-	    console.log("get jobs error: " + data + " " + textStatus);
+	    console.log("get all jobs error: " + data + " " + textStatus);
 	}
     });
 }
@@ -144,7 +165,7 @@ function test6()
 	    test7();
 	},
 	error: function (data, textStatus, xhr) {
-	    console.log("return error: " + data + " " + textStatus);
+	    console.log("get config error: " + JSON.stringify(data) + " " + textStatus);
 	}
     });
 }
@@ -163,7 +184,7 @@ function test7()
 	    test8();
 	},
 	error: function (data, textStatus, xhr) {
-	    console.log("return error: " + data + " " + textStatus);
+	    console.log("stop job error: " + data + " " + textStatus);
 	}
     });
 }

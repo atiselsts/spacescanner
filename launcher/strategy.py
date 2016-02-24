@@ -222,32 +222,35 @@ class ParamSelectionGreedyReverse(ParamSelection):
 
 class StrategyManager:
     def __init__(self):
-        pass
-       
-    def prepare(self):
         atexit.register(self.cleanup, self)
 
+    def prepare(self, isDummy):
         self.jobLock = threading.Lock()
         self.activeJobPool = None
         self.finishedJobs = {}
         self.startedJobs = set()
         self.doQuitFlag = False
+        self.isExecutable = False
 
         self.lastNumJobsDumped = 0
         # job counter, starting from 1
         self.nextJobID = itertools.count(1)
 
-        self.copasiConfig = None
+        self.copasiConfig = {"params" : []}
+        self.jobsByBestOfValue = []
+
         self.copasiFile = self.loadCopasiFile()
         if not self.copasiFile:
             return False
 
         g.log(LOG_DEBUG, "querying COPASI optimization parameters")
-        self.copasiConfig = {"params" : self.copasiFile.queryParameters()}
+        self.copasiConfig["params"] = self.copasiFile.queryParameters()
         if not self.copasiConfig["params"]:
             return False
 
         self.jobsByBestOfValue = [[] for _ in range(1 + len(self.copasiConfig["params"]))]
+        if not isDummy:
+            self.isExecutable = True
         return True
 
     def isActive(self):
@@ -271,14 +274,15 @@ class StrategyManager:
 
 
     def dumpResults(self, totalLimit = 0, perParamLimit = 0):
+        if g.workDir is None:
+            return None
         filename = g.getConfig("output.filename")
         # do not allow put the results in other directories because of security reasons
         if filename != os.path.basename(filename):
             g.log(LOG_INFO, "output file name should not include path, ignoring all but the last element in it")
             filename = os.path.basename(filename)
         (name, ext) = os.path.splitext(filename)
-        filename = name + "-" + g.taskName + ext
-        filename = os.path.join(g.workDir, filename)
+        filename = os.path.join(g.workDir, "{}-{}{}".format(name, "-", g.taskName, ext))
 
         with self.jobLock:
             if len(self.finishedJobs) <= self.lastNumJobsDumped:
@@ -335,7 +339,6 @@ class StrategyManager:
     def finishJob(self, job):
         with self.jobLock:
             self.finishedJobs[job.id] = job
-            numFinishedJobs = len(self.finishedJobs)
 
             # order the finished-jobs list by OF values.
             # (full re-sorting is suboptimal, but we do not expect *that* many jobs)
@@ -345,6 +348,11 @@ class StrategyManager:
 
         # save the intermediate results after each finished job
         self.dumpResults()
+
+
+    def getNumFinishedJobs(self):
+        with self.jobLock:
+            return len(self.finishedJobs)
 
 
     def getBestOfValue(self, minNumParameters):
@@ -367,7 +375,17 @@ class StrategyManager:
         return joblist[0].params
 
 
-    def ioGetJobList(self, qs):
+    def ioGetActiveJobs(self, qs):
+        response = []
+        with self.jobLock:
+            if self.activeJobPool:
+                with self.activeJobPool.jobLock:
+                    for job in self.activeJobPool.activeJobs:
+                        response.append(job.getStatsBrief())
+        return response
+
+
+    def ioGetAllJobs(self, qs):
         response = []
         with self.jobLock:
             for id in self.finishedJobs:
@@ -376,6 +394,16 @@ class StrategyManager:
                 with self.activeJobPool.jobLock:
                     for job in self.activeJobPool.activeJobs:
                         response.append(job.getStatsBrief())
+        return response
+
+
+    def ioGetActiveJobs(self, qs):
+        response = []
+        with self.jobLock:
+            if self.activeJobPool:
+                with self.activeJobPool.jobLock:
+                    for job in self.activeJobPool.activeJobs:
+                        response.append(job.getStatsFull())
         return response
 
 
@@ -398,7 +426,11 @@ class StrategyManager:
 
 
     def ioGetConfig(self, qs):
-        return g.config
+        cfg = copy.copy(g.config)
+        # XXX hack to avoid infinities in the json
+        if math.isinf(cfg["optimization"].get("bestOfValue", 0)):
+            cfg["optimization"]["bestOfValue"] = 0.0
+        return cfg
 
 
     def ioGetResults(self, qs):
@@ -410,7 +442,9 @@ class StrategyManager:
             with open(filename) as f:
                 contents = f.read()
         except IOError as e:
-            g.log(LOG_DEBUG, "failed to read result .csv file " + filename)
+            g.log(LOG_DEBUG, "failed to read result .csv file {}".format(filename))
+        except Exception as e:
+            g.log(LOG_INFO, "failed to read result .csv file {}: {}".format(filename, e))
 
         return contents
 

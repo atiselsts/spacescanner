@@ -57,11 +57,14 @@ class Job:
         self.maxCores = maxCores
         self.loadBalanceFactor = float(g.getConfig("optimization.runsPerJob")) / maxCores
 
+
     def getFullName(self):
         return "job {} (optimization parameters: ".format(self.id) + " ".join(self.params) + ")"
 
+
     def getName(self):
         return "job {}".format(self.id)
+
 
     def execute(self, workDir, copasiFile):
         self.workDir = workDir
@@ -75,6 +78,7 @@ class Job:
         g.log(LOG_INFO, "starting " + self.getFullName())
 
         return self.createRunners()
+
 
     def createRunners(self):
         self.oldRunners.extend(self.runners)
@@ -98,8 +102,10 @@ class Job:
 
         return True
 
+
     def timeDiffExceeded(self, measuredDiff, requiredDiff):
         return measuredDiff > requiredDiff * self.loadBalanceFactor
+
 
     def checkReports(self):
         # if no runners are active, quit
@@ -223,6 +229,7 @@ class Job:
             return False
         return abs(1.0 - minV / maxV) < epsilonRel
 
+
     def decideTermination(self):
         badReasons = [TERMINATION_REASON_CPU_TIME_LIMIT, TERMINATION_REASON_COPASI_FINISHED]
         if not any([r.terminationReason in badReasons for r in self.runners]):
@@ -284,6 +291,7 @@ class Job:
             self.pool.finishJob(self)
             return
 
+
     def getBestOfValue(self):
         value = MIN_OF_VALUE
         if self.oldRunners:
@@ -291,6 +299,7 @@ class Job:
         if self.runners:
              value = max(value, max([r.ofValue for r in self.runners]))
         return value
+
 
     def getBestParams(self):
         if not self.oldRunners:
@@ -307,24 +316,26 @@ class Job:
             result[p] = stats.params[i]
         return result
 
+
     def cleanup(self):
-        isUnfinished = False
+        isActive = False
         for r in self.runners:
             if r.isActive:
                 r.terminationReason = TERMINATION_REASON_PROGRAM_QUITTING
-                isUnfinished = True
-        return isUnfinished
+                isActive = True
+        return isActive
+
 
     def getStatus(self):
         cpuTime = 0
         terminationReason = TERMINATION_REASON_MAX
         bestRunner = None
         bestOfValue = MIN_OF_VALUE
-        isTerminated = True
+        isActive = False
 
         for r in self.runners:
             if r.isActive:
-                isTerminated = False
+                isActive = True
             terminationReason = min(terminationReason, r.terminationReason)
             cpuTime += r.currentCpuTime
             if bestOfValue < r.ofValue:
@@ -342,7 +353,8 @@ class Job:
         if bestRunner is not None and bestRunner.getLastStats().isValid:
             bestStats = bestRunner.getLastStats()
 
-        return (bestOfValue, bestStats, cpuTime, isTerminated, terminationReason)
+        return (bestOfValue, bestStats, cpuTime, isActive, terminationReason)
+
 
     def dumpResults(self, f, allParams):
         (bestOfValue, bestStats, cpuTime, _, terminationReason) = self.getStatus()
@@ -367,31 +379,41 @@ class Job:
 
         f.write("\n")
 
+
     def unquoteParams(self):
         return [x.strip("'") for x in self.params]
 
-    def getStatsFull(self):
-        reply = []
-        for methodID in range(len(self.runners)):
-            runner = self.runners[methodID]
-            cpuTimes = []
-            ofValues = []
-            for s in runner.getAllStats():
-                cpuTimes.append(s.cpuTime)
-                ofValues.append(jsonFixInfinity(s.ofValue, 0.0))
-            reply.append({"id" : methodID, "values" : ofValues, "time" : cpuTimes})
-
-        return {"data" : reply, "methods" : self.methods, "parameters": self.unquoteParams()}
 
     def getStatsBrief(self):
-        (bestOfValue, _, cpuTime, isTerminated, terminationReason) = self.getStatus()
+        (bestOfValue, _, cpuTime, isActive, terminationReason) = self.getStatus()
 
         return {
             "id" : self.id,
             "of" : jsonFixInfinity(bestOfValue, 0.0),
             "cpu" : cpuTime,
-            "over" : isTerminated,
+            "active" : isActive,
             "reason" : reasonToStr(terminationReason),
             "method" : self.currentMethod,
             "parameters" : self.unquoteParams()
         }
+
+
+    def getStatsFull(self):
+        reply = []
+        isActive = False
+        for methodID in range(len(self.runners)):
+            runner = self.runners[methodID]
+            cpuTimes = []
+            ofValues = []
+            if runner.isActive:
+                isActive = True
+            for s in runner.getAllStats():
+                cpuTimes.append(s.cpuTime)
+                ofValues.append(jsonFixInfinity(s.ofValue, 0.0))
+            reply.append({"id" : methodID, "values" : ofValues, 
+                          "time" : cpuTimes, "active" : runner.isActive})
+
+        return {"id" : self.id,
+                "data" : reply, "methods" : self.methods,
+                "active" : isActive, "parameters": self.unquoteParams()}
+

@@ -55,7 +55,7 @@ DEFAULT_CONFIG = {
         {"type" : "greedy", "range" : [4, 8]}    # from 4 to 8
     ],
     "web" : {
-	"enable" : True,
+        "enable" : True,
         "port" : 19000
     },
     "output" : {

@@ -1,5 +1,4 @@
 <!DOCTYPE HTML>
-
 <html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
@@ -28,99 +27,102 @@
 
   Author: Atis Elsts, 2016
 -->
-  <head>
-    <title>Select a model</title>
+<head>
+<title>Select a model</title>
 
-		<link rel="stylesheet" href="stylesheets/bootstrap/css/bootstrap.min.css" media="screen">
-		<link href="jquery/css/smoothness/jquery-ui-1.10.3.custom.min.css" rel="stylesheet" media="screen">
-		<link rel="stylesheet" href="assets/css/main.css" />
-  </head>
-	<body id="top">
+<link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css" media="screen">
+<link href="jquery/css/smoothness/jquery-ui-1.10.3.custom.min.css" rel="stylesheet" media="screen">
+<link rel="stylesheet" href="assets/css/main.css" />
+</head>
 
-		<!-- Header -->
-			<header id="header">
+<body id="top">
 
-				<ul class="actions vertical">
-					<li><a id="button-select" class="button" title="Load a SBML model file">Select model</a></li>
-					<li class="divider"></li>
-					<li><a id="button-start-stop" class="button disabled" title="Start/stop optimizing the model"><i class="icon-play" style="margin-top: 3px"></i> Start</a></li>
-					<li><a id="button-status" class="button disabled" title="Show status of all jobs">Status</a></li>
-					<li class="divider"></li>
-					<li><a id="button-settings" class="button" title="Configure optimization settings">Settings</a></li>
-					<li><a id="button-parameters" class="button" title="Select parameter sets to include in optimizations">Parameter sets</a></li>
-					<li class="divider"></li>
-					<li><a id="button-export" class="button disabled" title="Export a CSV file with the current results">Export CSV</a></li>
-				</ul>
+    <!-- Header -->
+    <header id="header">
 
-			</header>
+      <ul class="actions vertical">
+        <li><a id="button-select" class="button" title="Load a SBML model file">Select model</a></li>
+        <li class="divider"></li>
+        <li><a id="button-start-stop" class="button disabled" title="Start/stop optimizing the model"><i class="icon-play" style="margin-top: 3px"></i> Start</a></li>
+        <li><a id="button-status" class="button disabled" title="Show status of all jobs">Status</a></li>
+        <li class="divider"></li>
+        <li><a id="button-settings" class="button" title="Configure optimization settings">Settings</a></li>
+        <li><a id="button-parameters" class="button" title="Select parameter sets to include in optimizations">Parameter sets</a></li>
+        <li class="divider"></li>
+        <li><a id="button-export" class="button disabled" title="Export a CSV file with the current results">Export CSV</a></li>
+      </ul>
+   </header>
 
-		<!-- Main -->
-			<div id="main">
+  <!-- Main -->
+ <div id="main">
+   <div id="job_name"></div>
+   <div id="job_parameters"></div>
+   <div id="job_chart" style="width: 100%; height: 300px;"></div>
+   <ul class="actions">
+     <li><a id="button-stop-job1" class="button small"><i class="icon-stop" style="margin-top: 1px"></i> Stop</a></li>
+   </ul>
 
-				<!-- One -->
-					<section id="one">
-						<h2>Job 13</h2>
-						<p>Parameters: Triosephosphate isomerase, Pyruvate kinase, Hexokinase, Glyceraldehyde 3-phosphate dehydrogenase, Alcohol dehydrogenase</p>
-						<img widht="800" height="600" src="./graph.jpg" alt="Job 13 results"></img>
+<!--     <section id="one">
+                        <h2>Job 13</h2>
+                        <p>Parameters: Triosephosphate isomerase, Pyruvate kinase, Hexokinase, Glyceraldehyde 3-phosphate dehydrogenase, Alcohol dehydrogenase</p>
+                        <img widht="800" height="600" src="./graph.jpg" alt="Job 13 results"></img>
 
-						<ul class="actions">
-							<li><a href="#" class="button small"><i class="icon-stop" style="margin-top: 1px"></i> Stop</a></li>
-							<li><a href="#" class="button small">Hide run 1</a></li>
-							<li><a href="#" class="button small">Hide run 2</a></li>
-						</ul>
+                        <ul class="actions">
+                            <li><a href="#" class="button small"><i class="icon-stop" style="margin-top: 1px"></i> Stop</a></li>
+                            <li><a href="#" class="button small">Hide run 1</a></li>
+                            <li><a href="#" class="button small">Hide run 2</a></li>
+                        </ul>
 
-						<h2>Job 14</h2>
-						<p>Parameters: Triosephosphate isomerase, Pyruvate kinase, Hexokinase, Glyceraldehyde 3-phosphate dehydrogenase, Storage</p>
-						<img widht="800" height="600" src="./graph.jpg" alt="Job 14 results"></img>
+                        <h2>Job 14</h2>
+                        <p>Parameters: Triosephosphate isomerase, Pyruvate kinase, Hexokinase, Glyceraldehyde 3-phosphate dehydrogenase, Storage</p>
+                        <img widht="800" height="600" src="./graph.jpg" alt="Job 14 results"></img>
 
-						<ul class="actions">
-							<li><a href="#" class="button small"><i class="icon-stop" style="margin-top: 1px"></i> Stop</a></li>
-							<li><a href="#" class="button small">Hide run 1</a></li>
-							<li><a href="#" class="button small">Hide run 2</a></li>
-						</ul>
-				</section>
+                        <ul class="actions">
+                            <li><a href="#" class="button small"><i class="icon-stop" style="margin-top: 1px"></i> Stop</a></li>
+                            <li><a href="#" class="button small">Hide run 1</a></li>
+                            <li><a href="#" class="button small">Hide run 2</a></li>
+                        </ul>
+      </section> -->
+    </div>
 
-			</div>
-
-		<!-- Footer -->
-			<footer id="footer">
-				<ul class="icons">
-					<li><a href="https://atiselsts.github.io/corunner" class="icon fa-file-text-o" title="Documentation"><span class="label">Documentation</span></a></li>
-					<li><a href="https://github.com/atiselsts/corunner" class="icon fa-github" title="Source code"><span class="label">Github</span></a></li>
-				</ul>
-				<ul class="copyright">
-					<li>&copy; biosystems.lv</li><!-- <li>Design: <a href="http://html5up.net">HTML5 UP</a></li> -->
-				</ul>
-			</footer>
+    <!-- Footer -->
+    <footer id="footer">
+      <ul class="icons">
+        <li><a href="https://atiselsts.github.io/corunner" class="icon fa-file-text-o" title="Documentation"><span class="label">Documentation</span></a></li>
+        <li><a href="https://github.com/atiselsts/corunner" class="icon fa-github" title="Source code"><span class="label">Github</span></a></li>
+      </ul>
+      <ul class="copyright">
+        <li>&copy; biosystems.lv</li>
+      </ul>
+    </footer>
 
 
 <div id="dialog" class="hide"><form id="dialog-form" class="form-horizontal"></form></div>
 
 <div id="dialog-select-model" class="hide">
+   <form id="dialog-visual-options-form" class="form-horizontal" method="post" action="model" enctype="multipart/form-data">
     <div class="form-row">
-        <label for="input-filename" ><i class="icon-tag"></i> Filename:</label>
+        <label for="input-import-filename" ><i class="icon-tag"></i> Filename:</label>
         <input type="file" id="input-import-filename" placeholder="Filename">
     </div>
-
-		<br/>
-
+    <br/>
     <div class="form-row">
-        <label for="input-taskname">Task name:</label>
-        <input type="text" id="input-import-taskname" placeholder="Name">
+        <label for="input-import-taskname">Task name:</label>
+        <input type="text" id="input-import-taskname" placeholder="Name (optional)">
     </div>
+    <br/>
+    <div class="form-row">
+    <div class="button-group">
+        <button type="submit" id="button-upload-model" class="button">Select</button>
+    </div>
+    </form>
 </div>
 
 
 <div id="dialog-status" class="hide">
-    <div class="form-row">
-			Job 1 / done / Pyruvate kinase...
-    </div>
-
-		<br/>
-
-    <div class="form-row">
-			Job 2 / running / Pyruvate kinase, Aldolase...
-    </div>
+  <div class="form-row">
+    Refreshing...
+  </div>
 </div>
 
 
@@ -129,12 +131,10 @@
         <label for="input-option-timelimit" style="width:150px">Time limit, seconds</label>
         <input type="number" id="input-option-timelimit" style="width:100px !important"  placeholder="3600" min="10" title="Maximal CPU time for optimization in case convergence criteria and other end conditions have not been reached">
     </div>
-
-		<br/>
-
+    <br/>
     <div class="form-row">
         <label>&nbsp;</label>
-        <input type="checkbox" id="input-option-restartFromBestValue" style="display: inline-block; width: auto; vertical-align: top;" title="restart each subsequent method from the best point in the search space so far">
+        <input type="checkbox" id="input-option-restartFromBestValue" style="display: inline-block; width: auto; vertical-align: top;" title="Restart each subsequent method from the best point in the search space so far?">
         <label for="input-option-restartFromBestValue" style="width: 70%;">Restart from best value</label>
     </div>
 </div>
@@ -148,21 +148,26 @@
 <div id="dialog-export" class="hide">
     <div class="form-row">
         <label for="input-export-totallimit" style="width:250px">Limit total number of results</label>
-        <input type="number" id="input-export-totallimit" style="width:100px !important" min="1" title="The number of the best results to export">
+        <input type="number" id="input-export-totallimit" style="width:120px !important" min="1" title="The number of the best results to export" placeholder="unlimited">
     </div>
-
-		<br/>
-
+    <br/>
     <div class="form-row">
         <label for="input-export-paramlimit" style="width:250px">Limit per-number-of-parameters number of results</label>
-        <input type="number" id="input-export-paramlimit" style="width:100px !important" min="1" title="The number of the best results per a number of parameters to export">
+        <input type="number" id="input-export-paramlimit" style="width:120px !important" min="1" title="The number of the best results per a number of parameters to export" placeholder="unlimited">
     </div>
 </div>
 
 <script src="jquery/js/jquery-1.9.1.js"></script>
-<script src="bootstrap/js/bootstrap.min.js"></script>
+<!-- <script src="bootstrap/js/bootstrap.min.js"></script> -->
 <script src="jquery/js/jquery-ui-1.10.3.custom.min.js"></script>
+<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>-->
+<script src="https://www.google.com/jsapi"></script>
+<script src="js/fileupload.js"></script>
 <script src="js/corunner.js"></script>
+<script src="js/graph.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/refresh.js"></script>
+<script src="js/settings.js"></script>
 
 </body>
 </html>
