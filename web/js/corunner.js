@@ -8,17 +8,17 @@ var CORUNNER = function() {
         width: 600,
         height: 230,
         open: function() {
-	    $( '#input-import-taskName' ).val(CORUNNER.settings.get("taskName"));
+            $( '#input-import-taskName' ).val(CORUNNER.settings.get("taskName"));
         },
     });
 
     $('#dialog-select-model').fileUpload({
         success: function (data, textStatus, jqXHR) {
-	    var filename = $( '#input-import-filename' ).val();
+            var filename = $( '#input-import-filename' ).val();
             CORUNNER.notify("Model file selected:\n" + filename, "success");
             $( "#dialog-select-model" ).dialog("close");
             $( 'title' ).text("Model file '" + filename + "'");
-	    CORUNNER.settings.set("taskName", $( '#input-import-taskName' ).val());
+            CORUNNER.settings.set("taskName", $( '#input-import-taskName' ).val());
         },
         error: function (data, textStatus, err) {
             CORUNNER.notify("Failed to use the model file: " + JSON.stringify(data), "error");
@@ -65,14 +65,14 @@ var CORUNNER = function() {
         width: 640,
         height: 750,
         open: function() {
-	    CORUNNER.settings.querySettings();
-	    CORUNNER.settings.populateSettings();
+            CORUNNER.settings.querySettings();
+            CORUNNER.settings.populateSettings();
         },
         buttons: [
             {
                 text: "Ok",
                 click: function() {
-		    CORUNNER.settings.saveSettings();
+                    CORUNNER.settings.saveSettings();
                     $( this ).dialog( "close" );
                 }
             },
@@ -87,78 +87,78 @@ var CORUNNER = function() {
 
     function changeParam(element, i) {
         var type = element.val();
-	var doRanges = false;
-	var doNames = false;
+        var doRanges = false;
+        var doNames = false;
 
-	if (type === "none") {
-	} else if (type === "all") {
-	} else if (type === "exhaustive") {
-	    doRanges = true;
-	} else if (type === "greedy") {
-	    doRanges = true;
-	} else if (type === "explicit") {
-	    doNames = true;
-	} else if (type === "zero") {
-	}
+        if (type === "none") {
+        } else if (type === "all") {
+        } else if (type === "exhaustive") {
+            doRanges = true;
+        } else if (type === "greedy") {
+            doRanges = true;
+        } else if (type === "explicit") {
+            doNames = true;
+        } else if (type === "zero") {
+        }
 
-	if (doRanges) {
-	    $( "#params" + i + "-ranges" ).show();
-	} else {
-	    $( "#params" + i + "-ranges" ).hide();
-	}
-	if (doNames) {
-	    $( "#params" + i + "-names" ).show();
-	} else {
-	    $( "#params" + i + "-names" ).hide();
-	}
+        if (doRanges) {
+            $( "#params" + i + "-ranges" ).show();
+        } else {
+            $( "#params" + i + "-ranges" ).hide();
+        }
+        if (doNames) {
+            $( "#params" + i + "-names" ).show();
+        } else {
+            $( "#params" + i + "-names" ).hide();
+        }
     }
 
     function displayParam(parameters, i) {
-	var type = i < parameters.length ? parameters[i].type : "none";
-	var paramField = $( "#input-option-params" + i );
-	paramField.val(type).change(function () { changeParam(paramField, i) })
-	changeParam(paramField, i);
+        var type = i < parameters.length ? parameters[i].type : "none";
+        var paramField = $( "#input-option-params" + i );
+        paramField.val(type).change(function () { changeParam(paramField, i) })
+        changeParam(paramField, i);
 
-	if (type === "exhaustive" || type === "greedy") {
-	    if (parameters[i].range && parameters[i].range.length > 0) {
-		var rs = parameters[i].range[0];
-		var re = parameters[i].range.length > 1 ? parameters[i].range[1] : rs;
-		$( "#input-option-param" + i + "-rangeStart" ).val(rs);
-		$( "#input-option-param" + i + "-rangeEnd" ).val(re);
-	    } else {
- 		$( "#input-option-param" + i + "-rangeStart" ).val("");
-		$( "#input-option-param" + i + "-rangeEnd" ).val("");
-	    }
-	} else if (type === "explicit") {
-	    var names = parameters[i].parameters;
-	    if (!names) names = [];
- 	    $( "#input-option-param" + i + "-params" ).val(names.join());
-	}
+        if (type === "exhaustive" || type === "greedy") {
+            if (parameters[i].range && parameters[i].range.length > 0) {
+                var rs = parameters[i].range[0];
+                var re = parameters[i].range.length > 1 ? parameters[i].range[1] : rs;
+                $( "#input-option-param" + i + "-rangeStart" ).val(rs);
+                $( "#input-option-param" + i + "-rangeEnd" ).val(re);
+            } else {
+                $( "#input-option-param" + i + "-rangeStart" ).val("");
+                $( "#input-option-param" + i + "-rangeEnd" ).val("");
+            }
+        } else if (type === "explicit") {
+            var names = parameters[i].parameters;
+            if (!names) names = [];
+            $( "#input-option-param" + i + "-params" ).val(names.join());
+        }
     }
 
     function constructParam(type, i) {
-	var result = {type : type};
-	
-	var rs = parseInt($( "#input-option-param" + i + "-rangeStart" ).val());
-	var re = parseInt($( "#input-option-param" + i + "-rangeEnd" ).val());
-	if (!(rs > 0)) {
-	    rs = 1;
-	}
-	if (!(re > rs)) {
-	    re = rs;
-	}
-	var names = $( "#input-option-param" + i + "-params" ).val().split(",").map(function(x) { return x.trim() });
+        var result = {type : type};
+        
+        var rs = parseInt($( "#input-option-param" + i + "-rangeStart" ).val());
+        var re = parseInt($( "#input-option-param" + i + "-rangeEnd" ).val());
+        if (!(rs > 0)) {
+            rs = 1;
+        }
+        if (!(re > rs)) {
+            re = rs;
+        }
+        var names = $( "#input-option-param" + i + "-params" ).val().split(",").map(function(x) { return x.trim() });
 
-	if (type === "all") {
-	} else if (type === "exhaustive") {
-	    result.range = [rs, re];
-	} else if (type === "greedy") {
-	    result.range = [rs, re];
-	} else if (type === "explicit") {
-	    result.parameters = names;
-	} else if (type === "zero") {
-	}
-	return result;
+        if (type === "all") {
+        } else if (type === "exhaustive") {
+            result.range = [rs, re];
+        } else if (type === "greedy") {
+            result.range = [rs, re];
+        } else if (type === "explicit") {
+            result.parameters = names;
+        } else if (type === "zero") {
+        }
+        return result;
     }
 
     $( "#dialog-parameters" ).dialog({
@@ -168,23 +168,23 @@ var CORUNNER = function() {
         width: 770,
         height: 350,
         open: function() {
-	    var parameters = CORUNNER.settings.get("parameters");
-	    for (var i = 0; i < 4; ++i) {
-		displayParam(parameters, i);
-	    }
+            var parameters = CORUNNER.settings.get("parameters");
+            for (var i = 0; i < 4; ++i) {
+                displayParam(parameters, i);
+            }
         },
         buttons: [
             {
                 text: "Ok",
                 click: function() {
-		    var parameters = [];
-		    for (var i = 0; i < 4; ++i) {
-			var type = $( "#input-option-params" + i ).val();
-			if (type !== "none") {
-			    parameters.push(constructParam(type, i));
-			}
-		    }
-		    CORUNNER.settings.set("parameters", parameters);
+                    var parameters = [];
+                    for (var i = 0; i < 4; ++i) {
+                        var type = $( "#input-option-params" + i ).val();
+                        if (type !== "none") {
+                            parameters.push(constructParam(type, i));
+                        }
+                    }
+                    CORUNNER.settings.set("parameters", parameters);
                     $( this ).dialog( "close" );
                 }
             },

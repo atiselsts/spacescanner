@@ -27,8 +27,8 @@ CORUNNER.refresh = function() {
             success: updateStatus,
             error: function (data, textStatus, xhr) {
                 CORUNNER.notify("Failed to get CoRunner status", "error");
-		// refresh slower in case of error
-		refreshTimerID = setTimeout(refresh, pageRefreshInterval * 3);
+                // refresh slower in case of error
+                refreshTimerID = setTimeout(refresh, pageRefreshInterval * 3);
             }
         });
     }
@@ -48,8 +48,8 @@ CORUNNER.refresh = function() {
             } else {
                 CORUNNER.notify("Optimizations finished");
                 $("#button-select").removeClass('disabled');
-		// remove all charts
-		CORUNNER.display.drawCharts([]);
+                // remove all charts
+                CORUNNER.display.drawCharts([]);
             }
         }
         if (isActive != oldIsActive || isModelExecutable != oldIsModelExecutable) {
@@ -129,10 +129,13 @@ CORUNNER.refresh = function() {
             console.log("dialog hidden");
             return;
         }
+
+        var anyActive = false;
         var s = "";
         for (var i = 0; i < data.length; ++i) {
             var job = data[i];
             var status = job.active ? "running" : job.reason;
+            if (job.active) anyActive = true;
             var params = "";
             for (var j = 0; j < job.parameters.length; ++j) {
                 params += job.parameters[j];
@@ -142,15 +145,17 @@ CORUNNER.refresh = function() {
             }
             s += '<div class="form-row">\n'
             s += "Job " + job.id + " / "
-	    	+ "OF value: " + job.of + " / "
-	    	+ "CPU time: " + job.cpu + " / "
-		+ "Status: " + status + " / "
-		+ "Method: " + job.method + " / "
-		+ params + "\n";
+                + "OF value: " + job.of + " / "
+                + "CPU time: " + (Math.round(10 * job.cpu) / 10.0) + " / "
+                + "Status: " + status + " / "
+                + "Method: " + job.method + " / "
+                + params + "\n";
             s += '</div><br/>\n'
         }
 
-        console.log(s);
+        console.log(s)
+        $( "#dialog-status" ).dialog("option", "title",
+            anyActive ? "Job status" : "Job status (finished only)");
         $("#dialog-status").html(s);
         
         refreshFullTimerID = setTimeout(refreshFull, pageRefreshInterval * 3);

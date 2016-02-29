@@ -27,21 +27,21 @@ CORUNNER.settings = function() {
 
     // read from the server
     function querySettings() {
-	$.ajax({
-	    type: "GET",
-	    url: "config",
-	    dataType: "json",
-	    success: function (returnData) {
-		console.log("got config ok");
-		currentSettings = returnData;
-		if ($( "#dialog-settings" ).is(':visible')) {
-		    populateSettings();
-		}
-	    },
-	    error: function (data, textStatus, xhr) {
-		console.log("get config error: " + JSON.stringify(data) + " " + textStatus);
-	    }
-	});
+        $.ajax({
+            type: "GET",
+            url: "config",
+            dataType: "json",
+            success: function (returnData) {
+                console.log("got config ok");
+                currentSettings = returnData;
+                if ($( "#dialog-settings" ).is(':visible')) {
+                    populateSettings();
+                }
+            },
+            error: function (data, textStatus, xhr) {
+                console.log("get config error: " + JSON.stringify(data) + " " + textStatus);
+            }
+        });
     }
 
     function postSettings() {
@@ -63,7 +63,7 @@ CORUNNER.settings = function() {
     }
 
     function getd(obj, property, def) {
-	return obj.hasOwnProperty(property) ? obj[property] : def;
+        return obj.hasOwnProperty(property) ? obj[property] : def;
     }
 
     function populateSettings() {
@@ -72,21 +72,21 @@ CORUNNER.settings = function() {
 
         $( "#input-option-consensusMinDurationSec" ).val(getd(currentSettings["optimization"], "consensusMinDurationSec", 300));
         $( "#input-option-consensusMinProportionalDuration" ).val(
-	    Math.round(100 * getd(currentSettings["optimization"], "consensusMinProportionalDuration", 0.15), 1));
+            Math.round(1000 * getd(currentSettings["optimization"], "consensusMinProportionalDuration", 0.15)) / 10.0);
         $( "#input-option-consensusRelativeError" ).val(
-	    Math.round(100 * getd(currentSettings["optimization"], "consensusRelativeError", 0.01), 1));
+            Math.round(1000 * getd(currentSettings["optimization"], "consensusRelativeError", 0.01)) / 10.0);
 
         $( "#input-option-methods" ).val(
-	    getd(currentSettings["copasi"], "methods", []).join());
+            getd(currentSettings["copasi"], "methods", []).join());
         $( "#input-option-fallbackMethods" ).val(
-	    getd(currentSettings["copasi"], "fallbackMethods", []).join());
+            getd(currentSettings["copasi"], "fallbackMethods", []).join());
         $( "#input-option-randomizeMethodSelection" ).prop("checked",
-	    getd(currentSettings["copasi"], "randomizeMethodSelection", false));
+            getd(currentSettings["copasi"], "randomizeMethodSelection", false));
         $( "#input-option-restartFromBestValue" ).prop("checked",
-	    getd(currentSettings["optimization"], "restartFromBestValue", true));
+            getd(currentSettings["optimization"], "restartFromBestValue", true));
 
         $( "#input-option-loglevel" ).val(
-	    getd(currentSettings["output"], "loglevel", 2));
+            getd(currentSettings["output"], "loglevel", 2));
     }
 
     function saveSettings() {
@@ -94,11 +94,11 @@ CORUNNER.settings = function() {
         currentSettings["optimization"]["timeLimitSec"] = parseInt($( "#input-option-timeLimit" ).val());
 
         currentSettings["optimization"]["consensusMinDurationSec"] = parseInt($( "#input-option-consensusMinDurationSec" ).val());
-	currentSettings["optimization"]["consensusMinProportionalDuration"] = $( "#input-option-consensusMinProportionalDuration" ).val() / 100.0;
-	currentSettings["optimization"]["consensusRelativeError"] = $( "#input-option-consensusRelativeError" ).val() / 100.0;
+        currentSettings["optimization"]["consensusMinProportionalDuration"] = $( "#input-option-consensusMinProportionalDuration" ).val() / 100.0;
+        currentSettings["optimization"]["consensusRelativeError"] = $( "#input-option-consensusRelativeError" ).val() / 100.0;
 
-	currentSettings["copasi"]["methods"] = $( "#input-option-methods" ).val().split(",").map(function(x) { return x.trim() });
-	currentSettings["copasi"]["fallbackMethods"] = $( "#input-option-fallbackMethods" ).val().split(",").map(function(x) { return x.trim() });
+        currentSettings["copasi"]["methods"] = $( "#input-option-methods" ).val().split(",").map(function(x) { return x.trim() });
+        currentSettings["copasi"]["fallbackMethods"] = $( "#input-option-fallbackMethods" ).val().split(",").map(function(x) { return x.trim() });
 
         currentSettings["copasi"]["randomizeMethodSelection"] = $( "#input-option-randomizeMethodSelection" ).is(":checked");
         currentSettings["optimization"]["restartFromBestValue"] = $( "#input-option-restartFromBestValue" ).is(":checked");
@@ -111,8 +111,8 @@ CORUNNER.settings = function() {
     return {
         get : function(property) { return currentSettings[property] },
         set : function(property, value) {
-	    currentSettings[property] = value;
-	},
+            currentSettings[property] = value;
+        },
         querySettings : querySettings,
         postSettings : postSettings,
         populateSettings : populateSettings,
