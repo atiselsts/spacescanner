@@ -105,8 +105,12 @@ def main():
             print("Launching CoRunner...")
             with glock:
                 isServerStarted = True
-            pid = os.fork()
-            if pid == 0:
+            if isWindows():
+                time.sleep(2) # just wait, since fork is not supported
+                doExec = True
+            else:
+                doExec = (os.fork() == 0)
+            if doExec:
                 os.execl(executable, executable,
                          * [os.path.join(CORUNNER_PATH, 'corunner.py'), 'web'])
         else:
