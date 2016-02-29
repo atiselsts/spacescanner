@@ -2376,9 +2376,15 @@
 		input[type="reset"]:hover,
 		input[type="button"]:hover,
 		.button:hover {
-			border: solid 3px orange;
+			border: solid 3px grey;
 			color: black !important;
 		}
+
+		.button.main:hover {
+			border: solid 3px white;
+			color: black !important;
+		}
+
 
 		input[type="submit"]:active,
 		input[type="reset"]:active,
