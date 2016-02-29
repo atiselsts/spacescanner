@@ -8,8 +8,8 @@
 * determine the minimal subset of parameters that gives "good enough" results for a specific objective function.
 
 Corunner requires the following inputs:
-* a Copasi model file (`.sbml`)
-* that include a user-defined objective function,
+* a Copasi model file (`.sbml`), that
+* includes a user-defined objective function,
 * optimization parameters and methods
 and produces these outputs:
 * `.csv` file with the best (or all) optimization results
@@ -63,9 +63,9 @@ Alternatively, run this on Ubuntu Linux to install `psutil`:
 
 # Terminology
 
-**Run** - a single optimization. Each active run corresponds to a single Copasi process instance.
-**Job** - single or multiple optimization runs that all share the same set of parameters and are executed in parallel.
-**Task** - a collection of jobs described by a single configuration file. A tasks corresponds to a single command-line execution of CoRunner.
+* **Run** - a single optimization. Each active run corresponds to a single Copasi process instance.
+* **Job** - single or multiple optimization runs that all share the same set of parameters and are executed in parallel.
+* **Task** - a collection of jobs described by a single configuration file. A tasks corresponds to a single command-line execution of CoRunner.
 
 
 # Execution
