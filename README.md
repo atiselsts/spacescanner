@@ -19,11 +19,9 @@ and produces these outputs:
 
 CoRunner internally uses [Copasi](http://copasi.org) to execute the optimizations.
 
+**CoRunner** at the moment supports greedy and exhaustive search strategies when looking for the minimal satisfying number of parameters. "Smarter" search strategies are planned as future additions.
 
-**CoRunner** at the moment supports greedy and exhaustive search strategies when looking for .
-"Smarter" search strategies are planned as future additions.
-
-**CoRunner** is easy to use and configure. It has two interfaces:
+**CoRunner** is easy to use and configure. There are two ways how to work with CoRunner:
 * a command-line interface that expects a configuration file in JSON format as the only argument;
 * a web interface that allows the user to interactively configure, start, and stop the optimizations, as well as see their results graphically.
 
@@ -72,7 +70,7 @@ Alternatively, run this on Ubuntu Linux to install `psutil`:
 
 ## Web interface
 
-Double click or `corunner/corunner_launcher.py` file. This both starts the CoRunner executable (if not started yet) and opens the web interface in a web browser.
+Double click on `corunner/corunner_launcher.py` file. This both starts the CoRunner executable (if not started yet) and opens the web interface in a web browser.
 
 Alternatively, start `corunner/source/corunner.py` from a command line, passing the string "web" as the parameter, and open the web interface manually (default URL: `http://localhost:19000`).
 
@@ -80,10 +78,9 @@ Alternatively, start `corunner/source/corunner.py` from a command line, passing 
 
 Simply execute the `corunner/source/corunner.py` script, passing the configuration file name as a parameter.
 
-
 ## Accessing the results
 
-CoRunner stores the results in `corunner/results` directory.
+CoRunner stores the results in `corunner/results` directory. **Warning:** for tasks with a large number of jobs these directories can take quite a lot of space on the disk!
 
 Each optimization task (collection of jobs) is stored in a separate directory. This directory contains the configuration of that task, the `.log` file of the execution, and `.csv` file where the results of finished jobs are stored.
 
