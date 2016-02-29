@@ -296,6 +296,8 @@ class StrategyManager:
             g.log(LOG_INFO, "output file name should not include path, ignoring all but the last element in it")
             filename = os.path.basename(filename)
         (name, ext) = os.path.splitext(filename)
+        if not ext:
+            ext = ".csv" # default
         filename = os.path.join(g.workDir, "{}-{}{}".format(name, "-", g.taskName, ext))
 
         with self.jobLock:
@@ -387,16 +389,6 @@ class StrategyManager:
             g.log(LOG_ERROR, "Parameter ranges are invalid: best value of {} parameters requested, but no jobs finished".format(k))
             return None
         return joblist[0].params
-
-
-    def ioGetActiveJobs(self, qs):
-        response = []
-        with self.jobLock:
-            if self.activeJobPool:
-                with self.activeJobPool.jobLock:
-                    for job in self.activeJobPool.activeJobs:
-                        response.append(job.getStatsBrief())
-        return response
 
 
     def ioGetAllJobs(self, qs):

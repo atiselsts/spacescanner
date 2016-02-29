@@ -11,6 +11,8 @@ CORUNNER.refresh = function() {
     var isActive = false;
     var hasResults = false;
 
+    var resultsButtonClicked = false;
+
     // get list of active jobs and the general state
     function refresh() {
         if (refreshTimerID) {
@@ -23,7 +25,6 @@ CORUNNER.refresh = function() {
             url: "status",
             contentType: "application/json",
             dataType: "json",
-            crossDomain: true,
             success: updateStatus,
             error: function (data, textStatus, xhr) {
                 CORUNNER.notify("Failed to get CoRunner status", "error");
@@ -44,12 +45,15 @@ CORUNNER.refresh = function() {
 
         if (isActive != oldIsActive) {
             if (isActive) {
+		resultsButtonClicked = false;
                 $("#button-select").addClass('disabled');
             } else {
                 CORUNNER.notify("Optimizations finished");
                 $("#button-select").removeClass('disabled');
-                // remove all charts
-                CORUNNER.display.drawCharts([]);
+		if (!resultsButtonClicked) {
+                    // remove all charts
+                    CORUNNER.display.drawCharts([]);
+		}
             }
         }
         if (isActive != oldIsActive || isModelExecutable != oldIsModelExecutable) {
@@ -85,8 +89,10 @@ CORUNNER.refresh = function() {
                 url: "activestatus",
                 contentType: "application/json",
                 dataType: "json",
-                crossDomain: true,
-                success: updateActiveStatus,
+                success: function (data) {
+		    CORUNNER.display.drawCharts(data);
+		    refreshTimerID = setTimeout(refresh, pageRefreshInterval);
+		},
                 error: function (data, textStatus, xhr) {
                     console.log("get active status error: " + JSON.stringify(data) + " " + textStatus);
                     refreshTimerID = setTimeout(refresh, pageRefreshInterval);
@@ -97,9 +103,23 @@ CORUNNER.refresh = function() {
         }
     }
 
-    function updateActiveStatus(data) {
-        CORUNNER.display.drawCharts(data);
-        refreshTimerID = setTimeout(refresh, pageRefreshInterval);
+    function showFinishedJobResults(id) {
+	resultsButtonClicked = true;
+
+        $.ajax({
+            type: "GET",
+            url: "job/" + id,
+            contentType: "application/json",
+            dataType: "json",
+            success:  function (data) {
+		CORUNNER.display.drawCharts([data]);
+	    },
+            error: function (data, textStatus, xhr) {
+                console.log("get job " + id + " status error: " + JSON.stringify(data) + " " + textStatus);
+            }
+	});
+
+        $( "#dialog-status" ).dialog( "close" );
     }
 
     // get list of all jobs (active + finished)
@@ -114,7 +134,6 @@ CORUNNER.refresh = function() {
             url: "allstatus",
             contentType: "application/json",
             dataType: "json",
-            crossDomain: true,
             success: updateStatusFull,
             error: function (data, textStatus, xhr) {
                 console.log("get server full status error: " + data + " " + textStatus);
@@ -123,19 +142,22 @@ CORUNNER.refresh = function() {
     }
 
     function updateStatusFull(data) {
-        console.log("all jobs: " + JSON.stringify(data));
-
         if (!$("#dialog-status").dialog('isOpen')) {
-            console.log("dialog hidden");
+            console.log("status dialog hidden");
             return;
         }
 
         var anyActive = false;
+        for (var i = data.length - 1; i >= 0 ; --i) {
+            if (data[i].active) {
+		anyActive = true;
+		break;
+	    }
+	}
         var s = "";
         for (var i = 0; i < data.length; ++i) {
             var job = data[i];
             var status = job.active ? "running" : job.reason;
-            if (job.active) anyActive = true;
             var params = "";
             for (var j = 0; j < job.parameters.length; ++j) {
                 params += job.parameters[j];
@@ -144,8 +166,11 @@ CORUNNER.refresh = function() {
                 }
             }
             s += '<div class="form-row">\n'
-            s += "Job " + job.id + " / "
-                + "OF value: " + job.of + " / "
+            s += "Job " + job.id + " / ";
+	    if (!anyActive) {
+		s += '<a title="Show job results graph" class="button-results" id="button-results-' + job.id +'" onclick="CORUNNER.refresh.showFinishedJobResults(' + job.id + ')">Results graph</a> / ';
+	    }
+            s += "OF value: " + job.of + " / "
                 + "CPU time: " + (Math.round(10 * job.cpu) / 10.0) + " / "
                 + "Status: " + status + " / "
                 + "Method: " + job.method + " / "
@@ -153,7 +178,6 @@ CORUNNER.refresh = function() {
             s += '</div><br/>\n'
         }
 
-        console.log(s)
         $( "#dialog-status" ).dialog("option", "title",
             anyActive ? "Job status" : "Job status (finished only)");
         $("#dialog-status").html(s);
@@ -167,6 +191,7 @@ CORUNNER.refresh = function() {
     return {
         refresh: refresh,
         refreshFull: refreshFull,
-        isActive: function () { return isActive }
+        isActive: function () { return isActive },
+        showFinishedJobResults: showFinishedJobResults,
     }
 }();

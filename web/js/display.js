@@ -40,6 +40,10 @@ CORUNNER.display = function() {
     }
 
     function showChart(i, chart, job) {
+	if (job.error) {
+	    console.log("Job data has an error: " + job.error);
+	    return;
+	}
         var params = ""; 
         for (var j = 0; j < job.parameters.length; ++j) {
             params += job.parameters[j];
@@ -50,6 +54,12 @@ CORUNNER.display = function() {
 
         $("#job" + i + "_name").html("<h2>Job " + job.id + "</h2>\n");
         $("#job" + i + "_parameters").html("<p>Parameters: " + params + "</p>\n");
+
+	if (job.active) {
+	    $("#job" + i + "_actions").show();
+	} else {
+	    $("#job" + i + "_actions").hide();
+	}
 
         var allData = [];
         for (var runner = 0; runner < job.data.length; runner++) {

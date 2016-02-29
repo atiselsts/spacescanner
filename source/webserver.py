@@ -86,7 +86,7 @@ class InterruptibleHTTPServer(HTTPServer):
 ################################################
 
 class HttpServerHandler(BaseHTTPRequestHandler):
-    server_version = 'CoRunner Web Server ' + CORUNNER_VERSION
+    server_version = 'CoRunner web server ' + CORUNNER_VERSION
 
     # overrides base class function, because in some versions
     # it tries to resolve dns and fails...
@@ -226,8 +226,6 @@ class HttpServerHandler(BaseHTTPRequestHandler):
 
         self.send_response(200)
         self.sendDefaultHeaders(response, isJSON, contentType)
-        # to enable cross-site scripting
-        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.serveBody(response, qs)
 
@@ -306,13 +304,3 @@ class HttpServerHandler(BaseHTTPRequestHandler):
             self.postConfig(qs)
         else:
             self.serveError(qs)
-
-    def do_OPTIONS(self):
-        self.send_response(200)
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Headers", "content-type")
-        self.send_header("Content-Type", "text/plain")
-        self.send_header("Content-Length", "0")
-        self.end_headers()
-        self.end()

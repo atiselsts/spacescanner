@@ -51,7 +51,6 @@ CORUNNER.settings = function() {
             data: JSON.stringify(currentSettings),
             contentType: "application/json",
             dataType: "json",
-            crossDomain: true,
             success: function (returnData) {
                 CORUNNER.notify("Jobs started", "success");
                 console.log("start command: " + JSON.stringify(returnData));
