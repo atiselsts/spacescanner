@@ -1,5 +1,5 @@
 PYTHON = python
-CORUNNER = ../launcher/corunner.py
+CORUNNER = ../source/corunner.py
 
 all: test-broken test-fast-consensus test-no-solution test-param-ranges test-param-ranges2 test-solution-timeout test-solution-timeout-allmethods test-suspend-resume cleanup
 
