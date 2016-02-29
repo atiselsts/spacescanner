@@ -7,7 +7,7 @@
 * display optimization history graphically for these parallel runs;
 * determine the minimal subset of parameters that gives "good enough" results for a specific objective function.
 
-Corunner requires the following inputs:
+CoRunner requires the following inputs:
 * a Copasi model file (`.sbml`), that
 * includes a user-defined objective function,
 * optimization parameters and methods
@@ -19,9 +19,9 @@ and produces these outputs:
 
 CoRunner internally uses [Copasi](http://copasi.org) to execute the optimizations.
 
-**CoRunner** at the moment supports greedy and exhaustive search strategies when looking for the minimal satisfying number of parameters. "Smarter" search strategies are planned as future additions.
+CoRunner at the moment supports greedy and exhaustive search strategies when looking for the minimal satisfying number of parameters. "Smarter" search strategies are planned as future additions.
 
-**CoRunner** is easy to use and configure. There are two ways how to work with CoRunner:
+CoRunner is easy to use and configure. There are two ways how to work with CoRunner:
 * a command-line interface that expects a configuration file in JSON format as the only argument;
 * a web interface that allows the user to interactively configure, start, and stop the optimizations, as well as see their results graphically.
 
