@@ -26,7 +26,9 @@ CORUNNER.refresh = function() {
             crossDomain: true,
             success: updateStatus,
             error: function (data, textStatus, xhr) {
-                console.log("get server status error: " + JSON.stringify(data) + " " + textStatus);
+                CORUNNER.notify("Failed to get CoRunner status", "error");
+		// refresh slower in case of error
+		refreshTimerID = setTimeout(refresh, pageRefreshInterval * 3);
             }
         });
     }
@@ -44,8 +46,10 @@ CORUNNER.refresh = function() {
             if (isActive) {
                 $("#button-select").addClass('disabled');
             } else {
-		CORUNNER.notify("Optimizations finished");
+                CORUNNER.notify("Optimizations finished");
                 $("#button-select").removeClass('disabled');
+		// remove all charts
+		CORUNNER.display.drawCharts([]);
             }
         }
         if (isActive != oldIsActive || isModelExecutable != oldIsModelExecutable) {
@@ -75,27 +79,27 @@ CORUNNER.refresh = function() {
             }
         }
 
-	if (isActive) {
+        if (isActive) {
             $.ajax({
-		type: "GET",
-		url: "activestatus",
-		contentType: "application/json",
-		dataType: "json",
-		crossDomain: true,
-		success: updateActiveStatus,
-		error: function (data, textStatus, xhr) {
+                type: "GET",
+                url: "activestatus",
+                contentType: "application/json",
+                dataType: "json",
+                crossDomain: true,
+                success: updateActiveStatus,
+                error: function (data, textStatus, xhr) {
                     console.log("get active status error: " + JSON.stringify(data) + " " + textStatus);
-		    refreshTimerID = setTimeout(refresh, pageRefreshInterval);
-		}
+                    refreshTimerID = setTimeout(refresh, pageRefreshInterval);
+                }
             });
-	} else {
-	    refreshTimerID = setTimeout(refresh, pageRefreshInterval);
-	}
+        } else {
+            refreshTimerID = setTimeout(refresh, pageRefreshInterval);
+        }
     }
 
     function updateActiveStatus(data) {
-	CORUNNER.graph.drawChart(data);
-	refreshTimerID = setTimeout(refresh, pageRefreshInterval);
+        CORUNNER.display.drawCharts(data);
+        refreshTimerID = setTimeout(refresh, pageRefreshInterval);
     }
 
     // get list of all jobs (active + finished)
@@ -128,7 +132,7 @@ CORUNNER.refresh = function() {
         var s = "";
         for (var i = 0; i < data.length; ++i) {
             var job = data[i];
-            var status = job.active ? "running" : "done";
+            var status = job.active ? "running" : job.reason;
             var params = "";
             for (var j = 0; j < job.parameters.length; ++j) {
                 params += job.parameters[j];
@@ -137,7 +141,12 @@ CORUNNER.refresh = function() {
                 }
             }
             s += '<div class="form-row">\n'
-            s += "Job " + job.id + " / " + status + " / " + params + "\n";
+            s += "Job " + job.id + " / "
+	    	+ "OF value: " + job.of + " / "
+	    	+ "CPU time: " + job.cpu + " / "
+		+ "Status: " + status + " / "
+		+ "Method: " + job.method + " / "
+		+ params + "\n";
             s += '</div><br/>\n'
         }
 
@@ -149,12 +158,10 @@ CORUNNER.refresh = function() {
 
     // delayed refresh
     refreshTimerID = setTimeout(refresh, pageRefreshInterval);
-    // immediate refresh
-    //refresh();
 
     return {
         refresh: refresh,
         refreshFull: refreshFull,
-	isActive: function () { return isActive }
+        isActive: function () { return isActive }
     }
 }();

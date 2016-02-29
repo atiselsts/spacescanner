@@ -107,7 +107,7 @@ def reasonToStr(reason):
     if reason == TERMINATION_REASON_GOOD_VALUE_REACHED:
         return "Good value reached"
     if reason == TERMINATION_REASON_PROGRAM_QUITTING:
-        return "CoRunner interrupted"
+        return "User terminated"
     return "?"
 
 def getUserInput(prompt):

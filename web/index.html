@@ -51,39 +51,64 @@
         <li class="divider"></li>
         <li><a id="button-export" class="button disabled" title="Export a CSV file with the current results">Export CSV</a></li>
       </ul>
+
+      <div id="notifications" style="position:absolute; top:30px; left:400px; width:600px; text-align:center"></div>
+
    </header>
 
   <!-- Main -->
- <div id="main">
-   <div id="job_name"></div>
-   <div id="job_parameters"></div>
-   <div id="job_chart" style="width: 100%; height: 300px;"></div>
-   <ul class="actions">
-     <li><a id="button-stop-job1" class="button small"><i class="icon-stop" style="margin-top: 1px"></i> Stop</a></li>
-   </ul>
+  <div id="main">
+   <!-- note that the system cannot display more than 4 jobs simultaneously.
+    that should not be a problem unless/until a distributed version corunner is made -->
+   <div id="job0" class="hide">
+   <div id="job0_name"></div>
+   <div id="job0_parameters"></div>
+   <div id="job0_chart" style="width: 100%; height: 300px;"></div>
+   &nbsp;<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;<br/>
+   <div id="job0_actions">
+     <ul class="actions">
+       <li><a id="button-stop-job0" class="button small"><i class="icon-stop" style="margin-top: 1px"></i> Stop</a></li>
+     </ul>
+   </div>
+   </div>
 
-<!--     <section id="one">
-                        <h2>Job 13</h2>
-                        <p>Parameters: Triosephosphate isomerase, Pyruvate kinase, Hexokinase, Glyceraldehyde 3-phosphate dehydrogenase, Alcohol dehydrogenase</p>
-                        <img widht="800" height="600" src="./graph.jpg" alt="Job 13 results"></img>
+   <div id="job1" class="hide">
+   <div id="job1_name"></div>
+   <div id="job1_parameters"></div>
+   <div id="job1_chart" style="width: 100%; height: 300px;"></div>
+   &nbsp;<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;<br/>
+   <div id="job1_actions">
+     <ul class="actions">
+       <li><a id="button-stop-job1" class="button small"><i class="icon-stop" style="margin-top: 1px"></i> Stop</a></li>
+     </ul>
+   </div>
+   </div>
 
-                        <ul class="actions">
-                            <li><a href="#" class="button small"><i class="icon-stop" style="margin-top: 1px"></i> Stop</a></li>
-                            <li><a href="#" class="button small">Hide run 1</a></li>
-                            <li><a href="#" class="button small">Hide run 2</a></li>
-                        </ul>
+   <div id="job2" class="hide">
+   <div id="job2_name"></div>
+   <div id="job2_parameters"></div>
+   <div id="job2_chart" style="width: 100%; height: 300px;"></div>
+   &nbsp;<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;<br/>
+   <div id="job2_actions">
+     <ul class="actions">
+       <li><a id="button-stop-job2" class="button small"><i class="icon-stop" style="margin-top: 1px"></i> Stop</a></li>
+     </ul>
+   </div>
+   </div>
 
-                        <h2>Job 14</h2>
-                        <p>Parameters: Triosephosphate isomerase, Pyruvate kinase, Hexokinase, Glyceraldehyde 3-phosphate dehydrogenase, Storage</p>
-                        <img widht="800" height="600" src="./graph.jpg" alt="Job 14 results"></img>
+   <div id="job3" class="hide">
+   <div id="job3_name"></div>
+   <div id="job3_parameters"></div>
+   <div id="job3_chart" style="width: 100%; height: 300px;"></div>
+   &nbsp;<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;<br/>
+   <div id="job3_actions">
+     <ul class="actions">
+       <li><a id="button-stop-job3" class="button small"><i class="icon-stop" style="margin-top: 1px"></i> Stop</a></li>
+     </ul>
+   </div>
+   </div>
 
-                        <ul class="actions">
-                            <li><a href="#" class="button small"><i class="icon-stop" style="margin-top: 1px"></i> Stop</a></li>
-                            <li><a href="#" class="button small">Hide run 1</a></li>
-                            <li><a href="#" class="button small">Hide run 2</a></li>
-                        </ul>
-      </section> -->
-    </div>
+   </div>
 
     <!-- Footer -->
     <footer id="footer">
@@ -105,10 +130,9 @@
         <label for="input-import-filename" ><i class="icon-tag"></i> Filename:</label>
         <input type="file" id="input-import-filename" placeholder="Filename">
     </div>
-    <br/>
     <div class="form-row">
-        <label for="input-import-taskname">Task name:</label>
-        <input type="text" id="input-import-taskname" placeholder="Name (optional)">
+        <label for="input-import-taskName">Task name:</label>
+        <input type="text" id="input-import-taskName" placeholder="Name (optional)">
     </div>
     <br/>
     <div class="form-row">
@@ -128,20 +152,171 @@
 
 <div id="dialog-settings" class="hide">
     <div class="form-row">
-        <label for="input-option-timelimit" style="width:150px">Time limit, seconds</label>
-        <input type="number" id="input-option-timelimit" style="width:100px !important"  placeholder="3600" min="10" title="Maximal CPU time for optimization in case convergence criteria and other end conditions have not been reached">
+        <label for="input-option-runsPerJob" style="width:150px">Runs per job</label>
+        <input type="number" id="input-option-runsPerJob" style="width:100px !important" placeholder="4" min="1" title="The number of paraller COPASI executions per each job">
     </div>
+
     <br/>
+
+    <div class="form-row">
+        <label for="input-option-timeLimit" style="width:150px">Time limit, sec</label>
+        <input type="number" id="input-option-timeLimit" style="width:100px !important"  placeholder="3600" min="10" title="Maximal CPU time for optimization in case the consensus criteria and other end conditions have not been reached">
+    </div>
+
+<!--    <br/> -->
+    <div class="form-row">
+        <label for="input-option-consensusMinDurationSec" style="width:150px">Consensus minimal duration, sec</label>
+        <input type="number" id="input-option-consensusMinDurationSec" style="width:100px !important"  placeholder="300" min="10" title="The minimal time to continue after the consensus criteria has been reached">
+<!--    </div>
+    <div class="form-row"> -->
+
+    &nbsp;&nbsp;&nbsp;&nbsp;
+
+        <label for="input-option-consensusMinProportionalDuration" style="width:150px">Consensus minimal proportional duration, %</label>
+        <input type="number" id="input-option-consensusMinProportionalDuration" style="width:100px !important" placeholder="15" min="0" title="The minimal time to continue after the consensus criteria has been reached as a proportion of runtime so-far">
+    </div>
+    <div class="form-row">
+        <label for="input-option-consensusRelativeError" style="width:150px">Consensus maximal relative error, %</label>
+        <input type="number" id="input-option-consensusRelativeError" style="width:100px !important"  placeholder="1" min="0" title="To determine whether the consensus criteria has been reached" step="0.1">
+    </div>
+
+    <br/>
+    <div class="form-row">
+        <label for="input-option-methods">Methods:</label>
+        <input type="text" id="input-option-methods">
+    </div>
+    <div class="form-row">
+        <label for="input-option-fallbackMethods">Fallback methods:</label>
+        <input type="text" id="input-option-fallbackMethods">
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="input-option-randomizeMethodSelection" style="display: inline-block; width: auto; vertical-align: top;" title="Pick optimization methods randomly?">
+        <label for="input-option-randomizeMethodSelection" style="width: 70%;">Randomize method selection</label>
+    </div>
     <div class="form-row">
         <label>&nbsp;</label>
         <input type="checkbox" id="input-option-restartFromBestValue" style="display: inline-block; width: auto; vertical-align: top;" title="Restart each subsequent method from the best point in the search space so far?">
         <label for="input-option-restartFromBestValue" style="width: 70%;">Restart from best value</label>
+    </div>
+
+    <div class="form-row">
+      <label for="input-option-loglevel" style="width:150px">Output log level (1-4)</label>
+      Min <input type="range" id="input-option-loglevel" name="loglevel" style="width:300px" min="1" max="4" step="1" title="Console output level (higher means more output)"> Max
     </div>
 </div>
 
 
 <div id="dialog-parameters" class="hide">
 
+    <div class="form-row">
+        <label for="input-option-params0" style="width:120px">Parameter set:</label>
+        <select id="input-option-params0" style="width:150px !important; color: black" title="Type of the parameter set">
+          <option value="none">None</option>
+          <option value="all">All parameters</option>
+          <option value="exhaustive">Exhaustive</option>
+          <option value="greedy">Greedy</option>
+          <option value="explicit">Explicit</option>
+          <option value="zero">Zero parameters</option>
+        </select>
+
+	<span id="params0-ranges" class="hide">
+	&nbsp;&nbsp;
+        <label for="input-option-param0-rangeStart" style="width:100px">Range start:</label>
+        <input type="number" id="input-option-param0-rangeStart" style="width:100px !important" placeholder="1" min="1" title="">
+	&nbsp;&nbsp;
+        <label for="input-option-param0-rangeEnd" style="width:40px">End:</label>
+        <input type="number" id="input-option-param0-rangeEnd" style="width:100px !important" placeholder="2" min="1" title="">
+	</span>
+
+	<span id="params0-names" class="hide">
+	&nbsp;&nbsp;
+        <label for="input-option-param0-params">Names:</label>
+        <input type="text" id="input-option-param0-params" style="width:200px !important">
+	</span>
+
+    </div>
+
+    <div class="form-row">
+        <label for="input-option-params1" style="width:120px">Parameter set:</label>
+        <select id="input-option-params1" style="width:150px !important; color: black" title="Type of the parameter set">
+          <option value="none" selected>None</option>
+          <option value="all">All parameters</option>
+          <option value="exhaustive">Exhaustive</option>
+          <option value="greedy">Greedy</option>
+          <option value="explicit">Explicit</option>
+          <option value="zero">Zero parameters</option>
+        </select>
+
+	<span id="params1-ranges" class="hide">
+	&nbsp;&nbsp;
+        <label for="input-option-param1-rangeStart" style="width:100px">Range start:</label>
+        <input type="number" id="input-option-param1-rangeStart" style="width:100px !important" placeholder="1" min="1" title="">
+	&nbsp;&nbsp;
+        <label for="input-option-param1-rangeEnd" style="width:40px">End:</label>
+        <input type="number" id="input-option-param1-rangeEnd" style="width:100px !important" placeholder="2" min="1" title="">
+	</span>
+
+	<span id="params1-names" class="hide">
+	&nbsp;&nbsp;
+        <label for="input-option-param1-params">Names:</label>
+        <input type="text" id="input-option-param1-params" style="width:200px !important">
+	</span>
+    </div>
+
+    <div class="form-row">
+        <label for="input-option-params2" style="width:120px">Parameter set:</label>
+        <select id="input-option-params2" style="width:150px !important; color: black" title="Type of the parameter set">
+          <option value="none" selected>None</option>
+          <option value="all">All parameters</option>
+          <option value="exhaustive">Exhaustive</option>
+          <option value="greedy">Greedy</option>
+          <option value="explicit">Explicit</option>
+          <option value="zero">Zero parameters</option>
+        </select>
+
+	<span id="params2-ranges" class="hide">
+	&nbsp;&nbsp;
+        <label for="input-option-param2-rangeStart" style="width:100px">Range start:</label>
+        <input type="number" id="input-option-param2-rangeStart" style="width:100px !important" placeholder="1" min="1" title="">
+	&nbsp;&nbsp;
+        <label for="input-option-param2-rangeEnd" style="width:40px">End:</label>
+        <input type="number" id="input-option-param2-rangeEnd" style="width:100px !important" placeholder="2" min="1" title="">
+	</span>
+
+	<span id="params2-names" class="hide">
+	&nbsp;&nbsp;
+        <label for="input-option-param2-params">Names:</label>
+        <input type="text" id="input-option-param2-params" style="width:200px !important">
+	</span>
+    </div>
+
+    <div class="form-row">
+        <label for="input-option-params3" style="width:120px">Parameter set:</label>
+        <select id="input-option-params3" style="width:150px !important; color: black" title="Type of the parameter set">
+          <option value="none" selected>None</option>
+          <option value="all">All parameters</option>
+          <option value="exhaustive">Exhaustive</option>
+          <option value="greedy">Greedy</option>
+          <option value="explicit">Explicit</option>
+          <option value="zero">Zero parameters</option>
+        </select>
+
+	<span id="params3-ranges" class="hide">
+	&nbsp;&nbsp;
+        <label for="input-option-param3-rangeStart" style="width:100px">Range start:</label>
+        <input type="number" id="input-option-param3-rangeStart" style="width:100px !important" placeholder="1" min="1" title="">
+	&nbsp;&nbsp;
+        <label for="input-option-param3-rangeEnd" style="width:40px">End:</label>
+        <input type="number" id="input-option-param3-rangeEnd" style="width:100px !important" placeholder="2" min="1" title="">
+	</span>
+
+	<span id="params3-names" class="hide">
+	&nbsp;&nbsp;
+        <label for="input-option-param3-params">Names:</label>
+        <input type="text" id="input-option-param3-params" style="width:200px !important">
+	</span>
+    </div>
 </div>
 
 
@@ -150,7 +325,6 @@
         <label for="input-export-totallimit" style="width:250px">Limit total number of results</label>
         <input type="number" id="input-export-totallimit" style="width:120px !important" min="1" title="The number of the best results to export" placeholder="unlimited">
     </div>
-    <br/>
     <div class="form-row">
         <label for="input-export-paramlimit" style="width:250px">Limit per-number-of-parameters number of results</label>
         <input type="number" id="input-export-paramlimit" style="width:120px !important" min="1" title="The number of the best results per a number of parameters to export" placeholder="unlimited">
@@ -164,7 +338,7 @@
 <script src="https://www.google.com/jsapi"></script>
 <script src="js/fileupload.js"></script>
 <script src="js/corunner.js"></script>
-<script src="js/graph.js"></script>
+<script src="js/display.js"></script>
 <script src="js/notifications.js"></script>
 <script src="js/refresh.js"></script>
 <script src="js/settings.js"></script>

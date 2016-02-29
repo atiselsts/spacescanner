@@ -16,15 +16,15 @@
         "methodParametersFromFile" : false,
     },
     "optimization" : {
-	// maximal CPU time for optimization in case convergence criteria and other end conditions have not been reached (default: 600 sec)
+	// maximal CPU time for optimization in case the consensus criteria and other end conditions have not been reached (default: 600 sec)
         "timeLimitSec" : 60,
-	// for determining whether the convergence criteria of multiple solutions has been reached (default: 1%)
+	// to determine whether the consensus criteria has been reached (default: 1%)
         "consensusRelativeError" : 0.01,
-	// for determining whether the convergence criteria of multiple solutions has been reached (default: 1e-6)
+	// to determine whether the consensus criteria has been reached (default: 1e-6)
         "consensusAbsoluteError" : 1e-6,
-	// minimal time to continue after convergence criteria has been reached (default: 300 sec )
+	// the minimal time to continue after the consensus criteria has been reached (default: 300 sec )
         "consensusMinDurationSec" : 30,
-	// minimal time to continue after convergence criteria has been reached as proportion of runtime so-far (default: 15%)
+	// the minimal time to continue after the consensus criteria has been reached as proportion of runtime so-far (default: 15%)
         "consensusMinProportionalDuration" : 0.15,
 	// compared to already found solution (default: 0.9, range: (0.0  .. 1.0])
         "optimalityRelativeError" : 0.1,
@@ -34,7 +34,7 @@
         "restartFromBestValue" : true,
 	// how many COPASI processes to run by parallel (default: max(4, the number of CPU cores); range: [1 .. number of CPU cores])
         "maxConcurrentRuns" : 4,
-	// how many paraller COPASI exectutions to per single job (i.e. a single set of parameters)
+	// how many paraller COPASI executions per each job (i.e. a single set of parameters)
         "runsPerJob" : 2
     },
     // .csv file name on which to restart optimization runs, trying to complete timeouted jobs (default: null)

@@ -407,9 +407,16 @@ class Job:
             ofValues = []
             if runner.isActive:
                 isActive = True
-            for s in runner.getAllStats():
+            stats = runner.getAllStats()
+            for s in stats:
                 cpuTimes.append(s.cpuTime)
                 ofValues.append(jsonFixInfinity(s.ofValue, 0.0))
+
+            # always add the current state
+            lastOfValue = ofValues[-1] if len(ofValues) else 0.0
+            cpuTimes.append(runner.currentCpuTime)
+            ofValues.append(lastOfValue)
+
             reply.append({"id" : methodID, "values" : ofValues, 
                           "time" : cpuTimes, "active" : runner.isActive})
 

@@ -38,6 +38,7 @@ PARAM_SEL_EXPLICIT   = 2
 PARAM_SEL_EXHAUSTIVE = 3
 PARAM_SEL_GREEDY     = 4
 PARAM_SEL_GREEDY_REVERSE = 5
+PARAM_SEL_ZERO       = 6
 
 class ParamSelection(object):
     instanceOfExplicit = None
@@ -85,6 +86,8 @@ class ParamSelection(object):
 
         if specification["type"] == "all":
             x = ParamSelectionAll(strategy)
+        elif specification["type"] == "zero":
+            x = ParamSelectionZero(strategy)
         elif specification["type"] == "explicit":
             # use a singleton instance
             if ParamSelection.instanceOfExplicit is None:
@@ -121,6 +124,17 @@ class ParamSelectionAll(ParamSelection):
 
     def getParameterSets(self):
         yield [self.allParameters]
+
+    def getNumCombinations(self):
+        return 1
+
+
+class ParamSelectionZero(ParamSelection):
+    def __init__(self, strategy):
+        super(ParamSelectionZero, self).__init__(PARAM_SEL_ZERO, strategy, 0, 0)
+
+    def getParameterSets(self):
+        yield [[]]
 
     def getNumCombinations(self):
         return 1
@@ -400,6 +414,10 @@ class StrategyManager:
     def ioGetActiveJobs(self, qs):
         response = []
         with self.jobLock:
+            if bool(g.getConfig("webTestMode")):
+                for id in self.finishedJobs:
+                    if id < 4:
+                        response.append(self.finishedJobs[id].getStatsFull())
             if self.activeJobPool:
                 with self.activeJobPool.jobLock:
                     for job in self.activeJobPool.activeJobs:

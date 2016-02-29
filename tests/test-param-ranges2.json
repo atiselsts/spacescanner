@@ -1,0 +1,18 @@
+{
+    "optimization" : {
+        "timeLimitSec" : 10,
+        "consensusMinDurationSec" : 5
+    },
+    "copasi" : {
+        "modelFile" : "@SELF@/models/simple-6params.cps",
+        "methods" : ["RandomSearch"],
+        "fallbackMethods" : []
+    },
+    "parameters" : [
+        {"type" : "zero"}
+    ],
+    "output" : {
+        "logfile" : "corunner.log"
+    },
+    "testMode" : true
+}

@@ -39,7 +39,7 @@ def executeCopasi(runner):
     # a pseudo-loop for simpler error handling
     while True:
         if bool(g.getConfig("webTestMode")):
-            if runner.job.id < 3:
+            if runner.job.id < 4:
                 time.sleep(1.0)
                 runner.ofValue = random.random() * 100
                 runner.isActive = False

@@ -112,11 +112,12 @@ def wait():
 
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == "web":
-        # web-only mode; create an empty strategy and wait for input commands
+        # web-only mode; load the last saved web config, if present
+        g.loadConfig(os.path.join(SELF_PATH, "tmpweb", "config.json"), isQuiet = True)
+        # create an empty strategy and wait for input commands
         strategyManager = strategy.StrategyManager()
         strategyManager.prepare(isDummy = True)
-        g.config["output"]["loglevel"] = 3
-        # start the web server (XXX: configurable port number?)
+        # start the web server
         process.createBackgroundThread(executeWebserver, strategyManager)
         wait()
     else:

@@ -43,7 +43,7 @@ DEFAULT_CONFIG = {
         "consensusAbsoluteError" : 1e-6,
         "consensusMinDurationSec" : 300,
         "consensusMinProportionalDuration" : 0.15, # 15% of total run's time
-        "optimalityRelativeError" : 0.1, # set to None to disable this
+        "optimalityRelativeError" : 0.0, # set to 0.0 to disable this
         "bestOfValue" : float("-inf"),
         "restartFromBestValue" : True, # if yes, each next method will start from the best parameter values so far
         "maxConcurrentRuns" : 4,
@@ -97,14 +97,15 @@ def getConfig(name, default = None, useHardcodedConfig = True):
         value, ok = get(path, DEFAULT_CONFIG)
     return value if ok else default
 
-def loadConfig(filename):
+def loadConfig(filename, isQuiet = False):
     global config
     global configFileName
 
     if filename:
         configFileName = filename
 
-    print("load config from file " + configFileName)
+    if not isQuiet:
+        print("loading config from file " + configFileName)
 
     # load configuration
     try:
@@ -112,8 +113,9 @@ def loadConfig(filename):
             config = json.load(f)
     except IOError as e:
         config = DEFAULT_CONFIG
-        log(LOG_ERROR, "<corunner>: exception occurred while loading configuration file: " + str(e))
-        log(LOG_ERROR, "going to use the default configuration!\n")
+        if not isQuiet:
+            log(LOG_ERROR, "<corunner>: exception occurred while loading configuration file: " + str(e))
+            log(LOG_ERROR, "going to use the default configuration!\n")
 
     # see if the number of runners is below the number of CPU cores
     numCores = multiprocessing.cpu_count()

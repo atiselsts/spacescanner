@@ -30,13 +30,16 @@ CORUNNER.notify = function() {
             }
         }
         var n = document.createElement("div");
-        n.id="red-notification-"+c;
+        n.id="corunner-notification-"+c;
         n.className = "alert";
         n.fixed = fixed;
         if (type) {
             n.className = "alert alert-"+type;
         }
         n.style.display = "none";
+        n.style.borderColor = "black";
+        n.style.borderWidth = "2px";
+        n.style.color = "black";
         n.innerHTML = msg;
         $("#notifications").append(n);
         $(n).slideDown(300);

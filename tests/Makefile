@@ -1,7 +1,7 @@
 PYTHON = python
 CORUNNER = ../launcher/corunner.py
 
-all: test-broken test-fast-consensus test-no-solution test-param-ranges test-solution-timeout test-solution-timeout-allmethods test-suspend-resume cleanup
+all: test-broken test-fast-consensus test-no-solution test-param-ranges test-param-ranges2 test-solution-timeout test-solution-timeout-allmethods test-suspend-resume cleanup
 
 test-fast-consensus:
 	@echo Testing a fast consensus...
@@ -27,6 +27,17 @@ test-param-ranges:
 	@grep "total 18 parameter combination(s) to try out" corunner.log
 	@grep "starting job 1 (optimization parameters: 'Hexokinase' 'Phosphofructokinase' 'Glucose in')" corunner.log
 	@grep "terminating job 18" corunner.log
+	@grep "results of finished jobs saved" corunner.log
+	@echo ..done
+	@echo ""
+
+test-param-ranges2:
+	@echo Testing parameter range zero configuration options...
+	@rm -f corunner.log
+	$(PYTHON) $(CORUNNER) test-param-ranges2.json
+	@grep "total 1 parameter combination(s) to try out" corunner.log
+	@grep "starting job 1 (optimization parameters: )" corunner.log
+	@grep "terminating job 1" corunner.log
 	@grep "results of finished jobs saved" corunner.log
 	@echo ..done
 	@echo ""
