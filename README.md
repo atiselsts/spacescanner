@@ -11,10 +11,12 @@ CoRunner requires the following inputs:
 * a Copasi model file (`.sbml`), that
 * includes a user-defined objective function,
 * optimization parameters and methods
+
 and produces these outputs:
-* `.csv` file with the best (or all) optimization results
-* a `.log` file
-* a `.txt` file for each optimization run, describing the history of the optimization process and the end parameter values;
+
+* a `.csv` file with the best (or all) optimization results
+* a `.log` file tracing the CoRunner execution history;
+* a `.txt` file for each optimization run, describing the history of the Copasi optimization process and the end parameter values;
 * a Copasi model for each optimization run; besides the input model, each of these file contains the parameter values that gives the best objective function value at the file's configuration.
 
 CoRunner internally uses [Copasi](http://copasi.org) to execute the optimizations.
