@@ -63,7 +63,7 @@ CORUNNER.refresh = function() {
                 $("#button-start-stop").addClass('disabled');
             }
             if (isActive) {
-                $("#button-start-stop").html('<i class="icon-stop" style="margin-top: 3px"></i> Stop');
+                $("#button-start-stop").html('<i class="icon-stop" style="margin-top: 3px"></i> Stop all');
             } else {
                 $("#button-start-stop").html('<i class="icon-play" style="margin-top: 3px"></i> Start');
             }

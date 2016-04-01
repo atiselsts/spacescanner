@@ -1,8 +1,11 @@
 "use strict";
 var CORUNNER = function() {
 
+    var MAX_DISPLAY_JOBS = 8;
+    var MAX_DISPLAY_PARAMS = 5;
+
     $( "#dialog-select-model" ).dialog({
-        title: "Select a model",
+        title: "Select model",
         modal: true,
         autoOpen: false,
         width: 600,
@@ -91,15 +94,19 @@ var CORUNNER = function() {
         var doNames = false;
 
         if (type === "none") {
-        } else if (type === "all") {
-        } else if (type === "exhaustive") {
-            doRanges = true;
-        } else if (type === "greedy") {
-            doRanges = true;
-        } else if (type === "explicit") {
-            doNames = true;
-        } else if (type === "zero") {
-        }
+	    $( "#row-params" + i ).hide();
+	} else {
+	    $( "#row-params" + i ).show();
+
+            if (type === "exhaustive") {
+		doRanges = true;
+            } else if (type === "greedy" || type === "greedy-reverse") {
+		doRanges = true;
+            } else if (type === "explicit") {
+		doNames = true;
+            } else if (type === "zero") {
+            }
+	}
 
         if (doRanges) {
             $( "#params" + i + "-ranges" ).show();
@@ -113,26 +120,26 @@ var CORUNNER = function() {
         }
     }
 
-    function displayParam(parameters, i) {
-        var type = i < parameters.length ? parameters[i].type : "none";
+    function displayParam(parameter, i) {
+        var type = parameter === null ? "none" : parameter.type;
         var paramField = $( "#input-option-params" + i );
         paramField.val(type).change(function () { changeParam(paramField, i) })
         changeParam(paramField, i);
 
-        if (type === "exhaustive" || type === "greedy") {
-            if (parameters[i].range && parameters[i].range.length > 0) {
-                var rs = parameters[i].range[0];
-                var re = parameters[i].range.length > 1 ? parameters[i].range[1] : rs;
+        if (type === "exhaustive" || type === "greedy" || type === "greedy-reverse") {
+	    if (parameter.range && parameter.range.length > 0) {
+                var rs = parameter.range[0];
+                var re = parameter.range.length > 1 ? parameter.range[1] : rs;
                 $( "#input-option-param" + i + "-rangeStart" ).val(rs);
                 $( "#input-option-param" + i + "-rangeEnd" ).val(re);
-            } else {
+	    } else {
                 $( "#input-option-param" + i + "-rangeStart" ).val("");
                 $( "#input-option-param" + i + "-rangeEnd" ).val("");
-            }
+	    }
         } else if (type === "explicit") {
-            var names = parameters[i].parameters;
-            if (!names) names = [];
-            $( "#input-option-param" + i + "-params" ).val(names.join());
+	    var names = parameter.parameters;
+	    if (!names) names = [];
+	    $( "#input-option-param" + i + "-params" ).val(names.join());
         }
     }
 
@@ -142,17 +149,26 @@ var CORUNNER = function() {
         var rs = parseInt($( "#input-option-param" + i + "-rangeStart" ).val());
         var re = parseInt($( "#input-option-param" + i + "-rangeEnd" ).val());
         if (!(rs > 0)) {
+            CORUNNER.notify("Range start may not be less than 1", "error");
             rs = 1;
         }
-        if (!(re > rs)) {
-            re = rs;
-        }
+	if (type === "greedy" || type === "exhaustive") {
+            if (rs > re) {
+		CORUNNER.notify("For type " + type + " range end may not be less than range start", "error");
+		rs = re;
+            }
+	} else if (type === "greedy-reverse") {
+            if (re > rs) {
+		CORUNNER.notify("For type " + type + " range start may not be less than range end", "error");
+		rs = re;
+	    }
+	}
         var names = $( "#input-option-param" + i + "-params" ).val().split(",").map(function(x) { return x.trim() });
 
         if (type === "all") {
         } else if (type === "exhaustive") {
             result.range = [rs, re];
-        } else if (type === "greedy") {
+        } else if (type === "greedy" || type === "greedy-reverse") {
             result.range = [rs, re];
         } else if (type === "explicit") {
             result.parameters = names;
@@ -161,16 +177,44 @@ var CORUNNER = function() {
         return result;
     }
 
+    function delParams() {
+	var id = $( this ).attr("id");
+        var index = parseInt(id.substr(17));
+	displayParam(null, index);
+    }
+    for (var i = 1; i < MAX_DISPLAY_PARAMS; ++i) {
+	$("#button-del-params" + i).click(delParams);
+    }
+
+    $("#button-add-params").click(function(){
+	var found = -1;
+	for (var i = 0; i < MAX_DISPLAY_PARAMS; ++i) {
+	    if (!$( "#row-params" + i ).is(':visible')) {
+		found = i;
+		break;
+	    }
+	}
+	if (found != -1) {
+	    displayParam({type: "exhaustive", range: [1, 1]}, found);
+	} else {
+            CORUNNER.notify("Max " + MAX_DISPLAY_PARAMS + " different parameter sets");
+	}
+    });
+
     $( "#dialog-parameters" ).dialog({
-        title: "Parameter ranges to include in optimization",
+        title: "Parameter sets to search through",
         modal: true,
         autoOpen: false,
-        width: 770,
-        height: 350,
+        width: 880,
+        height: 400,
         open: function() {
             var parameters = CORUNNER.settings.get("parameters");
-            for (var i = 0; i < 4; ++i) {
-                displayParam(parameters, i);
+            for (var i = 0; i < MAX_DISPLAY_PARAMS; ++i) {
+		if (i < parameters.length) {
+                    displayParam(parameters[i], i);
+		} else {
+                    displayParam(null, i);
+		}
             }
         },
         buttons: [
@@ -178,11 +222,14 @@ var CORUNNER = function() {
                 text: "Ok",
                 click: function() {
                     var parameters = [];
-                    for (var i = 0; i < 4; ++i) {
-                        var type = $( "#input-option-params" + i ).val();
-                        if (type !== "none") {
-                            parameters.push(constructParam(type, i));
-                        }
+                    for (var i = 0; i < MAX_DISPLAY_PARAMS; ++i) {
+			// only if (1) visible and (2) the selected type is not "none"
+			if ($( "#row-params" + i ).is(':visible')) {
+                            var type = $( "#input-option-params" + i ).val();
+                            if (type !== "none") {
+				parameters.push(constructParam(type, i));
+                            }
+			}
                     }
                     CORUNNER.settings.set("parameters", parameters);
                     $( this ).dialog( "close" );
@@ -252,7 +299,7 @@ var CORUNNER = function() {
         }
     });
 
-    for (var i = 0; i < 4; ++i) {
+    for (var i = 0; i < MAX_DISPLAY_JOBS; ++i) {
         $('#button-stop-job' + i).click(function(){
             var sindex = $( this ).attr("id")
             var index = parseInt(sindex.substr(15));

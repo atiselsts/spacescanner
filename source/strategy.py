@@ -108,10 +108,13 @@ class ParamSelection(object):
         elif specification["type"] == "exhaustive":
             x = ParamSelectionExhaustive(strategy, start, end)
         elif specification["type"] == "greedy":
-            if start > end:
-                x = ParamSelectionGreedyReverse(strategy, start, end)
-            else:
-                x = ParamSelectionGreedy(strategy, start, end)
+            newstart = min(start, end)
+            newend = max(start, end)
+            x = ParamSelectionGreedy(strategy, newstart, newend)
+        elif specification["type"] == "greedy-reverse":
+            newstart = max(start, end)
+            newend = min(start, end)
+            x = ParamSelectionGreedyReverse(strategy, newstart, newend)
         else:
             return None
 
