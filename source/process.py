@@ -61,10 +61,10 @@ class Process:
         if self.psutilProcess is None:
             return 0.0
         if "get_cpu_times" in dir(self.psutilProcess):
-            user, system = self.psutilProcess.get_cpu_times()
+            times = self.psutilProcess.get_cpu_times()
         else:
-            user, system = self.psutilProcess.cpu_times()
-        return user + system
+            times = self.psutilProcess.cpu_times()
+        return times.user + times.system
 
     def suspend(self, yes):
         if yes:
