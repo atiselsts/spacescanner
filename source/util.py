@@ -76,7 +76,7 @@ if not COPASI_DIR:
 else:
     COPASI_DIR = os.path.join(COPASI_DIR, "bin")
 
-CORUNNER_VERSION = "0.1.0 (c) 2016 http://biosystems.lv"
+SPACESCANNER_VERSION = "0.1.0 (c) 2016 http://biosystems.lv"
 
 LOG_FATAL = 0
 LOG_ERROR = 1

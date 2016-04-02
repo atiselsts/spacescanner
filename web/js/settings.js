@@ -1,5 +1,5 @@
 "use strict";
-CORUNNER.settings = function() {
+SPACESCANNER.settings = function() {
 
     var defaultSettings = {
         "optimization" : {
@@ -52,11 +52,11 @@ CORUNNER.settings = function() {
             contentType: "application/json",
             dataType: "json",
             success: function (returnData) {
-                CORUNNER.notify("Jobs started", "success");
+                SPACESCANNER.notify("Jobs started", "success");
                 console.log("start command: " + JSON.stringify(returnData));
             },
             error: function (data, textStatus, xhr) {
-                CORUNNER.notify("Failed to start jobs: " + JSON.stringify(data) + " " + textStatus, "error");
+                SPACESCANNER.notify("Failed to start jobs: " + JSON.stringify(data) + " " + textStatus, "error");
             }
         });
     }

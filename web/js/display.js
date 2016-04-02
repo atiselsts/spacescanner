@@ -1,5 +1,5 @@
 "use strict";
-CORUNNER.display = function() {
+SPACESCANNER.display = function() {
 
     var charts = [];
     var MAX_NUM_CHARTS = 4;
@@ -35,7 +35,7 @@ CORUNNER.display = function() {
             }
         }
         if (allData.length > MAX_NUM_CHARTS) {
-            CORUNNER.notify("Too many active jobs, showing only first four");
+            SPACESCANNER.notify("Too many active jobs, showing only first four");
         }
     }
 

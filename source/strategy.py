@@ -280,7 +280,7 @@ class StrategyManager:
             return self.activeJobPool is not None
 
     def cleanup(self, args):
-        sys.stderr.write("<corunner>: quitting...\n")
+        sys.stderr.write("<spacescanner>: quitting...\n")
         self.doQuitFlag = True
         if self.copasiConfig is not None and self.copasiConfig.get("params"):
             self.dumpResults()
@@ -291,7 +291,7 @@ class StrategyManager:
                 isUnfinished = self.activeJobPool.cleanup()
                 self.activeJobPool = None
         if isUnfinished:
-            sys.stderr.write("<corunner>: some jobs still running, waiting for cleanup...\n")
+            sys.stderr.write("<spacescanner>: some jobs still running, waiting for cleanup...\n")
             time.sleep(2.0)
 
 
@@ -339,7 +339,7 @@ class StrategyManager:
                 if totalLimit and cnt >= totalLimit:
                     break
 
-        g.log(LOG_INFO, '<corunner>: results of finished jobs saved in "' + filename + '"')
+        g.log(LOG_INFO, '<spacescanner>: results of finished jobs saved in "' + filename + '"')
         return filename
 
     def dumpCsvFileHeader(self, f):
@@ -354,7 +354,7 @@ class StrategyManager:
         copasiFile = copasifile.CopasiFile()
         filename = g.getConfig("copasi.modelFile")
         filename = filename.replace("@SELF@", SELF_PATH)
-        g.log(LOG_INFO, "<corunner>: opening COPASI model file {}".format(filename))
+        g.log(LOG_INFO, "<spacescanner>: opening COPASI model file {}".format(filename))
         if not copasiFile.read(filename):
             return None
         return copasiFile

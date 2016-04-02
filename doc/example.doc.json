@@ -4,7 +4,7 @@
 //
 {
     "copasi" : {
-	// COPASI model file name; @SELF@ refers to CoRunner source directory
+	// COPASI model file name; @SELF@ refers to SpaceScanner source directory
         "modelFile" : "@SELF@/models/simple-6params.cps",
 	// which and how many methods to use; can contain a method more than once
         "methods" : ["ParticleSwarm", "GeneticAlgorithm", "GeneticAlgorithmSR", "EvolutionaryProgram", "EvolutionaryStrategySR", "ScatterSearch", "SimulatedAnnealing"],
@@ -22,8 +22,8 @@
         "consensusRelativeError" : 0.01,
 	// to determine whether the consensus criteria has been reached (default: 1e-6)
         "consensusAbsoluteError" : 1e-6,
-	// the minimal time to continue after the consensus criteria has been reached (default: 300 sec )
-        "consensusMinDurationSec" : 30,
+	// the minimal time to continue after the consensus criteria has been reached (default: 300 sec)
+        "consensusMinDurationSec" : 300,
 	// the minimal time to continue after the consensus criteria has been reached as proportion of runtime so-far (default: 15%)
         "consensusMinProportionalDuration" : 0.15,
 	// compared to already found solution (default: 0.9, range: (0.0  .. 1.0])
@@ -50,7 +50,7 @@
     ],
     "web" : {
 	// whether to run the web interface (default: true)
-	// WARNING: access control is not supported by CoRunner!
+	// WARNING: access control is not supported by SpaceScanner!
 	// Enable this only in trusted environment.
         "enable" : true,
 	// http port number (default: 19000)

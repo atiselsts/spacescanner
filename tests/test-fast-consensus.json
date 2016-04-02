@@ -10,6 +10,6 @@
         {"type" : "explicit", "parameters" : ["GAPD"]}
     ],
     "output" : {
-        "logfile" : "corunner.log"
+        "logfile" : "spacescanner.log"
     }
 }

@@ -9,6 +9,6 @@
         "fallbackMethods" : []
     },
     "output" : {
-        "logfile" : "corunner.log"
+        "logfile" : "spacescanner.log"
     }
 }

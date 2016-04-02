@@ -14,6 +14,6 @@
         {"type" : "all"}
     ],
     "output" : {
-        "logfile" : "corunner.log"
+        "logfile" : "spacescanner.log"
     }
 }

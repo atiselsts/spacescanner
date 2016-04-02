@@ -12,6 +12,6 @@
         {"type" : "explicit", "parameters" : ["Nonexistent parameter", "Phosphofructokinase", "Hexokinase"]}
     ],
     "output" : {
-        "logfile" : "corunner.log"
+        "logfile" : "spacescanner.log"
     }
 }

@@ -1,5 +1,5 @@
 "use strict";
-var CORUNNER = function() {
+var SPACESCANNER = function() {
 
     var MAX_DISPLAY_JOBS = 8;
     var MAX_DISPLAY_PARAMS = 5;
@@ -11,20 +11,20 @@ var CORUNNER = function() {
         width: 600,
         height: 230,
         open: function() {
-            $( '#input-import-taskName' ).val(CORUNNER.settings.get("taskName"));
+            $( '#input-import-taskName' ).val(SPACESCANNER.settings.get("taskName"));
         },
     });
 
     $('#dialog-select-model').fileUpload({
         success: function (data, textStatus, jqXHR) {
             var filename = $( '#input-import-filename' ).val();
-            CORUNNER.notify("Model file selected:\n" + filename, "success");
+            SPACESCANNER.notify("Model file selected:\n" + filename, "success");
             $( "#dialog-select-model" ).dialog("close");
             $( 'title' ).text("Model file '" + filename + "'");
-            CORUNNER.settings.set("taskName", $( '#input-import-taskName' ).val());
+            SPACESCANNER.settings.set("taskName", $( '#input-import-taskName' ).val());
         },
         error: function (data, textStatus, err) {
-            CORUNNER.notify("Failed to use the model file: " + JSON.stringify(data), "error");
+            SPACESCANNER.notify("Failed to use the model file: " + JSON.stringify(data), "error");
         },
         action: "model"
     });
@@ -34,7 +34,7 @@ var CORUNNER = function() {
             var filename = $( '#input-import-filename' ).val();
             if (!filename || filename.length == 0) {
                 e.preventDefault();
-                CORUNNER.notify("Model file not specified", "error");
+                SPACESCANNER.notify("Model file not specified", "error");
             }
         });
 
@@ -68,14 +68,14 @@ var CORUNNER = function() {
         width: 640,
         height: 750,
         open: function() {
-            CORUNNER.settings.querySettings();
-            CORUNNER.settings.populateSettings();
+            SPACESCANNER.settings.querySettings();
+            SPACESCANNER.settings.populateSettings();
         },
         buttons: [
             {
                 text: "Ok",
                 click: function() {
-                    CORUNNER.settings.saveSettings();
+                    SPACESCANNER.settings.saveSettings();
                     $( this ).dialog( "close" );
                 }
             },
@@ -149,17 +149,17 @@ var CORUNNER = function() {
         var rs = parseInt($( "#input-option-param" + i + "-rangeStart" ).val());
         var re = parseInt($( "#input-option-param" + i + "-rangeEnd" ).val());
         if (!(rs > 0)) {
-            CORUNNER.notify("Range start may not be less than 1", "error");
+            SPACESCANNER.notify("Range start may not be less than 1", "error");
             rs = 1;
         }
 	if (type === "greedy" || type === "exhaustive") {
             if (rs > re) {
-		CORUNNER.notify("For type " + type + " range end may not be less than range start", "error");
+		SPACESCANNER.notify("For type " + type + " range end may not be less than range start", "error");
 		rs = re;
             }
 	} else if (type === "greedy-reverse") {
             if (re > rs) {
-		CORUNNER.notify("For type " + type + " range start may not be less than range end", "error");
+		SPACESCANNER.notify("For type " + type + " range start may not be less than range end", "error");
 		rs = re;
 	    }
 	}
@@ -197,7 +197,7 @@ var CORUNNER = function() {
 	if (found != -1) {
 	    displayParam({type: "exhaustive", range: [1, 1]}, found);
 	} else {
-            CORUNNER.notify("Max " + MAX_DISPLAY_PARAMS + " different parameter sets");
+            SPACESCANNER.notify("Max " + MAX_DISPLAY_PARAMS + " different parameter sets");
 	}
     });
 
@@ -208,7 +208,7 @@ var CORUNNER = function() {
         width: 880,
         height: 400,
         open: function() {
-            var parameters = CORUNNER.settings.get("parameters");
+            var parameters = SPACESCANNER.settings.get("parameters");
             for (var i = 0; i < MAX_DISPLAY_PARAMS; ++i) {
 		if (i < parameters.length) {
                     displayParam(parameters[i], i);
@@ -231,7 +231,7 @@ var CORUNNER = function() {
                             }
 			}
                     }
-                    CORUNNER.settings.set("parameters", parameters);
+                    SPACESCANNER.settings.set("parameters", parameters);
                     $( this ).dialog( "close" );
                 }
             },
@@ -281,18 +281,18 @@ var CORUNNER = function() {
 
     $('#button-start-stop').click(function(){
         if (!$( this ).hasClass('disabled')) {
-            if (!CORUNNER.refresh.isActive()) {
+            if (!SPACESCANNER.refresh.isActive()) {
                 // start
-                CORUNNER.settings.postSettings();
+                SPACESCANNER.settings.postSettings();
             } else { 
                 // stop
                 $.ajax({
                     url: "stopall",
                     success: function (returnData) {
-                        CORUNNER.notify("Stopping all jobs");
+                        SPACESCANNER.notify("Stopping all jobs");
                     },
                     error: function (data, textStatus, xhr) {
-                        CORUNNER.notify("Failed to stop jobs: " + JSON.stringify(data) + " " + textStatus, "error");
+                        SPACESCANNER.notify("Failed to stop jobs: " + JSON.stringify(data) + " " + textStatus, "error");
                     }
                 });
             }
@@ -303,15 +303,15 @@ var CORUNNER = function() {
         $('#button-stop-job' + i).click(function(){
             var sindex = $( this ).attr("id")
             var index = parseInt(sindex.substr(15));
-            var job = CORUNNER.display.getJobID(index);
+            var job = SPACESCANNER.display.getJobID(index);
             if (job) {
                 $.ajax({
                     url: "stop/" + job,
                     success: function (returnData) {
-                        CORUNNER.notify("Stopping job " + job);
+                        SPACESCANNER.notify("Stopping job " + job);
                     },
                     error: function (data, textStatus, xhr) {
-                        CORUNNER.notify("Failed to stop job " + job + ": " + JSON.stringify(data) + " " + textStatus, "error");
+                        SPACESCANNER.notify("Failed to stop job " + job + ": " + JSON.stringify(data) + " " + textStatus, "error");
                     }
                 });
             }
@@ -321,7 +321,7 @@ var CORUNNER = function() {
     $('#button-status').click(function(){
         if (!$( this ).hasClass('disabled')) {
             $( "#dialog-status" ).dialog( "open" );
-            CORUNNER.refresh.refreshFull();
+            SPACESCANNER.refresh.refreshFull();
         }
     });
 
@@ -342,7 +342,7 @@ var CORUNNER = function() {
     });
 
     $(function() {
-        console.log("loading corunner...")
+        console.log("loading spacescanner web interface...")
     });
 
     return {

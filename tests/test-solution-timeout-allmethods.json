@@ -13,6 +13,6 @@
     ],
     "output" : {
         "loglevel" : 3,
-        "logfile" : "corunner.log"
+        "logfile" : "spacescanner.log"
     }
 }

@@ -318,7 +318,7 @@ class CopasiFile:
 
         with open(configFilename, "w") as outf:
             outf.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-            outf.write('<!-- generated with CoRunner ' + CORUNNER_VERSION + ' at ' + getCurrentTime() +' -->\n')
+            outf.write('<!-- generated with SpaceScanner ' + SPACESCANNER_VERSION + ' at ' + getCurrentTime() +' -->\n')
             vmaj = self.xmlroot.get("versionMajor")
             vmin = self.xmlroot.get("versionMinor")
             vdev = self.xmlroot.get("versionDevel")

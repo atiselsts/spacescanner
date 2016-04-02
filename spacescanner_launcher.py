@@ -3,9 +3,9 @@
 import os, subprocess, threading, webbrowser, time
 from sys import path, version, executable
 
-CORUNNER_PATH = os.path.join(
+SPACESCANNER_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "source")
-path.append(CORUNNER_PATH)
+path.append(SPACESCANNER_PATH)
 from util import *
 
 isServerStarted = False
@@ -24,7 +24,7 @@ def importsOk():
         psutilModuleOK = False
 
     if not psutilModuleOK:
-        print("Cannot start CoRunner: psutil module not found")
+        print("Cannot start SpaceScanner: psutil module not found")
 
         if isWindows():
             installStr = "Run:\n\tpip install psutil"
@@ -92,7 +92,7 @@ def main():
 
     if not version.startswith("2.7"):
         print("You are using Python version {0}".format(version[:5]))
-        print("For CoRunner only version 2.7 is supported")
+        print("For SpaceScanner only version 2.7 is supported")
 
     if not importsOk():
         exit(1)
@@ -101,8 +101,8 @@ def main():
         browserThread = threading.Thread(target=launchBrowser)
         browserThread.start()
 
-        if not isProcessRunning(['corunner.py']):
-            print("Launching CoRunner...")
+        if not isProcessRunning(['spacescanner.py']):
+            print("Launching SpaceScanner...")
             with glock:
                 isServerStarted = True
             if isWindows():
@@ -112,7 +112,7 @@ def main():
                 doExec = (os.fork() == 0)
             if doExec:
                 os.execl(executable, executable,
-                         * [os.path.join(CORUNNER_PATH, 'corunner.py'), 'web'])
+                         * [os.path.join(SPACESCANNER_PATH, 'spacescanner.py'), 'web'])
         else:
             with glock:
                 isServerStarted = True

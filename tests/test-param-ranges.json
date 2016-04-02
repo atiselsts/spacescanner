@@ -14,7 +14,7 @@
         {"type" : "explicit", "parameters" : ["Hexokinase", "Phosphofructokinase", "Glucose in"]}
     ],
     "output" : {
-        "logfile" : "corunner.log"
+        "logfile" : "spacescanner.log"
     },
     "testMode" : true
 }

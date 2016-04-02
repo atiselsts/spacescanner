@@ -12,7 +12,7 @@
         {"type" : "zero"}
     ],
     "output" : {
-        "logfile" : "corunner.log"
+        "logfile" : "spacescanner.log"
     },
     "testMode" : true
 }

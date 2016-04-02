@@ -1,5 +1,5 @@
 "use strict";
-CORUNNER.refresh = function() {
+SPACESCANNER.refresh = function() {
 
     var pageRefreshInterval = 2000;
 
@@ -27,7 +27,7 @@ CORUNNER.refresh = function() {
             dataType: "json",
             success: updateStatus,
             error: function (data, textStatus, xhr) {
-                CORUNNER.notify("Failed to get CoRunner status", "error");
+                SPACESCANNER.notify("Failed to get SpaceScanner status", "error");
                 // refresh slower in case of error
                 refreshTimerID = setTimeout(refresh, pageRefreshInterval * 3);
             }
@@ -48,11 +48,11 @@ CORUNNER.refresh = function() {
 		resultsButtonClicked = false;
                 $("#button-select").addClass('disabled');
             } else {
-                CORUNNER.notify("Optimizations finished");
+                SPACESCANNER.notify("Optimizations finished");
                 $("#button-select").removeClass('disabled');
 		if (!resultsButtonClicked) {
                     // remove all charts
-                    CORUNNER.display.drawCharts([]);
+                    SPACESCANNER.display.drawCharts([]);
 		}
             }
         }
@@ -90,7 +90,7 @@ CORUNNER.refresh = function() {
                 contentType: "application/json",
                 dataType: "json",
                 success: function (data) {
-		    CORUNNER.display.drawCharts(data);
+		    SPACESCANNER.display.drawCharts(data);
 		    refreshTimerID = setTimeout(refresh, pageRefreshInterval);
 		},
                 error: function (data, textStatus, xhr) {
@@ -112,7 +112,7 @@ CORUNNER.refresh = function() {
             contentType: "application/json",
             dataType: "json",
             success:  function (data) {
-		CORUNNER.display.drawCharts([data]);
+		SPACESCANNER.display.drawCharts([data]);
 	    },
             error: function (data, textStatus, xhr) {
                 console.log("get job " + id + " status error: " + JSON.stringify(data) + " " + textStatus);
@@ -168,7 +168,7 @@ CORUNNER.refresh = function() {
             s += '<div class="form-row">\n'
             s += "Job " + job.id + " / ";
 	    if (!anyActive) {
-		s += '<a title="Show job results graph" class="button-results" id="button-results-' + job.id +'" onclick="CORUNNER.refresh.showFinishedJobResults(' + job.id + ')">Results graph</a> / ';
+		s += '<a title="Show job results graph" class="button-results" id="button-results-' + job.id +'" onclick="SPACESCANNER.refresh.showFinishedJobResults(' + job.id + ')">Results graph</a> / ';
 	    }
             s += "OF value: " + job.of + " / "
                 + "CPU time: " + (Math.round(10 * job.cpu) / 10.0) + " / "

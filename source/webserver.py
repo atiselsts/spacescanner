@@ -35,7 +35,7 @@ else:
     from SocketServer import *
     from urlparse import *
 
-import corunner
+import spacescanner
 
 ################################################
 
@@ -86,7 +86,7 @@ class InterruptibleHTTPServer(HTTPServer):
 ################################################
 
 class HttpServerHandler(BaseHTTPRequestHandler):
-    server_version = 'CoRunner web server ' + CORUNNER_VERSION
+    server_version = 'SpaceScanner web server ' + SPACESCANNER_VERSION
 
     # overrides base class function, because in some versions
     # it tries to resolve dns and fails...
@@ -276,9 +276,9 @@ class HttpServerHandler(BaseHTTPRequestHandler):
 
         # else start running
         filename = self.saveInFile(received, "config.json")
-        sm = corunner.startFromWeb(filename)
+        sm = spacescanner.startFromWeb(filename)
         if sm is None:
-            return self.serveError(qs, 500, "Cannot start CoRunner optimizations")
+            return self.serveError(qs, 500, "Cannot start SpaceScanner optimizations")
         # set it only if not none
         InterruptibleHTTPServer.serverInstance.strategyManager = sm
 

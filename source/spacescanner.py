@@ -49,14 +49,14 @@ import strategy
 def executeWebserver(strategyManager):
     try:
         port = int(g.getConfig("web.port"))
-        g.log(LOG_INFO, "<corunner>: starting webserver, port: " + str(port))
+        g.log(LOG_INFO, "<spacescanner>: starting webserver, port: " + str(port))
         server = webserver.InterruptibleHTTPServer(('', port), webserver.HttpServerHandler)
         server.strategyManager = strategyManager
         # report ok and enter the main loop
-        g.log(LOG_DEBUG, "<corunner>: webserver started, listening to port {}".format(port))
+        g.log(LOG_DEBUG, "<spacescanner>: webserver started, listening to port {}".format(port))
         server.serve_forever()
     except Exception as e:
-        g.log(LOG_ERROR, "<corunner>: exception occurred in webserver:")
+        g.log(LOG_ERROR, "<spacescanner>: exception occurred in webserver:")
         g.log(LOG_ERROR, str(e))
         g.log(LOG_ERROR, traceback.format_exc())
         sys.exit(1)

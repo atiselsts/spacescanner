@@ -14,7 +14,7 @@
 	{"type" : "explicit", "parameters" : ["Glucose in"]}
     ],
     "output" : {
-        "logfile" : "corunner.log",
+        "logfile" : "spacescanner.log",
 	"loglevel" : 3
     }
 }

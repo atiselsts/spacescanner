@@ -14,7 +14,7 @@
  * limitations under the License.
  **/
 "use strict";
-CORUNNER.notify = function() {
+SPACESCANNER.notify = function() {
     var currentNotifications = [];
     var c = 0;
     return function(msg,type,fixed,timeout) {
@@ -30,7 +30,7 @@ CORUNNER.notify = function() {
             }
         }
         var n = document.createElement("div");
-        n.id="corunner-notification-"+c;
+        n.id="spacescanner-notification-"+c;
         n.className = "alert";
         n.fixed = fixed;
         if (type) {
