@@ -170,10 +170,12 @@ class ParamSelectionExhaustive(ParamSelection):
         step = -1 if self.isReverse else 1
         paramCombinations = []
         for k in range(self.start, self.end + step, step):
+            # terminate if good enough value already found
+            if self.strategy.totalOptimizationPotentialReached(k):
+                return
             for it in itertools.combinations(self.allParameters, k):
                 paramCombinations.append(list(it))
-        # return all of them at once
-        yield paramCombinations
+            yield paramCombinations
 
     def getNumCombinations(self):
         r = 0
@@ -190,6 +192,9 @@ class ParamSelectionGreedy(ParamSelection):
     def getParameterSets(self):
         # add one more parameter to the best current parameter combination
         for k in range(self.start, self.end + 1):
+            # terminate if good enough value already found
+            if self.strategy.totalOptimizationPotentialReached(k):
+                return
             if k <= 1:
                 bestParams = []
             else:
@@ -374,16 +379,33 @@ class StrategyManager:
             return len(self.finishedJobs)
 
 
-    def getBestOfValue(self, minNumParameters):
-        configValue = float(g.getConfig("optimization.bestOfValue"))
-        calculatedValue = MIN_OF_VALUE
-        for joblist in self.jobsByBestOfValue[minNumParameters:]:
+    def totalOptimizationPotentialReached(self, numParameters):
+        optimality = g.getConfig("optimization.optimalityRelativeError")
+        if optimality is None or optimality == 0.0:
+            # TOP is disabled
+            return False
+
+        # calculate the target value, looking at both config and at the job with all parameters, if any
+        configTarget = float(g.getConfig("optimization.bestOfValue"))
+        joblist = self.jobsByBestOfValue[-1]
+        if joblist:
+            calculatedTarget = joblist[0].getBestOfValue()
+        else:
+            calculatedTarget = MIN_OF_VALUE
+        targetValue = max(configTarget, calculatedTarget)
+        if targetValue == MIN_OF_VALUE:
+            return False
+
+        achievedValue = MIN_OF_VALUE
+        for joblist in self.jobsByBestOfValue[:numParameters + 1]:
             if joblist:
-                calculatedValue = max(calculatedValue, joblist[0].getBestOfValue())
-        result = max(configValue, calculatedValue)
-        if result == MIN_OF_VALUE:
-            return None
-        return result
+                achievedValue = max(achievedValue, joblist[0].getBestOfValue())
+
+        proportion = 1.0 - float(optimality)
+        if achievedValue >= targetValue * proportion:
+            g.log(LOG_INFO, "terminating optimization at {} parameters: good-enough-value criteria reached (required {})".format(numParameters, targetValue * proportion))
+            return True
+        return False
 
 
     def getBestParameters(self, k):
@@ -440,7 +462,8 @@ class StrategyManager:
 
     def ioGetConfig(self, qs):
         cfg = copy.copy(g.config)
-        # XXX hack to avoid infinities in the json
+        # XXX hack to avoid infinities in the generated JSON output
+        # as jQuery decoding fails to deal with them
         if math.isinf(cfg["optimization"].get("bestOfValue", 0)):
             cfg["optimization"]["bestOfValue"] = 0.0
         return cfg

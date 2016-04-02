@@ -1,7 +1,7 @@
 PYTHON = python
 CORUNNER = ../source/corunner.py
 
-all: test-broken test-fast-consensus test-no-solution test-param-ranges test-param-ranges2 test-solution-timeout test-solution-timeout-allmethods test-suspend-resume cleanup
+all: test-broken test-fast-consensus test-no-solution test-param-ranges test-param-ranges2 test-solution-timeout test-solution-timeout-allmethods test-top test-suspend-resume cleanup
 
 test-fast-consensus:
 	@echo Testing a fast consensus...
@@ -58,6 +58,14 @@ test-solution-timeout-allmethods:
 	@grep -e "terminating job 1/. (method 'GeneticAlgorithm'): CPU time limit exceeded" corunner.log
 	@grep -e "terminating job 1/. (method 'GeneticAlgorithmSR'): CPU time limit exceeded" corunner.log
 	@grep -e "terminating job 1/. (method 'EvolutionaryStrategySR'): CPU time limit exceeded" corunner.log
+	@echo ..done
+	@echo ""
+
+test-top:
+	@echo Testing that the optimization is stopped when an acceptable total optimization potential \(TOP\) value is reached...
+	@rm -f corunner.log
+	$(PYTHON) $(CORUNNER) test-potential-value-reached.json
+	@grep -e "good-enough-value criteria reached" corunner.log
 	@echo ..done
 	@echo ""
 

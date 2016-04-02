@@ -179,18 +179,6 @@ class Job:
             # reset the timer
             self.convergenceTime = None
 
-        # take the best value only for jobs with more parameters than this
-        totalBestOfValue = self.pool.strategy.getBestOfValue(-1)
-        optimality = g.getConfig("optimization.optimalityRelativeError")
-        if totalBestOfValue is not None and optimality is not None and optimality > 0.0:
-            proportion = 1.0 - float(optimality)
-            if self.getBestOfValue() >= proportion * totalBestOfValue:
-                g.log(LOG_INFO, "terminating {}: good-enough-value criteria reached (required {})".format(self.getName(), totalBestOfValue * proportion))
-                for r in self.runners:
-                    if r.isActive:
-                        r.terminationReason = TERMINATION_REASON_GOOD_VALUE_REACHED
-                return
-
         if now - self.lastBalanceTime >= LOAD_BALANCE_INTERVAL:
             self.lastBalanceTime = now
             if numActiveRunners > self.maxCores:
