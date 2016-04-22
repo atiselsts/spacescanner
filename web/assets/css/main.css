@@ -3193,3 +3193,87 @@ button.input-append-right {
     border: none;
     padding: auto;
 }
+
+
+/*----- Dialog tabs -----*/
+.dialog-tabs {
+    width:100%;
+    display:inline-block;
+/*    background: #eee; */
+}
+/* Clearfix */
+.dialog-tab-links:after {
+    display:block;
+    clear:both;
+    content:'';
+}
+
+.dialog-tab-links li {
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    display: inline-block;
+    border-left: 1px solid  #999;
+    border-top: 1px solid   #999;
+    border-right: 1px solid #999;
+    border-bottom: 1px solid #999;
+    background: #f0f0f0;
+    margin: 0 5px 0 0;
+    height: 35px;
+    max-width: 200px;
+    width: 22%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 11pt;
+}
+.dialog-tab-links li a.dialog-tab-label {
+    display: block; 
+    padding: 3px 3px;
+/*    padding: 3px 16px; */
+/*    color: #666; */
+/*    background: #eee; */
+    text-decoration:none;
+}
+.dialog-tab-links li {
+    position: relative;
+}
+
+.dialog-tab-links a:hover {
+    text-decoration:none;
+}
+
+li.active a, li.active a:hover {
+    background:#fff;
+}
+
+/*----- Content of Tabs -----*/
+.dialog-tab-content {
+    padding:15px;
+    border-radius:3px;
+    box-shadow:-1px 1px 1px rgba(0,0,0,0.15);
+    background:#fff;
+}
+
+.dialog-tab {
+    display:none;
+}
+
+.dialog-tab.active {
+    display:block;
+    background:#fff;
+}
+
+.dialog-tab-content {
+    border:1px solid #999;
+    border-radius: 5px;
+    margin-top: -14px;
+    padding-top: 24px;
+}
+
+.dialog-tab-selector {
+    padding-bottom: 2px;
+}
+
+.dialog-tab-selector.active {
+    background: #fff;
+}

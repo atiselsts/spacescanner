@@ -168,7 +168,7 @@ SPACESCANNER.refresh = function() {
             s += '<div class="form-row">\n'
             s += "Job " + job.id + " / ";
 	    if (!anyActive) {
-		s += '<a title="Show job results graph" class="button-results" id="button-results-' + job.id +'" onclick="SPACESCANNER.refresh.showFinishedJobResults(' + job.id + ')">Results graph</a> / ';
+		s += '<a title="Show job results graph" class="button-results" id="button-results-' + job.id +'" onclick="SPACESCANNER.refresh.showFinishedJobResults(' + job.id + ')">Result graph</a> / ';
 	    }
             s += "OF value: " + job.of + " / "
                 + "CPU time: " + (Math.round(10 * job.cpu) / 10.0) + " / "
