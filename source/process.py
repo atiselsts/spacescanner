@@ -21,7 +21,8 @@
 # Author: Atis Elsts, 2016
 #
 
-import os, psutil, time, threading, signal, sys
+import os, time, threading, signal, sys
+import psutil_local as psutil
 from subprocess import Popen, PIPE, STDOUT
 
 from util import *
