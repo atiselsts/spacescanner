@@ -47,10 +47,21 @@ There's no installation necessary. [Download](https://github.com/atiselsts/space
 
 **Prerequisites:**
 * Python (version 2.7);
+* `psutil` Python module. 
+
+Install `psutil` with PIP, Python package manager, e.g.:
+ 
+   `sudo pip install psutil`
+ 
+To install `pip`, it may be possible to use `easy_install`:
+
+   `sudo easy_install pip`
+
+Alternatively, run this on Ubuntu Linux to install `psutil`:
+ 
+   `sudo apt-get install python-psutil`
 
 SpaceScanner has been successfully tested on 64-bit Linux and Windows, including Cygwin.
-
-`psutil` Python module is included in this together with the SpaceScanner in order to simplify the installation.
 
 
 # SpaceScanner terminology

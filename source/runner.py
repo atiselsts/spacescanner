@@ -22,7 +22,7 @@
 #
 
 import os, sys, time, copy, random, threading
-import psutil_local as psutil
+import psutil
 
 from util import *
 import g

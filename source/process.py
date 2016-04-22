@@ -22,7 +22,7 @@
 #
 
 import os, time, threading, signal, sys
-import psutil_local as psutil
+import psutil
 from subprocess import Popen, PIPE, STDOUT
 
 from util import *
