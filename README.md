@@ -28,7 +28,7 @@ SpaceScanner at the moment supports greedy and exhaustive search strategies when
 
 SpaceScanner is easy to use and configure. There are two ways how to work with SpaceScanner:
 * a command-line interface that expects a configuration file in JSON format as the only argument;
-* a web interface that allows the user to interactively configure, start, and stop the optimizations, as well as see their results graphically.
+* a web interface that allows the user to interactively configure, start, and stop Copasi optimizations, as well as see their results graphically.
 
 
 # Directory structure of this repository
@@ -43,50 +43,42 @@ SpaceScanner is easy to use and configure. There are two ways how to work with S
 
 # Installation
 
-Either `git clone` or [download](https://github.com/atiselsts/spacescanner/archive/master.zip) and extract the SpaceScanner source code.
+There's no installation necessary. [Download](https://github.com/atiselsts/spacescanner/archive/master.zip) and extract the SpaceScanner source code. Alternatively, get it through Git: `git clone https://github.com/atiselsts/spacescanner.git`.
 
 **Prerequisites:**
-* Python (version 2);
-* `psutil` Python module.
+* Python (version 2.7);
 
 SpaceScanner has been successfully tested on 64-bit Linux and Windows, including Cygwin.
 
-Install `psutil` with PIP, Python package manager, e.g.:
-
-   `sudo pip install psutil`
-
-To install `pip`, it may be possible to use `easy_install`:
-
-   `sudo easy_install pip`
-
-Alternatively, run this on Ubuntu Linux to install `psutil`:
-
-   `sudo apt-get install python-psutil`
+`psutil` Python module is included in this together with the SpaceScanner in order to simplify the installation.
 
 
-# Terminology
+# SpaceScanner terminology
 
-* **Run** - a single optimization. Each active run corresponds to a single Copasi process instance.
-* **Job** - single or multiple optimization runs that all share the same set of parameters and are executed in parallel.
-* **Task** - a collection of jobs described by a single configuration file. A tasks corresponds to a single command-line execution of SpaceScanner.
+There are multiple similar terms with quite different meanings used in the UI and documentation:
+
+* A **run** is a single optimization process. Each active run corresponds to a single Copasi process instance.
+* A **job** is a collection of one or more optimization *runs* that all share the same set of parameters and are executed in parallel.
+* A **task** is a collection of one or more *jobs* described by a single configuration file. A task corresponds to single command-line execution of SpaceScanner.
 
 
-# Execution
+# Running SpaceScanner
 
-## Web interface
+## From the web interface
 
 Double click on `spacescanner/spacescanner_launcher.py` file. This both starts the SpaceScanner executable (if not started yet) and opens the web interface in a web browser.
 
 Alternatively, start `spacescanner/source/spacescanner.py` from a command line, passing the string "web" as the parameter, and open the web interface manually (default URL: `http://localhost:19000`).
 
-## Command line
+## From command line
 
 Simply execute the `spacescanner/source/spacescanner.py` script, passing the configuration file name as a parameter.
 
-## Accessing the results
 
-SpaceScanner stores the results in `spacescanner/results` directory. **Warning:** for tasks with a large number of jobs these directories can take quite a lot of space on the disk!
+# Accessing the results
 
-Each optimization task (collection of jobs) is stored in a separate directory. This directory contains the configuration of that task, the `.log` file of the execution, and `.csv` file where the results of finished jobs are stored.
+SpaceScanner stores the results of finished jobs in `spacescanner/results` directory. **Warning:** for tasks with a large number of jobs these directories can take quite a lot of space on the disk!
 
-Each job gets it's own subdirectory there. These subdirectories contain Copasi model files (as `.cps`), and run execution histories (as `.txt` files). The `.cps` files not only contain the input mode, but for all finished runs they also include the best parameter values of that run.
+Each optimization task (i.e., a collection of jobs) is stored in a separate directory. This directory contains the configuration of that task, the `.log` file of the execution, and `.csv` file where the results of finished jobs are stored.
+
+Each job gets its own subdirectory. These subdirectories contain Copasi model files (stored as `.cps`), and run execution histories (stored as `.txt` files). The `.cps` files contain the input model; for all finished runs they also include the parameter values on which that run achieved its best objective function value.
