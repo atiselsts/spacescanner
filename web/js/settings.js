@@ -80,6 +80,7 @@ SPACESCANNER.settings = function() {
     function populateSettings() {
 	// Performance settings
         $( "#input-option-runsPerJob" ).val(getd(currentSettings["optimization"], "runsPerJob", 4));
+        $( "#input-option-maxConcurrentRuns" ).val(getd(currentSettings["optimization"], "maxConcurrentRuns", 4));
         $( "#input-option-timeLimit" ).val(getd(currentSettings["optimization"], "timeLimitSec", 3600));
 
         $( "#input-option-consensusMinDurationSec" ).val(getd(currentSettings["optimization"], "consensusMinDurationSec", 300));
@@ -121,6 +122,7 @@ SPACESCANNER.settings = function() {
     function saveSettings() {
 	// Performance settings
         currentSettings["optimization"]["runsPerJob"] = parseInt($( "#input-option-runsPerJob" ).val());
+        currentSettings["optimization"]["maxConcurrentRuns"] = parseInt($( "#input-option-maxConcurrentRuns" ).val());
         currentSettings["optimization"]["timeLimitSec"] = parseInt($( "#input-option-timeLimit" ).val());
 
         currentSettings["optimization"]["consensusMinDurationSec"] = parseInt($( "#input-option-consensusMinDurationSec" ).val());
