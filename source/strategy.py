@@ -386,7 +386,11 @@ class StrategyManager:
             return False
 
         # calculate the target value, looking at both config and at the job with all parameters, if any
-        configTarget = float(g.getConfig("optimization.bestOfValue"))
+        try:
+            configTarget = float(g.getConfig("optimization.bestOfValue"))
+        except:
+            g.log(LOG_INFO, "Bad bestOfValue in config: {}".format(g.getConfig("optimization.bestOfValue")))
+            return False
         joblist = self.jobsByBestOfValue[-1]
         if joblist:
             calculatedTarget = joblist[0].getBestOfValue()
@@ -464,7 +468,8 @@ class StrategyManager:
         cfg = copy.copy(g.config)
         # XXX hack to avoid infinities in the generated JSON output
         # as jQuery decoding fails to deal with them
-        if math.isinf(cfg["optimization"].get("bestOfValue", 0)):
+        bestOfValue = cfg["optimization"].get("bestOfValue", 0)
+        if isinstance(bestOfValue, float) and math.isinf(bestOfValue):
             cfg["optimization"]["bestOfValue"] = 0.0
         return cfg
 
