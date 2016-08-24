@@ -136,6 +136,9 @@ SPACESCANNER.settings = function() {
         currentSettings["copasi"]["randomizeMethodSelection"] = $( "#input-option-randomizeMethodSelection" ).is(":checked");
         currentSettings["optimization"]["restartFromBestValue"] = $( "#input-option-restartFromBestValue" ).is(":checked");
 
+	// Always use the same model file - the one POSTed from the web
+	currentSettings["copasi"]["modelFile"] = "@SELF@/tmpweb/model.cps";
+
 	// Total optimization settings
 	if ($( "#input-option-enableTotalOptimization" ).is(":checked"))  {
             currentSettings["optimization"]["optimalityRelativeError"] = $( "#input-option-optimalityRelativeError" ).val() / 100.0;
