@@ -9,6 +9,7 @@
 
 SpaceScanner requires the following inputs:
 * a Copasi model file (`.sbml`)
+
 The file must include:
 * the objective function to optimize;
 * list of changeable parameters of the model with their minimal and maximal values;
@@ -84,6 +85,121 @@ Alternatively, start `spacescanner/source/spacescanner.py` from a command line, 
 ## From command line
 
 Simply execute the `spacescanner/source/spacescanner.py` script, passing the configuration file name as a parameter.
+
+
+## Configuration file
+
+The name of the file must be passed as command line parameter if run from the command line. If web interface is used, the file is automatically generated.
+
+The configuration file contains a number of fields grouped in a number of sections.
+
+### "copasi" section
+
+This section defines the model file and optimization methods to use.
+
+Fields:
+* modelFile - COPASI model file name; @SELF@ refers to SpaceScanner source directory
+* methods - list of optimization methods to use; the methods are selected sequentially, each subsequent one is selected when the previous ones fail; can contain a method more than once
+* fallbackMethods - list of optimization methods to use when a method fails to evaluate the objective function in given time; useful for e.g. highly constrained models on which many methods may not find any solutions at all
+* randomizeMethodSelection - whether to pick methods from the configuration randomly or in order (default: false)
+* methodParametersFromFile - whether to use optimization method parameters from COPASI model file (default: false)
+
+### "optimization" section
+
+Defines maximal duration of optimization runs, termination criteria etc.
+
+Fields:
+* timeLimitSec - maximal CPU time for optimization in case the consensus criteria and other end conditions have not been reached (default: 600 sec)
+* consensusRelativeError - to determine whether the consensus criteria has been reached (default: 1%)
+* consensusAbsoluteError - to determine whether the consensus criteria has been reached (default: 1e-6)
+* consensusMinDurationSec - the minimal time to continue after the consensus criteria has been reached (default: 300 sec)
+* consensusMinProportionalDuration - the minimal time to continue after the consensus criteria has been reached as proportion of runtime so-far (default: 15%)
+* optimalityRelativeError - compared to already found solution (default: 0.9, range: (0.0  .. 1.0])
+* bestOfValue - known best value of an already found solution
+* restartFromBestValue - restart each subsequent method from the best point in the search space so far (default: true)
+* maxConcurrentRuns - how many COPASI processes to run by parallel (default: max(4, the number of CPU cores); range: [1 .. number of CPU cores])
+* runsPerJob - how many paraller COPASI executions per each job (i.e. a single set of parameters)
+
+### "parameters" section
+
+Defines the way how subsets of paramters are selected (optimization parameters themselves are defined in the model file).
+
+The section is an array of records of arbitrary length. If repeating or overlapping records are specified, an optimization job for a given subset of paramters is still run only once.
+
+Records may have the following type:
+* all - a single optimization job containing all parameters in the model
+* exhaustive - all possible combinations of `N` to `M` parameters. Field "range" defines the values of `N` and `M`. For example, `"range" : [1, 3]` selects `N` to be equal to 1, `M` to 3. `"range" : [2]` selects `N = M = 2`.
+* greedy - for `N` parameters, take the best set of `N-1` parameters and run all possible optimizations that add one parameter not yet in the set. Unless `N=1`, there must also be a record describing which strategy to use to for `N-1` parameter sets.
+* greedy-reverse - similar to "greedy", but takes away a single parameter from the best `N+1` paramter set instead of adding it.
+* explicit - the names of parameters to use are explicitly named in "parameters" field of the record.
+
+By default, these records are present:
+* "all";
+* "exhaustive" with range [1..3];
+* "greedy" with range [4..8].
+
+### "web" section
+
+Web interface settings.
+
+Fields:
+* enable - whether to run the web interface (default: true). WARNING: access control is not supported by SpaceScanner! Enable this only in trusted environment.
+* port - http port number (default: 19000)
+
+### "output" section
+
+Logging settings.
+
+Fields:
+* filename - the file name to use for optimization results (default: "results-<taskname>-<datetime>.csv")
+* loglevel - debug log level; from 0 to 4, higher means more messages (default: 2)
+* numberOfBestCombinations -  how many of the best parameter combinations to include in results for each number of parameters; 0 means unlimited (default: unlimited)
+
+### Not in separate sections
+
+* restartOnFile - .csv file name on which to restart optimization runs, trying to complete timeouted jobs (default: null)
+* taskName - the global name of this optimization task
+
+### Example configuration file
+
+{
+    "copasi" : {
+        "modelFile" : "@SELF@/models/simple-6params.cps",
+        "methods" : ["ParticleSwarm", "GeneticAlgorithm", "GeneticAlgorithmSR", "EvolutionaryProgram", "EvolutionaryStrategySR", "ScatterSearch", "SimulatedAnnealing"],
+        "fallbackMethods" : ["GeneticAlgorithmSR", "EvolutionaryStrategySR"],
+        "randomizeMethodSelection" : false,
+        "methodParametersFromFile" : false,
+        "parameters": []
+    },
+    "optimization" : {
+        "timeLimitSec" : 60,
+        "consensusRelativeError" : 0.01,
+        "consensusAbsoluteError" : 1e-6,
+        "consensusMinDurationSec" : 60,
+        "consensusMinProportionalDuration" : 0.15,
+        "optimalityRelativeError" : 0.1,
+        "bestOfValue" : -Infinity,
+        "restartFromBestValue" : true,
+        "maxConcurrentRuns" : 4,
+        "runsPerJob" : 2
+    },
+    "parameters" : [
+        {"type" : "all"},
+        {"type" : "exhaustive", "range" : [1, 3]},
+        {"type" : "greedy", "range" : [4, 8]}
+    ],
+    "restartOnFile" : null,
+    "web" : {
+	"enable" : true,
+	"port" : 19000
+    },
+    "output" : {
+        "filename" : "results.csv",
+        "loglevel" : 2,
+	"numberOfBestCombinations" : 0
+    },
+    "taskName" : null
+}
 
 
 # Accessing the results
