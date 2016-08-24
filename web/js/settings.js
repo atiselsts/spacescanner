@@ -77,6 +77,14 @@ SPACESCANNER.settings = function() {
 	}
     }
 
+    function toPercent(x) {
+	if (typeof(x) !== 'number') {
+	    return null;
+	}
+	/* percent, including decimal parts */
+	return Math.round(x * 1000.0) / 10.0;
+    }
+
     function populateSettings() {
 	// Performance settings
         $( "#input-option-runsPerJob" ).val(getd(currentSettings["optimization"], "runsPerJob", 4));
@@ -85,9 +93,9 @@ SPACESCANNER.settings = function() {
 
         $( "#input-option-consensusMinDurationSec" ).val(getd(currentSettings["optimization"], "consensusMinDurationSec", 300));
         $( "#input-option-consensusMinProportionalDuration" ).val(
-            Math.round(1000 * getd(currentSettings["optimization"], "consensusMinProportionalDuration", 0.15)) / 10.0);
-        $( "#input-option-consensusRelativeError" ).val(
-            Math.round(1000 * getd(currentSettings["optimization"], "consensusRelativeError", 0.01)) / 10.0);
+	    toPercent(getd(currentSettings["optimization"], "consensusMinProportionalDuration", 0.15)));
+	$( "#input-option-consensusRelativeError" ).val(
+	    toPercent(getd(currentSettings["optimization"], "consensusRelativeError", 0.01)));
 
 	// Method settings	
         $( "#input-option-methods" ).val(
@@ -105,7 +113,7 @@ SPACESCANNER.settings = function() {
 	if (relativeError && relativeError !== 0.0) {
 	    updateTOPState(true);
             $( "#input-option-optimalityRelativeError" ).val(
-		Math.round(10000 * getd(currentSettings["optimization"], "optimalityRelativeError", 0.0)) / 100.0);
+		toPercent(getd(currentSettings["optimization"], "optimalityRelativeError", 0.0)));
             $( "#input-option-bestOfValue" ).val(
 		getd(currentSettings["optimization"], "bestOfValue", 0.0));
 	} else {

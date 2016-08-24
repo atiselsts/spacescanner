@@ -209,6 +209,7 @@ class HttpServerHandler(BaseHTTPRequestHandler):
             response = sm.ioGetJob(qs, o.path[5:])
         elif o.path[:7] == '/config':
             response = sm.ioGetConfig(qs)
+            print("config=", response)
         elif o.path[:8] == '/results':
             response = sm.ioGetResults(qs)
             isJSON = False # the results are in .csv format

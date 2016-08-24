@@ -1,13 +1,12 @@
 {
     "optimization" : {
-        "timeLimitSec" : 10,
-        "consensusMinDurationSec" : 10
+	"maxConcurrentRuns" : 10,
+	"runsPerJob" : 10
     },
     "copasi" : {
         "modelFile" : "@SELF@/models/complex.cps"
     },
     "parameters" : [
-        {"type" : "exhaustive", "range" : [1, 3]},
-        {"type" : "greedy", "range" : [4, 8]}
+        {"type" : "exhaustive", "range" : [15]}
     ]
 }

@@ -465,12 +465,13 @@ class StrategyManager:
 
 
     def ioGetConfig(self, qs):
-        cfg = copy.copy(g.config)
+        cfg = g.getAllConfig()
         # XXX hack to avoid infinities in the generated JSON output
         # as jQuery decoding fails to deal with them
-        bestOfValue = cfg["optimization"].get("bestOfValue", 0)
+        bestOfValue = cfg["optimization"]["bestOfValue"]
         if isinstance(bestOfValue, float) and math.isinf(bestOfValue):
-            cfg["optimization"]["bestOfValue"] = 0.0
+            if "optimization" in cfg:
+                cfg["optimization"]["bestOfValue"] = 0.0
         return cfg
 
 

@@ -283,6 +283,8 @@ var SPACESCANNER = function() {
         if (!$( this ).hasClass('disabled')) {
             if (!SPACESCANNER.refresh.isActive()) {
                 // start
+		SPACESCANNER.settings.populateSettings();
+		SPACESCANNER.settings.saveSettings();
                 SPACESCANNER.settings.postSettings();
             } else { 
                 // stop

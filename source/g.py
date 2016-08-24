@@ -21,62 +21,84 @@
 # Author: Atis Elsts, 2016
 #
 
-import os, sys, shutil, json, multiprocessing
+import os, sys, shutil, copy, json, multiprocessing
+import numbers
 from util import *
 
 ################################################
 # Global variables
 
 # configuration settings
-DEFAULT_CONFIG = {
-    "copasi" : {
-        "modelFile" : os.path.join(SELF_PATH, "models", "simple-6params.cps"),
-        "methods" : ["ParticleSwarm", "GeneticAlgorithm", "GeneticAlgorithmSR", "EvolutionaryProgram", "EvolutionaryStrategySR"],
-        "fallbackMethods" : ["GeneticAlgorithmSR", "EvolutionaryStrategySR"],
-        "randomizeMethodSelection" : False,
-        "methodParametersFromFile" : False,
-        "parameters": [] # all from copasi file
-    },
-    "optimization" : {
-        "timeLimitSec" : 600,
-        "consensusRelativeError" : 0.01,
-        "consensusAbsoluteError" : 1e-6,
-        "consensusMinDurationSec" : 300,
-        "consensusMinProportionalDuration" : 0.15, # 15% of total run's time
-        "optimalityRelativeError" : 0.0, # set to 0.0 to disable this
-        "bestOfValue" : float("-inf"),
-        "restartFromBestValue" : True, # if yes, each next method will start from the best parameter values so far
-        "maxConcurrentRuns" : 4,
-        "runsPerJob" : 2
-    },
-    "parameters" : [
-        {"type" : "all"}, # include all parameters
-        {"type" : "exhaustive", "range" : [1, 3]}, # from 1 to 3
-        {"type" : "greedy", "range" : [4, 8]}    # from 4 to 8
-    ],
-    "web" : {
-        "enable" : True,
-        "port" : 19000
-    },
-    "output" : {
-        "filename" : "results.csv",
-        "loglevel" : 2,
-        "logfile" : None, # default "spacescanner.log" in the results directory
-        "numberOfBestCombinations" : 0
-    },
-    "restartOnFile" : None,
-    "taskName" : None,
-    # the rest are undocumented, for testing only
-    "webTestMode" : False,
-    "hangMode" : False
-}
-
-config = DEFAULT_CONFIG
+config = {}
 configFileName = DEFAULT_CONFIG_FILE
 spacescannerStartTime = None
 workDir = None
 taskName = None
 logFileName = None
+
+################################################
+
+class ConfigFileField:
+    def __init__(self, default, canBeNone = False):
+        self.default = default
+        self.canBeNone = canBeNone
+
+    def validate(self, value):
+        if value is None and not self.canBeNone:
+            return False
+        # if list, must be nonempty
+        if isinstance(self.default, list) and len(value) == 0:
+            return False
+        return True
+
+DEFCFG = {}
+
+def defaultConfigInitialize():
+    DEFCFG[("copasi", "modelFile")] = ConfigFileField(os.path.join(SELF_PATH, "models", "simple-6params.cps"))
+    DEFCFG[("copasi", "methods")] = ConfigFileField(["ParticleSwarm", "GeneticAlgorithm", "GeneticAlgorithmSR", "EvolutionaryProgram", "EvolutionaryStrategySR"])
+    DEFCFG[("copasi", "fallbackMethods")] = ConfigFileField (["GeneticAlgorithmSR", "EvolutionaryStrategySR"])
+    DEFCFG[("copasi", "randomizeMethodSelection")] = ConfigFileField(False)
+    DEFCFG[("copasi", "methodParametersFromFile")] = ConfigFileField(False)
+    DEFCFG[("copasi", "parameters")] = ConfigFileField([]) # all from copasi file
+
+    DEFCFG[("optimization", "timeLimitSec")] = ConfigFileField(600)
+    DEFCFG[("optimization", "consensusRelativeError")] = ConfigFileField(0.01)
+    DEFCFG[("optimization", "consensusAbsoluteError")] = ConfigFileField(1e-6)
+    DEFCFG[("optimization", "consensusMinDurationSec")] = ConfigFileField(300)
+    DEFCFG[("optimization", "consensusMinProportionalDuration")] = ConfigFileField(0.15) # 15% of total run's time
+    DEFCFG[("optimization", "optimalityRelativeError")] = ConfigFileField(0.0) # set to 0.0 to disable this
+    DEFCFG[("optimization", "bestOfValue")] = ConfigFileField(float("-inf"))
+    DEFCFG[("optimization", "restartFromBestValue")] = ConfigFileField( True) # if yes, each next method will start from the best parameter values so far
+    DEFCFG[("optimization", "maxConcurrentRuns")] = ConfigFileField(4)
+    DEFCFG[("optimization", "runsPerJob")] = ConfigFileField(2)
+
+    DEFCFG[("parameters")] = ConfigFileField([
+        {"type" : "all"}, # include all parameters
+        {"type" : "exhaustive", "range" : [1, 3]}, # from 1 to 3
+        {"type" : "greedy", "range" : [4, 8]}    # from 4 to 8
+    ])
+    DEFCFG[("web","enable")] = ConfigFileField(True)
+    DEFCFG[("web","port")] = ConfigFileField(19000)
+
+    DEFCFG[("output", "filename")] = ConfigFileField("results.csv")
+    DEFCFG[("output", "loglevel")] = ConfigFileField(2)
+    DEFCFG[("output", "logfile")] = ConfigFileField(None, True) # default "spacescanner.log" in the results directory
+    DEFCFG[("output", "numberOfBestCombinations")] = ConfigFileField( 0)
+    DEFCFG[("restartOnFile",)] = ConfigFileField(None, True)
+    DEFCFG[("taskName",)] = ConfigFileField(None, True)
+    # the rest are undocumented, for testing only
+    DEFCFG[("webTestMode",)] = ConfigFileField(False, True)
+    DEFCFG[("hangMode",)] = ConfigFileField(False, True)
+
+def defaultConfigGet(path):
+    if tuple(path) not in DEFCFG:
+        return None, False
+    return DEFCFG[tuple(path)].default, True
+
+def defaultConfigValidate(path, value):
+    if tuple(path) not in DEFCFG:
+        return False
+    return DEFCFG[tuple(path)].validate(value)
 
 ################################################
 # Configuration file management
@@ -93,13 +115,19 @@ def get(path, compartment):
 def getConfig(name, default = None, useHardcodedConfig = True):
     path = name.split(".")
     value, ok = get(path, config)
-    if not ok and useHardcodedConfig:
-        value, ok = get(path, DEFAULT_CONFIG)
+    if ok:
+        ok = defaultConfigValidate(path, value)
+    if ok:
+        return value
+    if useHardcodedConfig:
+        value, ok = defaultConfigGet(path)
     return value if ok else default
 
 def loadConfig(filename, isQuiet = False):
     global config
     global configFileName
+
+    defaultConfigInitialize()
 
     if filename:
         configFileName = filename
@@ -112,7 +140,7 @@ def loadConfig(filename, isQuiet = False):
         with open(configFileName, "r") as f:
             config = json.load(f)
     except IOError as e:
-        config = DEFAULT_CONFIG
+        config = {} # use default config
         if not isQuiet:
             log(LOG_ERROR, "<spacescanner>: exception occurred while loading configuration file: " + str(e))
             log(LOG_ERROR, "going to use the default configuration!\n")
@@ -122,7 +150,20 @@ def loadConfig(filename, isQuiet = False):
     numMaxRuns = int(getConfig("optimization.maxConcurrentRuns", numCores))
     if numMaxRuns > numCores:
         log(LOG_INFO, "warning: reducing the number of maximal concurrent optimizations rune to the number of CPU cores: {}".format(numCores))
+        if "optimization" not in config:
+            config["optimization"] = {}
         config["optimization"]["maxConcurrentRuns"] = numCores
+
+def getAllConfig():
+    cfg = copy.copy(config)
+    for k in DEFCFG:
+        if len(k) > 1:
+            if k[0] not in cfg:
+                cfg[k[0]] = {}
+            cfg[k[0]][k[1]] = DEFCFG[k].default
+        else:
+            cfg[k[0]] = DEFCFG[k].default
+    return cfg
 
 ################################################
 # Logging
