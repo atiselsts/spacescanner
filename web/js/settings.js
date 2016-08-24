@@ -45,6 +45,9 @@ SPACESCANNER.settings = function() {
     }
 
     function postSettings() {
+	// Always use the same model file - the one POSTed from the web
+	currentSettings["copasi"]["modelFile"] = "@SELF@/tmpweb/model.cps";
+
         $.ajax({
             type: "POST",
             url: "start",
@@ -125,6 +128,8 @@ SPACESCANNER.settings = function() {
 	// other settings
         $( "#input-option-loglevel" ).val(
             getd(currentSettings["output"], "loglevel", 2));
+
+	// TODO: parameter settings
     }
 
     function saveSettings() {
@@ -144,9 +149,6 @@ SPACESCANNER.settings = function() {
         currentSettings["copasi"]["randomizeMethodSelection"] = $( "#input-option-randomizeMethodSelection" ).is(":checked");
         currentSettings["optimization"]["restartFromBestValue"] = $( "#input-option-restartFromBestValue" ).is(":checked");
 
-	// Always use the same model file - the one POSTed from the web
-	currentSettings["copasi"]["modelFile"] = "@SELF@/tmpweb/model.cps";
-
 	// Total optimization settings
 	if ($( "#input-option-enableTotalOptimization" ).is(":checked"))  {
             currentSettings["optimization"]["optimalityRelativeError"] = $( "#input-option-optimalityRelativeError" ).val() / 100.0;
@@ -157,6 +159,8 @@ SPACESCANNER.settings = function() {
 
 	// other settings
         currentSettings["output"]["loglevel"] = $( "#input-option-loglevel" ).val();
+
+	// TODO: parameter settings
     }
 
     $( "#input-option-enableTotalOptimization" ).on("click", function() {

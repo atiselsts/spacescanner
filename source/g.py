@@ -72,7 +72,7 @@ def defaultConfigInitialize():
     DEFCFG[("optimization", "maxConcurrentRuns")] = ConfigFileField(4)
     DEFCFG[("optimization", "runsPerJob")] = ConfigFileField(2)
 
-    DEFCFG[("parameters")] = ConfigFileField([
+    DEFCFG[("parameters", )] = ConfigFileField([
         {"type" : "all"}, # include all parameters
         {"type" : "exhaustive", "range" : [1, 3]}, # from 1 to 3
         {"type" : "greedy", "range" : [4, 8]}    # from 4 to 8
@@ -159,10 +159,21 @@ def getAllConfig():
     for k in DEFCFG:
         if len(k) > 1:
             if k[0] not in cfg:
+                # add the section
                 cfg[k[0]] = {}
-            cfg[k[0]][k[1]] = DEFCFG[k].default
+            if k[1] not in cfg[k[0]]:
+                # use default
+                if isinstance(DEFCFG[k].default, list):
+                    cfg[k[0]][k[1]] = copy.copy(DEFCFG[k].default)
+                else:
+                    cfg[k[0]][k[1]] = DEFCFG[k].default
         else:
-            cfg[k[0]] = DEFCFG[k].default
+            if k[0] not in cfg:
+                # use default
+                if isinstance(DEFCFG[k].default, list):
+                    cfg[k[0]] = copy.copy(DEFCFG[k].default)
+                else:
+                    cfg[k[0]] = DEFCFG[k].default
     return cfg
 
 ################################################
