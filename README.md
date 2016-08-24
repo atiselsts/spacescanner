@@ -162,7 +162,7 @@ Fields:
 
 ### Example configuration file
 
-{
+<pre>{
     "copasi" : {
         "modelFile" : "@SELF@/models/simple-6params.cps",
         "methods" : ["ParticleSwarm", "GeneticAlgorithm", "GeneticAlgorithmSR", "EvolutionaryProgram", "EvolutionaryStrategySR", "ScatterSearch", "SimulatedAnnealing"],
@@ -199,7 +199,7 @@ Fields:
 	"numberOfBestCombinations" : 0
     },
     "taskName" : null
-}
+}</pre>
 
 
 # Accessing the results
