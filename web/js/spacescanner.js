@@ -5,7 +5,7 @@ var SPACESCANNER = function() {
     var MAX_DISPLAY_PARAMS = 5;
 
     $( "#dialog-select-model" ).dialog({
-        title: "Select model",
+        title: "Select a model",
         modal: true,
         autoOpen: false,
         width: 600,
@@ -68,7 +68,7 @@ var SPACESCANNER = function() {
         width: 740,
         height: 580,
         open: function() {
-            SPACESCANNER.settings.querySettings();
+            //SPACESCANNER.settings.querySettings();
             SPACESCANNER.settings.populateSettings();
         },
         buttons: [
@@ -165,7 +165,7 @@ var SPACESCANNER = function() {
 	}
         var names = $( "#input-option-param" + i + "-params" ).val().split(",").map(function(x) { return x.trim() });
 
-        if (type === "all") {
+        if (type === "full-set") {
         } else if (type === "exhaustive") {
             result.range = [rs, re];
         } else if (type === "greedy" || type === "greedy-reverse") {
@@ -202,7 +202,7 @@ var SPACESCANNER = function() {
     });
 
     $( "#dialog-parameters" ).dialog({
-        title: "Parameter sets to search through",
+        title: "Adjustable parameter sets to search through",
         modal: true,
         autoOpen: false,
         width: 880,

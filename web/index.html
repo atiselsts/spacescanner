@@ -41,13 +41,13 @@
     <header id="header">
 
       <ul class="actions vertical">
-        <li><a id="button-select" class="button main" title="Load a SBML model file">Select model</a></li>
+        <li><a id="button-select" class="button main" title="Load a SBML model file">Select a model</a></li>
         <li class="divider"></li>
         <li><a id="button-start-stop" class="button main disabled" title="Start/stop optimizing the model"><i class="icon-play" style="margin-top: 3px"></i> Start</a></li>
         <li><a id="button-status" class="button main disabled" title="Show status of all jobs">Status</a></li>
         <li class="divider"></li>
         <li><a id="button-settings" class="button main" title="Configure optimization settings">Settings</a></li>
-        <li><a id="button-parameters" class="button main" title="Select parameter sets to include in optimizations">Parameter sets</a></li>
+        <li><a id="button-parameters" class="button main" title="Select adjustable parameter sets to include in optimizations">Parameter sets</a></li>
         <li class="divider"></li>
         <li><a id="button-export" class="button main disabled" title="Export a CSV file with the current results">Export CSV</a></li>
       </ul>
@@ -309,10 +309,10 @@
     <div class="form-row" id="row-params0">
         <label for="input-option-params0" style="width:120px">Parameter set:</label>
         <select id="input-option-params0" style="width:150px !important; color: black" title="Type of the parameter set">
-          <option value="all" title="Every parameter in model file (a single run)">All parameters</option>
+	  <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
           <option value="exhaustive" title="Exhaustive search of parameter combinations">Exhaustive</option>
           <option value="greedy" title="Greedy search of parameter combinations">Greedy</option>
-          <option value="greedy-reverse" title="Greedy search, starting from all parameters included">Greedy from end</option>
+          <option value="greedy-reverse" title="Greedy search, starting from the full set of parameters">Greedy from end</option>
           <option value="explicit" title="A single set of explicitly named parameters">Explicit</option>
           <option value="zero" title="The value of the objective function at the default parameter values">Zero parameters</option>
         </select>
@@ -338,10 +338,10 @@
         <label for="input-option-params1" style="width:120px">Parameter set:</label>
         <select id="input-option-params1" style="width:150px !important; color: black" title="Type of the parameter set">
           <option value="none">None</option>
-          <option value="all" title="Every parameter in model file (a single run)">All parameters</option>
+	  <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
           <option value="exhaustive" title="Exhaustive search of parameter combinations">Exhaustive</option>
           <option value="greedy" title="Greedy search of parameter combinations">Greedy</option>
-          <option value="greedy-reverse" title="Greedy search, starting from all parameters included">Greedy from end</option>
+          <option value="greedy-reverse" title="Greedy search, starting from the full set of parameters">Greedy from end</option>
           <option value="explicit" title="A single set of explicitly named parameters">Explicit</option>
           <option value="zero" title="The value of the objective function at the default parameter values">Zero parameters</option>
         </select>
@@ -368,10 +368,10 @@
         <label for="input-option-params2" style="width:120px">Parameter set:</label>
         <select id="input-option-params2" style="width:150px !important; color: black" title="Type of the parameter set">
           <option value="none">None</option>
-          <option value="all" title="Every parameter in model file (a single run)">All parameters</option>
+          <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
           <option value="exhaustive" title="Exhaustive search of parameter combinations">Exhaustive</option>
           <option value="greedy" title="Greedy search of parameter combinations">Greedy</option>
-          <option value="greedy-reverse" title="Greedy search, starting from all parameters included">Greedy from end</option>
+          <option value="greedy-reverse" title="Greedy search, starting from the full set of parameters">Greedy from end</option>
           <option value="explicit" title="A single set of explicitly named parameters">Explicit</option>
           <option value="zero" title="The value of the objective function at the default parameter values">Zero parameters</option>
         </select>
@@ -398,10 +398,10 @@
         <label for="input-option-params3" style="width:120px">Parameter set:</label>
         <select id="input-option-params3" style="width:150px !important; color: black" title="Type of the parameter set">
           <option value="none">None</option>
-          <option value="all" title="Every parameter in model file (a single run)">All parameters</option>
+	  <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
           <option value="exhaustive" title="Exhaustive search of parameter combinations">Exhaustive</option>
           <option value="greedy" title="Greedy search of parameter combinations">Greedy</option>
-          <option value="greedy-reverse" title="Greedy search, starting from all parameters included">Greedy from end</option>
+          <option value="greedy-reverse" title="Greedy search, starting from the full set of parameters">Greedy from end</option>
           <option value="explicit" title="A single set of explicitly named parameters">Explicit</option>
           <option value="zero" title="The value of the objective function at the default parameter values">Zero parameters</option>
         </select>
@@ -428,10 +428,10 @@
         <label for="input-option-params4" style="width:120px">Parameter set:</label>
         <select id="input-option-params4" style="width:150px !important; color: black" title="Type of the parameter set">
           <option value="none">None</option>
-          <option value="all" title="Every parameter in model file (a single run)">All parameters</option>
+	  <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
           <option value="exhaustive" title="Exhaustive search of parameter combinations">Exhaustive</option>
           <option value="greedy" title="Greedy search of parameter combinations">Greedy</option>
-          <option value="greedy-reverse" title="Greedy search, starting from all parameters included">Greedy from end</option>
+          <option value="greedy-reverse" title="Greedy search, starting from the full set of parameters">Greedy from end</option>
           <option value="explicit" title="A single set of explicitly named parameters">Explicit</option>
           <option value="zero" title="The value of the objective function at the default parameter values">Zero parameters</option>
         </select>

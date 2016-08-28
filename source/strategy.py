@@ -33,7 +33,7 @@ import jobpool
 ###############################################################
 # Parameter selections
 
-PARAM_SEL_ALL        = 1
+PARAM_SEL_FULL_SET   = 1
 PARAM_SEL_EXPLICIT   = 2
 PARAM_SEL_EXHAUSTIVE = 3
 PARAM_SEL_GREEDY     = 4
@@ -84,8 +84,8 @@ class ParamSelection(object):
                 g.log(LOG_ERROR, "parameter selection ranges must contain numbers in the range [1 .. n]")
                 return None
 
-        if specification["type"] == "all":
-            x = ParamSelectionAll(strategy)
+        if specification["type"] == "full-set":
+            x = ParamSelectionFullSet(strategy)
         elif specification["type"] == "zero":
             x = ParamSelectionZero(strategy)
         elif specification["type"] == "explicit":
@@ -121,9 +121,9 @@ class ParamSelection(object):
         return x
 
 
-class ParamSelectionAll(ParamSelection):
+class ParamSelectionFullSet(ParamSelection):
     def __init__(self, strategy):
-        super(ParamSelectionAll, self).__init__(PARAM_SEL_ALL, strategy, 0, 0)
+        super(ParamSelectionFullSet, self).__init__(PARAM_SEL_FULL_SET, strategy, 0, 0)
 
     def getParameterSets(self):
         yield [self.allParameters]
@@ -546,7 +546,7 @@ class StrategyManager:
         else:
             # add the default optimization target: all parameters
             g.log(LOG_INFO, "optimizing only for all parameters")
-            spec = {"type" : "all"}
+            spec = {"type" : "full-set"}
             parameterSelections.append(ParamSelection.create(spec, self))
 
         numCombinations = 0

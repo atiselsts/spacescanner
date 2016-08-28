@@ -73,7 +73,7 @@ def defaultConfigInitialize():
     DEFCFG[("optimization", "runsPerJob")] = ConfigFileField(2)
 
     DEFCFG[("parameters", )] = ConfigFileField([
-        {"type" : "all"}, # include all parameters
+        {"type" : "full-set"}, # include all parameters
         {"type" : "exhaustive", "range" : [1, 3]}, # from 1 to 3
         {"type" : "greedy", "range" : [4, 8]}    # from 4 to 8
     ])
