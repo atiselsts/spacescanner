@@ -11,7 +11,7 @@
         "consensusAbsoluteError" : -1.0
     },
     "parameters" : [
-        {"type" : "all"}
+        {"type" : "full-set"}
     ],
     "output" : {
         "logfile" : "spacescanner.log"

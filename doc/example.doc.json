@@ -41,8 +41,8 @@
     "restartOnFile" : null,
     // parameter ranges which to use for optimization
     "parameters" : [
-	// an optimization all parameters included (default)
-        {"type" : "all"},
+	// an optimization the full set of parameters included (default)
+        {"type" : "full-set"},
  	// an optimization with exhaustive selection of 1 to 3 parameters (default)
         {"type" : "exhaustive", "range" : [1, 3]},
 	// an optimization with greedy selection of 4 to 8 parameters (default)

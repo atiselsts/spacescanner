@@ -20,7 +20,7 @@
         "runsPerJob" : 2
     },
     "parameters" : [
-        {"type" : "all"},
+        {"type" : "full-set"},
         {"type" : "exhaustive", "range" : [1, 3]},
         {"type" : "greedy", "range" : [4, 8]}
     ],

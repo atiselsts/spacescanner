@@ -9,7 +9,7 @@
         "consensusAbsoluteError" : -1.0
     },
     "parameters" : [
-        {"type" : "all"}
+        {"type" : "full-set"}
     ],
     "output" : {
         "loglevel" : 3,

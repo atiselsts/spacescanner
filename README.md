@@ -127,14 +127,14 @@ Defines the way how subsets of paramters are selected (optimization parameters t
 The section is an array of records of arbitrary length. If repeating or overlapping records are specified, an optimization job for a given subset of paramters is still run only once.
 
 Records may have the following type:
-* all - a single optimization job containing all parameters in the model
+* full-set - a single optimization job containing all parameters in the model
 * exhaustive - all possible combinations of `N` to `M` parameters. Field "range" defines the values of `N` and `M`. For example, `"range" : [1, 3]` selects `N` to be equal to 1, `M` to 3. `"range" : [2]` selects `N = M = 2`.
 * greedy - for `N` parameters, take the best set of `N-1` parameters and run all possible optimizations that add one parameter not yet in the set. Unless `N=1`, there must also be a record describing which strategy to use to for `N-1` parameter sets.
 * greedy-reverse - similar to "greedy", but takes away a single parameter from the best `N+1` paramter set instead of adding it.
 * explicit - the names of parameters to use are explicitly named in "parameters" field of the record.
 
 By default, these records are present:
-* "all";
+* "full-set";
 * "exhaustive" with range [1..3];
 * "greedy" with range [4..8].
 
@@ -184,7 +184,7 @@ Fields:
         "runsPerJob" : 2
     },
     "parameters" : [
-        {"type" : "all"},
+        {"type" : "full-set"},
         {"type" : "exhaustive", "range" : [1, 3]},
         {"type" : "greedy", "range" : [4, 8]}
     ],
