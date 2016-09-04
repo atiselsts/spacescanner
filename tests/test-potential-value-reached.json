@@ -2,7 +2,7 @@
     "optimization" : {
         "consensusMinDurationSec" : 5,
         "consensusRelativeError" : 0.9,
-        "optimalityRelativeError" : 0.5,
+        "optimalityRelativeError" : 0.7,
         "bestOfValue" : 100
     },
     "copasi" : {

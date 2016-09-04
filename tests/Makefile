@@ -1,7 +1,7 @@
 PYTHON = python
 SPACESCANNER = ../source/spacescanner.py
 
-all: test-broken test-fast-consensus test-no-solution test-param-ranges test-param-ranges2 test-solution-timeout test-solution-timeout-allmethods test-top test-suspend-resume cleanup
+all: test-broken test-fast-consensus test-no-solution test-param-ranges test-param-ranges2 test-solution-timeout test-top test-suspend-resume cleanup
 
 test-fast-consensus:
 	@echo Testing a fast consensus...
@@ -49,6 +49,7 @@ test-solution-timeout:
 	@echo ..done
 	@echo ""
 
+# XXX: this is broken by design now when the new "termination on stagnation" semantics is implemented
 test-solution-timeout-allmethods:
 	@echo Testing behavior on solution timeout with method switching...
 	@rm -f spacescanner.log

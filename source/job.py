@@ -129,14 +129,16 @@ class Job:
                     for r in self.runners:
                         if r.terminationReason == TERMINATION_REASON_COPASI_FINISHED:
                             r.terminationReason = TERMINATION_REASON_CONSENSUS
+            # switch the methods if required
             self.decideTermination()
             return
 
         if not all([r.isActive for r in self.runners]):
-            # some but not all have quit; quit the others with "time limit exceeded"
+            # some but not all have quit; quit the others with "stagnation"
+            # (not technically true, but the best match from the existing codes)
             for r in self.runners:
                 if r.isActive and not r.terminationReason:
-                    r.terminationReason = TERMINATION_REASON_CPU_TIME_LIMIT
+                    r.terminationReason = TERMINATION_REASON_STAGNATION
             return
 
         numActiveRunners = 0
@@ -211,8 +213,6 @@ class Job:
                     if r.isActive:
                         r.terminationReason = TERMINATION_REASON_STAGNATION
                     g.log(LOG_INFO, "terminating {}: Optimization stagnated (did not produce new results) for {} seconds".format(timeStagnated))
-                # switch the methods if required
-                self.decideTermination()
                 return
 
         # We will continue. Check if load balancing needs to be done
@@ -256,21 +256,20 @@ class Job:
 
 
     def decideTermination(self):
-        badReasons = [TERMINATION_REASON_CPU_TIME_LIMIT,
-                      TERMINATION_REASON_STAGNATION,
-                      TERMINATION_REASON_COPASI_FINISHED]
-        if not any([r.terminationReason in badReasons for r in self.runners]):
-            # all terminated fine (with consensus, or because asked by the user)
+        continuableReasons = [TERMINATION_REASON_STAGNATION,
+                              TERMINATION_REASON_COPASI_FINISHED]
+        if not any([r.terminationReason in continuableReasons for r in self.runners]):
+            # all terminated with consensus, because asked by the user, or with time limit
             self.pool.finishJob(self)
             return
 
-        # So we have at least one bad termination where either the CPU time limit
-        # was exceeded or Copasi stopped without consensus, or the optimizations
-        # have stagnated for too long.
+        # So we have at least one termination with either:
+        #  a) the stagnation limit was exceeded, or
+        #  b) Copasi stopped without consensus.
         # Actions now:
-        # 1) if no solution found: use a fallback method
-        # 2) else switch to the next method
-        # 3) if no more methods are available, quit
+        #  1) if no solution found: use a fallback method;
+        #  2) else switch to the next method;
+        #  3) if no more methods are available, quit.
 
         if self.currentMethod in self.fallbackMethods:
             # remove the already-used method to avoid infinite looping between methods

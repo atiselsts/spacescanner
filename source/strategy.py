@@ -33,12 +33,12 @@ import jobpool
 ###############################################################
 # Parameter selections
 
+PARAM_SEL_ZERO       = 0
 PARAM_SEL_FULL_SET   = 1
 PARAM_SEL_EXPLICIT   = 2
 PARAM_SEL_EXHAUSTIVE = 3
 PARAM_SEL_GREEDY     = 4
 PARAM_SEL_GREEDY_REVERSE = 5
-PARAM_SEL_ZERO       = 6
 
 class ParamSelection(object):
     instanceOfExplicit = None
@@ -172,7 +172,7 @@ class ParamSelectionExhaustive(ParamSelection):
         paramCombinations = []
         for k in range(self.start, self.end + step, step):
             # terminate if good enough value already found
-            if self.strategy.totalOptimizationPotentialReached(k):
+            if self.strategy.totalOptimizationPotentialReached(k - 1):
                 return
             for it in itertools.combinations(self.allParameters, k):
                 paramCombinations.append(list(it))
@@ -194,7 +194,7 @@ class ParamSelectionGreedy(ParamSelection):
         # add one more parameter to the best current parameter combination
         for k in range(self.start, self.end + 1):
             # terminate if good enough value already found
-            if self.strategy.totalOptimizationPotentialReached(k):
+            if self.strategy.totalOptimizationPotentialReached(k - 1):
                 return
             if k <= 1:
                 bestParams = []
@@ -423,11 +423,13 @@ class StrategyManager:
         isReached = False
         if self.topBaseline > targetValue:
             isReached = True
+            requiredValue = targetValue
         else:
-            isReached = (achievedValue - self.topBaseline) >= (targetValue - self.topBaseline) * proportion
+            requiredValue = (targetValue - self.topBaseline) * proportion + self.topBaseline
+            isReached = achievedValue >= requiredValue
 
         if isReached:
-            g.log(LOG_INFO, "terminating optimization at {} parameters: good-enough-value criteria reached (required {})".format(numParameters, targetValue * proportion))
+            g.log(LOG_INFO, "terminating optimization at {} parameters: good-enough-value criteria reached (required {})".format(numParameters, requiredValue))
             return True
         return False
 
