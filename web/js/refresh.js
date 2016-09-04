@@ -45,16 +45,16 @@ SPACESCANNER.refresh = function() {
 
         if (isActive != oldIsActive) {
             if (isActive) {
-		resultsButtonClicked = false;
+                resultsButtonClicked = false;
                 $("#button-select").addClass('disabled');
             } else {
                 SPACESCANNER.notify("Optimizations finished");
-		SPACESCANNER.display.resetMethods();
+                SPACESCANNER.display.resetMethods();
                 $("#button-select").removeClass('disabled');
-		if (!resultsButtonClicked) {
+                if (!resultsButtonClicked) {
                     // remove all charts
                     SPACESCANNER.display.drawCharts([]);
-		}
+                }
             }
         }
         if (isActive != oldIsActive || isModelExecutable != oldIsModelExecutable) {
@@ -91,9 +91,9 @@ SPACESCANNER.refresh = function() {
                 contentType: "application/json",
                 dataType: "json",
                 success: function (data) {
-		    SPACESCANNER.display.drawCharts(data);
-		    refreshTimerID = setTimeout(refresh, pageRefreshInterval);
-		},
+                    SPACESCANNER.display.drawCharts(data);
+                    refreshTimerID = setTimeout(refresh, pageRefreshInterval);
+                },
                 error: function (data, textStatus, xhr) {
                     console.log("get active status error: " + JSON.stringify(data) + " " + textStatus);
                     refreshTimerID = setTimeout(refresh, pageRefreshInterval);
@@ -105,9 +105,9 @@ SPACESCANNER.refresh = function() {
     }
 
     function showFinishedJobResults(id) {
-	resultsButtonClicked = true;
+        resultsButtonClicked = true;
 
-	SPACESCANNER.display.resetMethods();
+        SPACESCANNER.display.resetMethods();
 
         $.ajax({
             type: "GET",
@@ -115,12 +115,12 @@ SPACESCANNER.refresh = function() {
             contentType: "application/json",
             dataType: "json",
             success:  function (data) {
-		SPACESCANNER.display.drawCharts([data]);
-	    },
+                SPACESCANNER.display.drawCharts([data]);
+            },
             error: function (data, textStatus, xhr) {
                 console.log("get job " + id + " status error: " + JSON.stringify(data) + " " + textStatus);
             }
-	});
+        });
 
         $( "#dialog-status" ).dialog( "close" );
     }
@@ -153,10 +153,10 @@ SPACESCANNER.refresh = function() {
         var anyActive = false;
         for (var i = data.length - 1; i >= 0 ; --i) {
             if (data[i].active) {
-		anyActive = true;
-		break;
-	    }
-	}
+                anyActive = true;
+                break;
+            }
+        }
         var s = "";
         for (var i = 0; i < data.length; ++i) {
             var job = data[i];
@@ -170,9 +170,9 @@ SPACESCANNER.refresh = function() {
             }
             s += '<div class="form-row">\n'
             s += "Job " + job.id + " / ";
-	    if (!anyActive) {
-		s += '<a title="Show job results graph" class="button-results" id="button-results-' + job.id +'" onclick="SPACESCANNER.refresh.showFinishedJobResults(' + job.id + ')">Result graph</a> / ';
-	    }
+            if (!anyActive) {
+                s += '<a title="Show job results graph" class="button-results" id="button-results-' + job.id +'" onclick="SPACESCANNER.refresh.showFinishedJobResults(' + job.id + ')">Result graph</a> / ';
+            }
             s += "OF value: " + job.of + " / "
                 + "CPU time: " + (Math.round(10 * job.cpu) / 10.0) + " / "
                 + "Status: " + status + " / "

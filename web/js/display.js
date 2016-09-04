@@ -10,7 +10,10 @@ SPACESCANNER.display = function() {
 
     // reset the "methods" array
     function resetMethods() {
-	methods = [];
+        methods = [];
+        for (var i = 0; i < MAX_NUM_CHARTS; ++i) {
+            methods.push(null);
+        }
     }
 
     // onload callback
@@ -21,7 +24,7 @@ SPACESCANNER.display = function() {
             button2jobID.push(0); // no mapping
         }
 
-	resetMethods();
+        resetMethods();
     }
 
     function isReady() {
@@ -50,10 +53,10 @@ SPACESCANNER.display = function() {
     }
 
     function showChart(i, chart, job) {
-	if (job.error) {
-	    console.log("Job data has an error: " + job.error);
-	    return;
-	}
+        if (job.error) {
+            console.log("Job data has an error: " + job.error);
+            return;
+        }
         var params = ""; 
         for (var j = 0; j < job.parameters.length; ++j) {
             params += job.parameters[j];
@@ -65,18 +68,18 @@ SPACESCANNER.display = function() {
         $("#job" + i + "_name").html("<h2>Job " + job.id + "</h2>\n");
         $("#job" + i + "_parameters").html("<p>Parameters: " + params + "</p>\n");
 
-	if (job.active) {
-	    $("#job" + i + "_actions").show();
-	} else {
-	    $("#job" + i + "_actions").hide();
-	}
+        if (job.active) {
+            $("#job" + i + "_actions").show();
+        } else {
+            $("#job" + i + "_actions").hide();
+        }
 
-	if (methods[i] === null) {
-	    methods[i] = job.method;
-	} else if (methods[i] !== job.method) {
-	    SPACESCANNER.notify("Switching job " + job.id + " to method " + job.method);
-	    methods[i] = job.method;
-	}
+        if (methods[i] === null) {
+            methods[i] = job.method;
+        } else if (methods[i] !== job.method) {
+            SPACESCANNER.notify("Switching job " + job.id + " to method " + job.method);
+            methods[i] = job.method;
+        }
 
         var allData = [];
         for (var runner = 0; runner < job.data.length; runner++) {
@@ -132,7 +135,7 @@ SPACESCANNER.display = function() {
 
     return {
         drawCharts : drawCharts,
-	resetMethods : resetMethods,
+        resetMethods : resetMethods,
         getJobID : function (i) { return button2jobID[i] }
     };
 

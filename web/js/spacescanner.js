@@ -89,27 +89,27 @@ var SPACESCANNER = function() {
     });
 
     function delParams() {
-	var id = $( this ).attr("id");
+        var id = $( this ).attr("id");
         var index = parseInt(id.substr(17));
-	SPACESCANNER.settings.displayParam(null, index);
+        SPACESCANNER.settings.displayParam(null, index);
     }
     for (var i = 1; i < MAX_DISPLAY_PARAMS; ++i) {
-	$("#button-del-params" + i).click(delParams);
+        $("#button-del-params" + i).click(delParams);
     }
 
     $("#button-add-params").click(function(){
-	var found = -1;
-	for (var i = 0; i < MAX_DISPLAY_PARAMS; ++i) {
-	    if (!$( "#row-params" + i ).is(':visible')) {
-		found = i;
-		break;
-	    }
-	}
-	if (found != -1) {
-	    SPACESCANNER.settings.displayParam({type: "exhaustive", range: [1, 1]}, found);
-	} else {
+        var found = -1;
+        for (var i = 0; i < MAX_DISPLAY_PARAMS; ++i) {
+            if (!$( "#row-params" + i ).is(':visible')) {
+                found = i;
+                break;
+            }
+        }
+        if (found != -1) {
+            SPACESCANNER.settings.displayParam({type: "exhaustive", range: [1, 1]}, found);
+        } else {
             SPACESCANNER.notify("Max " + MAX_DISPLAY_PARAMS + " different parameter sets");
-	}
+        }
     });
 
     $( "#dialog-parameters" ).dialog({
@@ -119,13 +119,13 @@ var SPACESCANNER = function() {
         width: 880,
         height: 400,
         open: function() {
-	    SPACESCANNER.settings.populateSettings();
+            SPACESCANNER.settings.populateSettings();
         },
         buttons: [
             {
                 text: "Ok",
                 click: function() {
-		    SPACESCANNER.settings.saveSettings();
+                    SPACESCANNER.settings.saveSettings();
                     $( this ).dialog( "close" );
                 }
             },

@@ -47,8 +47,8 @@ SPACESCANNER.settings = function() {
     }
 
     function postSettings() {
-	// Always use the same model file - the one POSTed from the web
-	currentSettings["copasi"]["modelFile"] = "@SELF@/tmpweb/model.cps";
+        // Always use the same model file - the one POSTed from the web
+        currentSettings["copasi"]["modelFile"] = "@SELF@/tmpweb/model.cps";
 
         $.ajax({
             type: "POST",
@@ -71,23 +71,23 @@ SPACESCANNER.settings = function() {
     }
 
     function updateTOPState(enable) {
-	if (enable) {
+        if (enable) {
             $( "#input-option-enableTotalOptimization" ).prop("checked", true);
-	    $( "#input-option-optimalityRelativeError" ).prop('disabled', false);
-	    $( "#input-option-bestOfValue" ).prop('disabled', false);
-	} else {
+            $( "#input-option-optimalityRelativeError" ).prop('disabled', false);
+            $( "#input-option-bestOfValue" ).prop('disabled', false);
+        } else {
             $( "#input-option-enableTotalOptimization" ).prop("checked", false);
-	    $( "#input-option-optimalityRelativeError" ).prop('disabled', true);
-	    $( "#input-option-bestOfValue" ).prop('disabled', true);
-	}
+            $( "#input-option-optimalityRelativeError" ).prop('disabled', true);
+            $( "#input-option-bestOfValue" ).prop('disabled', true);
+        }
     }
 
     function toPercent(x) {
-	if (typeof(x) !== 'number') {
-	    return null;
-	}
-	/* percent, including decimal parts */
-	return Math.round(x * 1000.0) / 10.0;
+        if (typeof(x) !== 'number') {
+            return null;
+        }
+        /* percent, including decimal parts */
+        return Math.round(x * 1000.0) / 10.0;
     }
 
     function changeParam(element, i) {
@@ -96,19 +96,19 @@ SPACESCANNER.settings = function() {
         var doNames = false;
 
         if (type === "none") {
-	    $( "#row-params" + i ).hide();
-	} else {
-	    $( "#row-params" + i ).show();
+            $( "#row-params" + i ).hide();
+        } else {
+            $( "#row-params" + i ).show();
 
             if (type === "exhaustive") {
-		doRanges = true;
+                doRanges = true;
             } else if (type === "greedy" || type === "greedy-reverse") {
-		doRanges = true;
+                doRanges = true;
             } else if (type === "explicit") {
-		doNames = true;
+                doNames = true;
             } else if (type === "zero") {
             }
-	}
+        }
 
         if (doRanges) {
             $( "#params" + i + "-ranges" ).show();
@@ -129,19 +129,19 @@ SPACESCANNER.settings = function() {
         changeParam(paramField, i);
 
         if (type === "exhaustive" || type === "greedy" || type === "greedy-reverse") {
-	    if (parameter.range && parameter.range.length > 0) {
+            if (parameter.range && parameter.range.length > 0) {
                 var rs = parameter.range[0];
                 var re = parameter.range.length > 1 ? parameter.range[1] : rs;
                 $( "#input-option-param" + i + "-rangeStart" ).val(rs);
                 $( "#input-option-param" + i + "-rangeEnd" ).val(re);
-	    } else {
+            } else {
                 $( "#input-option-param" + i + "-rangeStart" ).val("");
                 $( "#input-option-param" + i + "-rangeEnd" ).val("");
-	    }
+            }
         } else if (type === "explicit") {
-	    var names = parameter.parameters;
-	    if (!names) names = [];
-	    $( "#input-option-param" + i + "-params" ).val(names.join());
+            var names = parameter.parameters;
+            if (!names) names = [];
+            $( "#input-option-param" + i + "-params" ).val(names.join());
         }
     }
 
@@ -151,23 +151,23 @@ SPACESCANNER.settings = function() {
         var rs = parseInt($( "#input-option-param" + i + "-rangeStart" ).val());
         var re = parseInt($( "#input-option-param" + i + "-rangeEnd" ).val());
         if (!(rs > 0)) {
-	    if (type === "greedy" || type === "greedy-reverse" || type === "exhaustive") {
-		/* Issue this warning only when there's a valid cause for this */
-		SPACESCANNER.notify("Range start may not be less than 1", "error");
-	    }
+            if (type === "greedy" || type === "greedy-reverse" || type === "exhaustive") {
+                /* Issue this warning only when there's a valid cause for this */
+                SPACESCANNER.notify("Range start may not be less than 1", "error");
+            }
             rs = 1;
         }
-	if (type === "greedy" || type === "exhaustive") {
+        if (type === "greedy" || type === "exhaustive") {
             if (rs > re) {
-		SPACESCANNER.notify("For type " + type + " range end may not be less than range start", "error");
-		rs = re;
+                SPACESCANNER.notify("For type " + type + " range end may not be less than range start", "error");
+                rs = re;
             }
-	} else if (type === "greedy-reverse") {
+        } else if (type === "greedy-reverse") {
             if (re > rs) {
-		SPACESCANNER.notify("For type " + type + " range start may not be less than range end", "error");
-		rs = re;
-	    }
-	}
+                SPACESCANNER.notify("For type " + type + " range start may not be less than range end", "error");
+                rs = re;
+            }
+        }
         var names = $( "#input-option-param" + i + "-params" ).val().split(",").map(function(x) { return x.trim() });
 
         if (type === "full-set") {
@@ -183,22 +183,22 @@ SPACESCANNER.settings = function() {
     }
 
     function populateSettings() {
-	// Performance settings
+  // Performance settings
         $( "#input-option-runsPerJob" ).val(getd(currentSettings["optimization"], "runsPerJob", 4));
         $( "#input-option-maxConcurrentRuns" ).val(getd(currentSettings["optimization"], "maxConcurrentRuns", 4));
         $( "#input-option-timeLimit" ).val(getd(currentSettings["optimization"], "timeLimitSec", 3600));
 
         $( "#input-option-consensusMinDurationSec" ).val(getd(currentSettings["optimization"], "consensusMinDurationSec", 300));
         $( "#input-option-consensusMinProportionalDuration" ).val(
-	    toPercent(getd(currentSettings["optimization"], "consensusMinProportionalDuration", 0.15)));
-	$( "#input-option-consensusRelativeError" ).val(
-	    toPercent(getd(currentSettings["optimization"], "consensusRelativeError", 0.01)));
+            toPercent(getd(currentSettings["optimization"], "consensusMinProportionalDuration", 0.15)));
+        $( "#input-option-consensusRelativeError" ).val(
+            toPercent(getd(currentSettings["optimization"], "consensusRelativeError", 0.01)));
 
-	$( "#input-option-stagnationMaxDurationSec" ).val(getd(currentSettings["optimization"], "stagnationMaxDurationSec", 300));
+        $( "#input-option-stagnationMaxDurationSec" ).val(getd(currentSettings["optimization"], "stagnationMaxDurationSec", 300));
         $( "#input-option-stagnationMaxProportionalDuration" ).val(
-	    toPercent(getd(currentSettings["optimization"], "stagnationMaxProportionalDuration", 0.15)));
+            toPercent(getd(currentSettings["optimization"], "stagnationMaxProportionalDuration", 0.15)));
 
-	// Method settings	
+  // Method settings  
         $( "#input-option-methods" ).val(
             getd(currentSettings["copasi"], "methods", []).join());
         $( "#input-option-fallbackMethods" ).val(
@@ -207,41 +207,41 @@ SPACESCANNER.settings = function() {
             getd(currentSettings["copasi"], "randomizeMethodSelection", false));
         $( "#input-option-methodParametersFromFile" ).prop("checked",
             getd(currentSettings["copasi"], "methodParametersFromFile", false));
-	$( "#input-option-restartFromBestValue" ).prop("checked",
+        $( "#input-option-restartFromBestValue" ).prop("checked",
             getd(currentSettings["optimization"], "restartFromBestValue", true));
 
-	// Total optimization settings
-	var relativeError = getd(currentSettings["optimization"], "optimalityRelativeError", 0.0);
+        // Total optimization settings
+        var relativeError = getd(currentSettings["optimization"], "optimalityRelativeError", 0.0);
 
-	if (relativeError && relativeError !== 0.0) {
-	    updateTOPState(true);
+        if (relativeError && relativeError !== 0.0) {
+            updateTOPState(true);
             $( "#input-option-optimalityRelativeError" ).val(
-		toPercent(getd(currentSettings["optimization"], "optimalityRelativeError", 0.0)));
+                toPercent(getd(currentSettings["optimization"], "optimalityRelativeError", 0.0)));
             $( "#input-option-bestOfValue" ).val(
-		getd(currentSettings["optimization"], "bestOfValue", 0.0));
-	} else {
-	    updateTOPState(false);
+                getd(currentSettings["optimization"], "bestOfValue", 0.0));
+        } else {
+            updateTOPState(false);
             $( "#input-option-optimalityRelativeError" ).val("");
             $( "#input-option-bestOfValue" ).val("");
-	}
+        }
 
-	// other settings
+        // other settings
         $( "#input-option-loglevel" ).val(
             getd(currentSettings["output"], "loglevel", 2));
 
-	// parameter settings
-	var parameters = currentSettings["parameters"];
+        // parameter settings
+        var parameters = currentSettings["parameters"];
         for (var i = 0; i < MAX_DISPLAY_PARAMS; ++i) {
-	    if (i < parameters.length) {
+            if (i < parameters.length) {
                 displayParam(parameters[i], i);
-	    } else {
+            } else {
                 displayParam(null, i);
-	    }
+            }
         }
     }
 
     function saveSettings() {
-	// Performance settings
+  // Performance settings
         currentSettings["optimization"]["runsPerJob"] = parseInt($( "#input-option-runsPerJob" ).val());
         currentSettings["optimization"]["maxConcurrentRuns"] = parseInt($( "#input-option-maxConcurrentRuns" ).val());
         currentSettings["optimization"]["timeLimitSec"] = parseInt($( "#input-option-timeLimit" ).val());
@@ -250,10 +250,10 @@ SPACESCANNER.settings = function() {
         currentSettings["optimization"]["consensusMinProportionalDuration"] = $( "#input-option-consensusMinProportionalDuration" ).val() / 100.0;
         currentSettings["optimization"]["consensusRelativeError"] = $( "#input-option-consensusRelativeError" ).val() / 100.0;
 
-	currentSettings["optimization"]["stagnationMaxDurationSec"] = parseInt($( "#input-option-stagnationMaxDurationSec" ).val());
+  currentSettings["optimization"]["stagnationMaxDurationSec"] = parseInt($( "#input-option-stagnationMaxDurationSec" ).val());
         currentSettings["optimization"]["stagnationMaxProportionalDuration"] = $( "#input-option-stagnationMaxProportionalDuration" ).val() / 100.0;
 
-	// Method settings
+  // Method settings
         currentSettings["copasi"]["methods"] = $( "#input-option-methods" ).val().split(",").map(function(x) { return x.trim() });
         currentSettings["copasi"]["fallbackMethods"] = $( "#input-option-fallbackMethods" ).val().split(",").map(function(x) { return x.trim() });
 
@@ -261,35 +261,35 @@ SPACESCANNER.settings = function() {
         currentSettings["copasi"]["methodParametersFromFile"] = $( "#input-option-methodParametersFromFile" ).is(":checked");
         currentSettings["optimization"]["restartFromBestValue"] = $( "#input-option-restartFromBestValue" ).is(":checked");
 
-	// Total optimization settings
-	if ($( "#input-option-enableTotalOptimization" ).is(":checked"))  {
+        // Total optimization settings
+        if ($( "#input-option-enableTotalOptimization" ).is(":checked"))  {
             currentSettings["optimization"]["optimalityRelativeError"] = $( "#input-option-optimalityRelativeError" ).val() / 100.0;
-	} else {
-	    currentSettings["optimization"]["optimalityRelativeError"] = 0.0; // disbales it
-	}
+        } else {
+            currentSettings["optimization"]["optimalityRelativeError"] = 0.0; // disbales it
+        }
         currentSettings["optimization"]["bestOfValue"] = parseInt($( "#input-option-bestOfValue" ).val());
 
-	// other settings
+        // other settings
         currentSettings["output"]["loglevel"] = $( "#input-option-loglevel" ).val();
 
-	if ($( "#dialog-parameters" ).is(':visible')) {
-	    // parameter settings
-	    var parameters = [];
+        if ($( "#dialog-parameters" ).is(':visible')) {
+            // parameter settings
+            var parameters = [];
             for (var i = 0; i < MAX_DISPLAY_PARAMS; ++i) {
-		// only if (1) visible and (2) the selected type is not "none"
-		if ($( "#row-params" + i ).is(':visible')) {
+                // only if (1) visible and (2) the selected type is not "none"
+                if ($( "#row-params" + i ).is(':visible')) {
                     var type = $( "#input-option-params" + i ).val();
                     if (type !== "none") {
-			parameters.push(constructParam(type, i));
+                        parameters.push(constructParam(type, i));
                     }
-		}
+                }
             }
-	    currentSettings["parameters"] = parameters;
-	}
+            currentSettings["parameters"] = parameters;
+        }
     }
 
     $( "#input-option-enableTotalOptimization" ).on("click", function() {
-	updateTOPState($( this ).is(":checked"));
+        updateTOPState($( this ).is(":checked"));
     });
 
     setTimeout(querySettings, 1000);
@@ -310,7 +310,7 @@ SPACESCANNER.settings = function() {
         querySettings : querySettings,
         postSettings : postSettings,
         populateSettings : populateSettings,
-        saveSettings : saveSettings,	
-	displayParam : displayParam,
+        saveSettings : saveSettings,  
+        displayParam : displayParam,
     }
 }();
