@@ -24,8 +24,12 @@
         "consensusAbsoluteError" : 1e-6,
 	// the minimal time to continue after the consensus criteria has been reached (default: 300 sec)
         "consensusMinDurationSec" : 300,
-	// the minimal time to continue after the consensus criteria has been reached as proportion of runtime so-far (default: 15%)
+	// the minimal time to continue after the consensus criteria has been reached, as proportion of runtime so-far (default: 15%)
         "consensusMinProportionalDuration" : 0.15,
+	// the minimal time to continue when no values are changing (default: 300 sec)
+        "stagnationMaxDurationSec" : 300,
+	// the minimal time to continue when no values are changing, as proportion of runtime so-far (default: 15%)
+        "stagnationMaxProportionalDuration" : 0.15,
 	// compared to already found solution (default: 0.9, range: (0.0  .. 1.0])
         "optimalityRelativeError" : 0.1,
 	// known best value of an already found solution

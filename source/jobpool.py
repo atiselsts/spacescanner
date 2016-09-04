@@ -38,9 +38,10 @@ def getParamSetHash(parameters, allParameters):
 # Pool is a group of jobs without mutual dependencies
 # which all can be executed simultaneously (but are not required to)
 class JobPool:
-    def __init__(self, strategy, parameterSets):
+    def __init__(self, strategy, parameterSets, areParametersChangeable):
         self.strategy = strategy
         self.parameterSets = parameterSets
+        self.areParametersChangeable = areParametersChangeable
         self.currentParametersIndex = 0
         self.jobLock = threading.Lock()
         self.activeJobs = []
@@ -76,7 +77,10 @@ class JobPool:
         numFreeCores = max(1, numFreeCores)
 
         # setup a new job
-        j = job.Job(self, params, min(numFreeCores, self.numRunnersPerJob))
+        j = job.Job(self,
+                    params, # the set of parameters
+                    min(numFreeCores, self.numRunnersPerJob), # the number of simultaneous processes
+                    self.areParametersChangeable) # whether to enable optimization
 
         # add it to the list of active jobs
         with self.jobLock:

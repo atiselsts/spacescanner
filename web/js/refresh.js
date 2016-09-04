@@ -49,6 +49,7 @@ SPACESCANNER.refresh = function() {
                 $("#button-select").addClass('disabled');
             } else {
                 SPACESCANNER.notify("Optimizations finished");
+		SPACESCANNER.display.resetMethods();
                 $("#button-select").removeClass('disabled');
 		if (!resultsButtonClicked) {
                     // remove all charts
@@ -105,6 +106,8 @@ SPACESCANNER.refresh = function() {
 
     function showFinishedJobResults(id) {
 	resultsButtonClicked = true;
+
+	SPACESCANNER.display.resetMethods();
 
         $.ajax({
             type: "GET",

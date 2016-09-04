@@ -89,7 +89,8 @@ TERMINATION_REASON_CPU_TIME_LIMIT     = 1
 TERMINATION_REASON_CONSENSUS          = 2
 TERMINATION_REASON_GOOD_VALUE_REACHED = 3
 TERMINATION_REASON_PROGRAM_QUITTING   = 4
-TERMINATION_REASON_MAX                = 4
+TERMINATION_REASON_STAGNATION         = 5
+TERMINATION_REASON_MAX                = 5
 
 MIN_OF_VALUE = float("-inf") # minimal objective function value
 
@@ -108,6 +109,8 @@ def reasonToStr(reason):
         return "Good value reached"
     if reason == TERMINATION_REASON_PROGRAM_QUITTING:
         return "User terminated"
+    if reason == TERMINATION_REASON_STAGNATION:
+        return "Stagnation"
     return "?"
 
 def getUserInput(prompt):

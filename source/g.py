@@ -66,6 +66,8 @@ def defaultConfigInitialize():
     DEFCFG[("optimization", "consensusAbsoluteError")] = ConfigFileField(1e-6)
     DEFCFG[("optimization", "consensusMinDurationSec")] = ConfigFileField(300)
     DEFCFG[("optimization", "consensusMinProportionalDuration")] = ConfigFileField(0.15) # 15% of total run's time
+    DEFCFG[("optimization", "stagnationMaxDurationSec")] = ConfigFileField(300)
+    DEFCFG[("optimization", "stagnationMaxProportionalDuration")] = ConfigFileField(0.15) # 15% of total run's time
     DEFCFG[("optimization", "optimalityRelativeError")] = ConfigFileField(0.0) # set to 0.0 to disable this
     DEFCFG[("optimization", "bestOfValue")] = ConfigFileField(float("-inf"))
     DEFCFG[("optimization", "restartFromBestValue")] = ConfigFileField( True) # if yes, each next method will start from the best parameter values so far

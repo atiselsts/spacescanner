@@ -118,7 +118,8 @@ class Runner:
         self.reportFilename = os.path.join(dirname, "output_" + filename + ".log")
         self.copasiFile = copasiFile
         if not copasiFile.createCopy(self.inputFilename, self.reportFilename,
-                                     self.job.params, [self.methodName], startParamValues):
+                                     self.job.params, [self.methodName], startParamValues,
+                                     self.job.areParametersChangeable):
             return False
 
         # clean up the report file
@@ -202,7 +203,7 @@ class Runner:
             paramsDict = dict(zip(self.job.params, stats.params))
             self.copasiFile.createCopy(self.inputFilename, self.reportFilename,
                                        self.job.params, [self.methodName],
-                                       paramsDict)
+                                       paramsDict, self.job.areParametersChangeable)
 
     def checkReport(self, hasTerminated, now):
         assert self.isActive
@@ -211,12 +212,13 @@ class Runner:
             if self.lastReportCheckTime is not None \
                  and now - self.lastReportCheckTime < MIN_REPORT_CHECK_INTERVAL:
                 # too soon, skip
-                return
+                return True
             if now - self.startTime < 3.0:
                 # too soon after start (copasi may not be launched yet), return
-                return
+                return True
 
         self.lastReportCheckTime = now
+        oldOfValue = self.ofValue
 
         try:
             st = os.stat(self.reportFilename)
@@ -241,7 +243,8 @@ class Runner:
 
                 if self.stats.isValid:
                     self.ofValue = self.getLastStats().ofValue
-                    g.log(LOG_INFO, "{}: new OF value {}".format(self.getName(), self.ofValue))
+                    if oldOfValue != self.ofValue:
+                        g.log(LOG_INFO, "{}: new OF value {}".format(self.getName(), self.ofValue))
 
                     # Check for CPU time end condition using the report file
                     self.currentCpuTime = self.getLastStats().cpuTime
@@ -271,6 +274,11 @@ class Runner:
                     g.log(LOG_DEBUG, "terminating {}: no value found in CPU time: {}".format(self.getName(), self.currentCpuTime))
                     self.terminationReason = TERMINATION_REASON_CPU_TIME_LIMIT
 
+        if oldOfValue != self.ofValue:
+            # the OF value was updated
+            return True
+
+        return False # the OF value was not updated
 
 ################################################
 # Parsing statistics

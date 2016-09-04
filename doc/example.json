@@ -13,6 +13,8 @@
         "consensusAbsoluteError" : 1e-6,
         "consensusMinDurationSec" : 60,
         "consensusMinProportionalDuration" : 0.15,
+	"stagnationMaxDurationSec" : 60,
+        "stagnationMaxProportionalDuration" : 0.15,
         "optimalityRelativeError" : 0.1,
         "bestOfValue" : -Infinity,
         "restartFromBestValue" : true,

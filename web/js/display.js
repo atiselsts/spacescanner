@@ -5,6 +5,14 @@ SPACESCANNER.display = function() {
     var MAX_NUM_CHARTS = 4;
     var button2jobID = [];
 
+    // this stores the last method name for each chart
+    var methods = [];
+
+    // reset the "methods" array
+    function resetMethods() {
+	methods = [];
+    }
+
     // onload callback
     function setupChart() {
         for (var i = 0; i < MAX_NUM_CHARTS; ++i) {
@@ -12,6 +20,8 @@ SPACESCANNER.display = function() {
                 $('#job' + i + '_chart').get(0)));
             button2jobID.push(0); // no mapping
         }
+
+	resetMethods();
     }
 
     function isReady() {
@@ -59,6 +69,13 @@ SPACESCANNER.display = function() {
 	    $("#job" + i + "_actions").show();
 	} else {
 	    $("#job" + i + "_actions").hide();
+	}
+
+	if (methods[i] === null) {
+	    methods[i] = job.method;
+	} else if (methods[i] !== job.method) {
+	    SPACESCANNER.notify("Switching job " + job.id + " to method " + job.method);
+	    methods[i] = job.method;
 	}
 
         var allData = [];
@@ -115,6 +132,7 @@ SPACESCANNER.display = function() {
 
     return {
         drawCharts : drawCharts,
+	resetMethods : resetMethods,
         getJobID : function (i) { return button2jobID[i] }
     };
 

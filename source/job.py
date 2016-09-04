@@ -35,9 +35,10 @@ LOAD_BALANCE_INTERVAL = 10.0 # seconds
 # May switch over to different optimization methods if the current method fails to reach consensus.
 
 class Job:
-    def __init__(self, pool, params, maxCores):
+    def __init__(self, pool, params, maxCores, areParametersChangeable):
         self.pool = pool
         self.params = params
+        self.areParametersChangeable = areParametersChangeable
         self.id = pool.strategy.nextJobID.next()
         self.methods = copy.copy(g.getConfig("copasi.methods"))
         assert len(self.methods)
@@ -46,11 +47,13 @@ class Job:
         self.isUsingFallback = False
         self.runners = []
         self.oldRunners = []
+        self.oldCpuTime = 0
         self.convergenceTime = None
         self.convergenceValue = None
         self.copasiFile = None
         self.workDir = None
         self.startTime = time.time()
+        self.lastOfUpdateTime = self.startTime
         self.lastBalanceTime = self.startTime - LOAD_BALANCE_INTERVAL
         # XXX: note that the number of free cores can increase during job's
         # lifetime, but the code will not react to that, keeping maxCores constant
@@ -81,8 +84,15 @@ class Job:
 
 
     def createRunners(self):
-        self.oldRunners.extend(self.runners)
-        self.runners = []
+        # move the current runners, if any, to the array with old runners
+        if self.runners:
+            self.oldCpuTime += max(r.currentCpuTime for r in self.runners)
+            self.oldRunners.extend(self.runners)
+            self.runners = []
+
+        # reset other state
+        self.convergenceTime = None
+        self.lastOfUpdateTime = time.time()
 
         bestParams = None
         if self.oldRunners and bool(g.getConfig("optimization.restartFromBestValue")):
@@ -119,7 +129,6 @@ class Job:
                     for r in self.runners:
                         if r.terminationReason == TERMINATION_REASON_COPASI_FINISHED:
                             r.terminationReason = TERMINATION_REASON_CONSENSUS
-            self.convergenceTime = None
             self.decideTermination()
             return
 
@@ -130,24 +139,37 @@ class Job:
                     r.terminationReason = TERMINATION_REASON_CPU_TIME_LIMIT
             return
 
+        numActiveRunners = 0
         now = time.time()
         cpuTimeLimit = float(g.getConfig("optimization.timeLimitSec"))
         maxCpuTime = 0
-        numActiveRunners = 0
+        anyUpdated = False
         with runner.reportLock:
             for r in self.runners:
                 if r.isActive:
                     numActiveRunners += 1
-                    r.checkReport(hasTerminated = False, now = now)
+                    if r.checkReport(hasTerminated = False, now = now):
+                        # the runner updated the OF time
+                        self.lastOfUpdateTime = now
+                        anyUpdated = True
                     maxCpuTime = max(maxCpuTime, r.currentCpuTime)
 
-        consensusReached = self.hasConsensus()
+        if not self.areParametersChangeable:
+            # it is simple; as soon as the first value is read, return
+            if anyUpdated:
+                for r in self.runners:
+                    if r.isActive:
+                        r.terminationReason = TERMINATION_REASON_CONSENSUS
+                return
 
-        doKillOnTimeLimit = maxCpuTime >= cpuTimeLimit and not consensusReached
+        consensusReached = self.hasConsensus()
 
         if all([r.terminationReason for r in self.runners]):
             return
 
+        # use the old CPU time as a basis
+        maxCpuTime += self.oldCpuTime
+        doKillOnTimeLimit = maxCpuTime >= cpuTimeLimit and not consensusReached
         if doKillOnTimeLimit:
             # kill all jobs immediately
             for r in self.runners:
@@ -179,6 +201,21 @@ class Job:
             # reset the timer
             self.convergenceTime = None
 
+            # check for stagnation's time limit
+            timeStagnated = time.time() - self.lastOfUpdateTime
+            maxAbsoluteTime = float(g.getConfig("optimization.stagnationMaxDurationSec"))
+            maxRelativeTime = (time.time() - self.startTime) * float(g.getConfig("optimization.stagnationMaxProportionalDuration"))
+            if self.timeDiffExceeded(timeStagnated, maxAbsoluteTime) and timeStagnated > maxRelativeTime:
+                # stagnation detected
+                for r in self.runners:
+                    if r.isActive:
+                        r.terminationReason = TERMINATION_REASON_STAGNATION
+                    g.log(LOG_INFO, "terminating {}: Optimization stagnated (did not produce new results) for {} seconds".format(timeStagnated))
+                # switch the methods if required
+                self.decideTermination()
+                return
+
+        # We will continue. Check if load balancing needs to be done
         if now - self.lastBalanceTime >= LOAD_BALANCE_INTERVAL:
             self.lastBalanceTime = now
             if numActiveRunners > self.maxCores:
@@ -219,14 +256,18 @@ class Job:
 
 
     def decideTermination(self):
-        badReasons = [TERMINATION_REASON_CPU_TIME_LIMIT, TERMINATION_REASON_COPASI_FINISHED]
+        badReasons = [TERMINATION_REASON_CPU_TIME_LIMIT,
+                      TERMINATION_REASON_STAGNATION,
+                      TERMINATION_REASON_COPASI_FINISHED]
         if not any([r.terminationReason in badReasons for r in self.runners]):
             # all terminated fine (with consensus, or because asked by the user)
             self.pool.finishJob(self)
             return
 
         # So we have at least one bad termination where either the CPU time limit
-        # was exceeded or Copasi stopped without consensus. Actions now:
+        # was exceeded or Copasi stopped without consensus, or the optimizations
+        # have stagnated for too long.
+        # Actions now:
         # 1) if no solution found: use a fallback method
         # 2) else switch to the next method
         # 3) if no more methods are available, quit
@@ -387,17 +428,18 @@ class Job:
 
 
     def getStatsFull(self):
+        # Note! This does not get the stats from runners already finished
         reply = []
         isActive = False
-        for methodID in range(len(self.runners)):
-            runner = self.runners[methodID]
+        for runnerID in range(len(self.runners)):
+            runner = self.runners[runnerID]
             cpuTimes = []
             ofValues = []
             if runner.isActive:
                 isActive = True
             stats = runner.getAllStats()
             for s in stats:
-                cpuTimes.append(s.cpuTime)
+                cpuTimes.append(self.oldCpuTime + s.cpuTime)
                 ofValues.append(jsonFixInfinity(s.ofValue, 0.0))
 
             # always add the current state
@@ -405,10 +447,13 @@ class Job:
             cpuTimes.append(runner.currentCpuTime)
             ofValues.append(lastOfValue)
 
-            reply.append({"id" : methodID, "values" : ofValues, 
+            reply.append({"id" : runnerID, "values" : ofValues, 
                           "time" : cpuTimes, "active" : runner.isActive})
 
         return {"id" : self.id,
-                "data" : reply, "methods" : self.methods,
-                "active" : isActive, "parameters": self.unquoteParams()}
+                "data" : reply,
+                "methods" : self.methods,
+                "method" : self.currentMethod,
+                "active" : isActive,
+                "parameters": self.unquoteParams()}
 

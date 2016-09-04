@@ -245,24 +245,52 @@ class CopasiFile:
         return self.paramDict.keys()
 
 
-    def writeParam(self, outf, param, startParamValues):
+    def writeParam(self, outf, param, startParamValues, areParametersChangeable):
         xml = self.paramDict[param]
-        if startParamValues is None or param not in startParamValues:
-            outf.write('          ' + str(ElementTree.tostring(xml)))
-            return
+
+        if areParametersChangeable:
+            if startParamValues is None or param not in startParamValues:
+                # no need to preprocess; write directly back in the file
+                outf.write('          ' + str(ElementTree.tostring(xml)))
+                return
+        else:
+            if startParamValues is None:
+                startParamValues = {}
+            for sub in xml.iterfind("*", COPASI_NS):
+                if "ParameterGroup" in sub.tag: continue
+                if sub.get("name").lower() == "startvalue" and param not in startParamValues:
+                    # read it directly from the file
+                    try:
+                        v = sub.get("value")
+                        startParamValues[param] = float(v)
+                    except:
+                        g.log(LOG_ERROR, "Getting start value of a parameter " + param + " failed:" + sub.get("value"))
 
         outf.write(' <ParameterGroup name="OptimizationItem">\n')
         for sub in xml.iterfind("*", COPASI_NS):
             if "ParameterGroup" in sub.tag: continue
-            if sub.get("name") == "StartValue":
+            if sub.get("name").lower() == "startvalue" \
+               and startParamValues is not None \
+               and param in startParamValues:
                 outf.write('          <Parameter name="StartValue" type="float" value="{}"/>\n'.format(startParamValues[param]))
-            else:
-                outf.write('          ' + str(ElementTree.tostring(sub)))
+                continue
+
+            if sub.get("name").lower() in ["lowerbound", "upperbound"] \
+               and not areParametersChangeable \
+               and startParamValues is not None \
+               and param in startParamValues:
+                # unchangeable; set the bounds to the start value
+                val = startParamValues[param]
+                outf.write('          <Parameter name="{}" type="cn" value="{}"/>\n'.format(sub.get("name"), val))
+                continue
+
+            # by default, just write back whatever was in the file
+            outf.write('          ' + str(ElementTree.tostring(sub)))
 
         outf.write(' </ParameterGroup>\n')
 
 
-    def serializeOptimizationTask(self, reportFilename, outf, parameters, methodNames, startParamValues):
+    def serializeOptimizationTask(self, reportFilename, outf, parameters, methodNames, startParamValues, areParametersChangeable):
         # Note: 'scheduled' is always set to true, as is 'update model' to save the final parameter values in the .cps file.
         outf.write('  <Task key="{}" name="Optimization" type="optimization" scheduled="true" updateModel="true">\n'.format(self.optimizationTask.get("key")))
 
@@ -291,7 +319,7 @@ class CopasiFile:
         outf.write(' <ParameterGroup name="OptimizationItemList">\n')
         for p in parameters:
             if p in self.paramDict:
-                self.writeParam(outf, p, startParamValues)
+                self.writeParam(outf, p, startParamValues, areParametersChangeable)
         outf.write(' </ParameterGroup>\n')
         outf.write(' </Problem>\n')
 
@@ -312,7 +340,7 @@ class CopasiFile:
         outf.write('\n  </Task>\n')
 
 
-    def createCopy(self, configFilename, reportFilename, parameters, methods, startParamValues):
+    def createCopy(self, configFilename, reportFilename, parameters, methods, startParamValues, areParametersChangeable):
         if self.optimizationTask is None:
             return False
 
@@ -329,7 +357,7 @@ class CopasiFile:
                     for sub in elem.iterfind("*", COPASI_NS):
                         if "ListOfTasks" in sub.tag: continue
                         if sub == self.optimizationTask:
-                            self.serializeOptimizationTask(reportFilename, outf, parameters, methods, startParamValues)
+                            self.serializeOptimizationTask(reportFilename, outf, parameters, methods, startParamValues, areParametersChangeable)
                         else:
                             # make sure all other tasks are unscheduled
                             sub.attrib["scheduled"] = "false"
@@ -354,7 +382,7 @@ def test():
     params = cf.queryParameters()
     print("parameter names: ", params)
     print("writing a copy")
-    cf.createCopy("./input.cps", "./output.log", [params[0], params[-1]], ["ParticleSwarm"], None)
+    cf.createCopy("./input.cps", "./output.log", [params[0], params[-1]], ["ParticleSwarm"], None, True)
     print("all done")
 
 if __name__ == "__main__":

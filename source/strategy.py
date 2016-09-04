@@ -137,7 +137,8 @@ class ParamSelectionZero(ParamSelection):
         super(ParamSelectionZero, self).__init__(PARAM_SEL_ZERO, strategy, 0, 0)
 
     def getParameterSets(self):
-        yield [[]]
+        # return all params; will set the boundary conditions to the start value anyway
+        yield [self.allParameters]
 
     def getNumCombinations(self):
         return 1
@@ -261,6 +262,8 @@ class StrategyManager:
         self.copasiConfig = {"params" : []}
         self.jobsByBestOfValue = []
 
+        self.topBaseline = 0.0
+
         self.copasiFile = self.loadCopasiFile()
         if not self.copasiFile:
             return False
@@ -364,6 +367,10 @@ class StrategyManager:
         with self.jobLock:
             self.finishedJobs[job.id] = job
 
+            # if this is a zero-parameter job, use the result as a baseline
+            if not job.areParametersChangeable:
+                self.topBaseline = job.getBestOfValue()
+
             # order the finished-jobs list by OF values.
             # (full re-sorting is suboptimal, but we do not expect *that* many jobs)
             self.jobsByBestOfValue[len(job.params)].append(job)
@@ -378,12 +385,19 @@ class StrategyManager:
         with self.jobLock:
             return len(self.finishedJobs)
 
-
-    def totalOptimizationPotentialReached(self, numParameters):
+    def isTOPEnabled(self):
         optimality = g.getConfig("optimization.optimalityRelativeError")
         if optimality is None or optimality == 0.0:
             # TOP is disabled
             return False
+        # TOP is enabled
+        return True
+
+    def totalOptimizationPotentialReached(self, numParameters):
+        if not self.isTOPEnabled():
+            return False
+
+        optimality = g.getConfig("optimization.optimalityRelativeError")
 
         # calculate the target value, looking at both config and at the job with all parameters, if any
         try:
@@ -406,7 +420,13 @@ class StrategyManager:
                 achievedValue = max(achievedValue, joblist[0].getBestOfValue())
 
         proportion = 1.0 - float(optimality)
-        if achievedValue >= targetValue * proportion:
+        isReached = False
+        if self.topBaseline > targetValue:
+            isReached = True
+        else:
+            isReached = (achievedValue - self.topBaseline) >= (targetValue - self.topBaseline) * proportion
+
+        if isReached:
             g.log(LOG_INFO, "terminating optimization at {} parameters: good-enough-value criteria reached (required {})".format(numParameters, targetValue * proportion))
             return True
         return False
@@ -528,6 +548,7 @@ class StrategyManager:
     def execute(self):
         parameterSelections = []
         if g.getConfig("restartOnFile"):
+            # Guess which parameters have not been optimized yet based on the .csv result file
             filename = g.getConfig("restartOnFile").replace("@SELF@", SELF_PATH)
             parameterSets = getNonconvergedResults(filename)
             for ps in parameterSets:
@@ -535,7 +556,17 @@ class StrategyManager:
                 x = ParamSelection.create(spec, self)
                 if x not in parameterSelections:
                     parameterSelections.append(x)
+
         elif g.getConfig("parameters"):
+
+            # Deal with TOP, if required
+            if self.isTOPEnabled():
+                # add the "zero" at the start
+                g.log(LOG_INFO, "optimizing for zero parameters initially to find the baseline")
+                spec = {"type" : "zero"}
+                parameterSelections.append(ParamSelection.create(spec, self))
+
+            # The take the other sets from the file
             for spec in g.getConfig("parameters"):
                 x = ParamSelection.create(spec, self)
                 if x is None:
@@ -543,6 +574,7 @@ class StrategyManager:
                     continue
                 if x not in parameterSelections:
                     parameterSelections.append(x)
+
         else:
             # add the default optimization target: all parameters
             g.log(LOG_INFO, "optimizing only for all parameters")
@@ -558,9 +590,10 @@ class StrategyManager:
 
         parameterSelections.sort(key = lambda x: x.getSortOrder())
         for sel in parameterSelections:
+            areParametersChangeable = sel.type != PARAM_SEL_ZERO
             for params in sel.getParameterSets():
                 g.log(LOG_DEBUG, "made a new pool of {} jobs".format(len(params)))
-                pool = jobpool.JobPool(self, params)
+                pool = jobpool.JobPool(self, params, areParametersChangeable)
                 with self.jobLock:
                     self.activeJobPool = pool
 
