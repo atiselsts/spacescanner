@@ -36,7 +36,7 @@ test-param-ranges2:
 	@rm -f spacescanner.log
 	$(PYTHON) $(SPACESCANNER) test-param-ranges2.json
 	@grep "total 1 parameter combination(s) to try out" spacescanner.log
-	@grep "starting job 1 (optimization parameters: 'Pyruvate kinase' 'Glucose in' 'ATPase' 'Phosphofructokinase' 'GAPD' 'Hexokinase')" spacescanner.log
+	@grep "starting job 1 (optimization parameters: " spacescanner.log
 	@grep "results of finished jobs saved" spacescanner.log
 	@echo ..done
 	@echo ""
