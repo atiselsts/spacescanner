@@ -63,6 +63,7 @@
    <div id="job0" class="hide">
    <div id="job0_name"></div>
    <div id="job0_parameters"></div>
+   <div id="job0_method"></div>
    <div id="job0_chart" style="width: 100%; height: 300px;"></div>
    &nbsp;<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;<br/>
    <div id="job0_actions">
@@ -75,6 +76,7 @@
    <div id="job1" class="hide">
    <div id="job1_name"></div>
    <div id="job1_parameters"></div>
+   <div id="job1_method"></div>
    <div id="job1_chart" style="width: 100%; height: 300px;"></div>
    &nbsp;<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;<br/>
    <div id="job1_actions">
@@ -87,6 +89,7 @@
    <div id="job2" class="hide">
    <div id="job2_name"></div>
    <div id="job2_parameters"></div>
+   <div id="job2_method"></div>
    <div id="job2_chart" style="width: 100%; height: 300px;"></div>
    &nbsp;<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;<br/>
    <div id="job2_actions">
@@ -99,6 +102,7 @@
    <div id="job3" class="hide">
    <div id="job3_name"></div>
    <div id="job3_parameters"></div>
+   <div id="job3_method"></div>
    <div id="job3_chart" style="width: 100%; height: 300px;"></div>
    &nbsp;<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;<br/>
    <div id="job3_actions">
@@ -111,6 +115,7 @@
    <div id="job4" class="hide">
    <div id="job4_name"></div>
    <div id="job4_parameters"></div>
+   <div id="job4_method"></div>
    <div id="job4_chart" style="width: 100%; height: 300px;"></div>
    &nbsp;<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;<br/>
    <div id="job4_actions">
@@ -123,6 +128,7 @@
    <div id="job5" class="hide">
    <div id="job5_name"></div>
    <div id="job5_parameters"></div>
+   <div id="job5_method"></div>
    <div id="job5_chart" style="width: 100%; height: 300px;"></div>
    &nbsp;<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;<br/>
    <div id="job5_actions">
@@ -135,6 +141,7 @@
    <div id="job6" class="hide">
    <div id="job6_name"></div>
    <div id="job6_parameters"></div>
+   <div id="job6_method"></div>
    <div id="job6_chart" style="width: 100%; height: 300px;"></div>
    &nbsp;<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;<br/>
    <div id="job6_actions">
@@ -147,6 +154,7 @@
    <div id="job7" class="hide">
    <div id="job7_name"></div>
    <div id="job7_parameters"></div>
+   <div id="job7_method"></div>
    <div id="job7_chart" style="width: 100%; height: 300px;"></div>
    &nbsp;<br/>&nbsp;<br/>&nbsp;<br/>&nbsp;<br/>
    <div id="job7_actions">
@@ -210,13 +218,13 @@
         <div class="dialog-tab-content">
           <div id="dialog-tab-0" class="dialog-tab active">
 
-	  <!-- Performance tab -->
+    <!-- Performance tab -->
 
     <div class="form-row">
         <label for="input-option-runsPerJob" style="width:150px">Runs per job</label>
         <input type="number" id="input-option-runsPerJob" style="width:100px !important" placeholder="4" min="1" title="The number of parallel COPASI executions per each job">
-	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-	<label for="input-option-maxConcurrentRuns" style="width:150px">Max concurrent runs</label>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <label for="input-option-maxConcurrentRuns" style="width:150px">Max concurrent runs</label>
         <input type="number" id="input-option-maxConcurrentRuns" style="width:100px !important" placeholder="4" min="1" title="The number of maximal simultaneous COPASI processes">
     </div>
 
@@ -252,11 +260,11 @@
 
         <label for="input-option-stagnationMaxProportionalDuration" style="width:216px">Stagnation max proportional duration, %</label>
         <input type="number" id="input-option-stagnationMaxProportionalDuration" style="width:100px !important" placeholder="15" min="0" title="The maximal duration to continue when no runners are finding new Objective Function values, as a proportion of the runtime so-far">
-	</div>
-	
+  </div>
+  
           </div>
           <div id="dialog-tab-1" class="dialog-tab">
-	  <!-- Methods tab -->
+    <!-- Methods tab -->
 
     <div class="form-row">
         <label for="input-option-methods">Methods:</label>
@@ -285,7 +293,7 @@
           </div>
           <div id="dialog-tab-2" class="dialog-tab">
 
-	  <!-- Total optimization tab -->
+    <!-- Total optimization tab -->
 
     <div class="form-row">
         <label>&nbsp;</label>
@@ -306,7 +314,7 @@
           </div>
           <div id="dialog-tab-3" class="dialog-tab">
 
-	  <!-- Other tab -->
+    <!-- Other tab -->
 
     <div class="form-row">
       <label for="input-option-loglevel" style="width:150px">Output log level (1-4)</label>
@@ -324,7 +332,7 @@
     <div class="form-row" id="row-params0">
         <label for="input-option-params0" style="width:120px">Parameter set:</label>
         <select id="input-option-params0" style="width:150px !important; color: black" title="Type of the parameter set">
-	  <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
+    <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
           <option value="exhaustive" title="Exhaustive search of parameter combinations">Exhaustive</option>
           <option value="greedy" title="Greedy search of parameter combinations">Greedy</option>
           <option value="greedy-reverse" title="Greedy search, starting from the full set of parameters">Greedy from end</option>
@@ -332,20 +340,20 @@
           <option value="zero" title="The value of the objective function at the default parameter values">Zero parameters</option>
         </select>
 
-	<span id="params0-ranges" class="hide">
-	&nbsp;&nbsp;
+  <span id="params0-ranges" class="hide">
+  &nbsp;&nbsp;
         <label for="input-option-param0-rangeStart" style="width:100px">Range start:</label>
         <input type="number" id="input-option-param0-rangeStart" style="width:100px !important" placeholder="1" min="1" title="Minimal number of parameters">
-	&nbsp;&nbsp;
+  &nbsp;&nbsp;
         <label for="input-option-param0-rangeEnd" style="width:40px">End:</label>
         <input type="number" id="input-option-param0-rangeEnd" style="width:100px !important" placeholder="2" min="1" title="Maximal number of parameters">
-	</span>
+  </span>
 
-	<span id="params0-names" class="hide">
-	&nbsp;&nbsp;
+  <span id="params0-names" class="hide">
+  &nbsp;&nbsp;
         <label for="input-option-param0-params">Names:</label>
         <input type="text" id="input-option-param0-params" style="width:200px !important" title="List of names of parameters to include">
-	</span>
+  </span>
 
     </div>
 
@@ -353,7 +361,7 @@
         <label for="input-option-params1" style="width:120px">Parameter set:</label>
         <select id="input-option-params1" style="width:150px !important; color: black" title="Type of the parameter set">
           <option value="none">None</option>
-	  <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
+    <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
           <option value="exhaustive" title="Exhaustive search of parameter combinations">Exhaustive</option>
           <option value="greedy" title="Greedy search of parameter combinations">Greedy</option>
           <option value="greedy-reverse" title="Greedy search, starting from the full set of parameters">Greedy from end</option>
@@ -361,22 +369,22 @@
           <option value="zero" title="The value of the objective function at the default parameter values">Zero parameters</option>
         </select>
 
-	<span id="params1-ranges" class="hide">
-	&nbsp;&nbsp;
+  <span id="params1-ranges" class="hide">
+  &nbsp;&nbsp;
         <label for="input-option-param1-rangeStart" style="width:100px">Range start:</label>
         <input type="number" id="input-option-param1-rangeStart" style="width:100px !important" placeholder="1" min="1" title="Minimal number of parameters">
-	&nbsp;&nbsp;
+  &nbsp;&nbsp;
         <label for="input-option-param1-rangeEnd" style="width:40px">End:</label>
         <input type="number" id="input-option-param1-rangeEnd" style="width:100px !important" placeholder="2" min="1" title="Maximal number of parameters">
-	</span>
+  </span>
 
-	<span id="params1-names" class="hide">
-	&nbsp;&nbsp;
+  <span id="params1-names" class="hide">
+  &nbsp;&nbsp;
         <label for="input-option-param1-params">Names:</label>
         <input type="text" id="input-option-param1-params" style="width:200px !important" title="List of names of parameters to include">
-	</span>
+  </span>
 
-	&nbsp;&nbsp;<a id="button-del-params1" class="button small">Remove</a>
+  &nbsp;&nbsp;<a id="button-del-params1" class="button small">Remove</a>
     </div>
 
     <div class="form-row" id="row-params2" class="hide">
@@ -391,29 +399,29 @@
           <option value="zero" title="The value of the objective function at the default parameter values">Zero parameters</option>
         </select>
 
-	<span id="params2-ranges" class="hide">
-	&nbsp;&nbsp;
+  <span id="params2-ranges" class="hide">
+  &nbsp;&nbsp;
         <label for="input-option-param2-rangeStart" style="width:100px">Range start:</label>
         <input type="number" id="input-option-param2-rangeStart" style="width:100px !important" placeholder="1" min="1" title="Minimal number of parameters">
-	&nbsp;&nbsp;
+  &nbsp;&nbsp;
         <label for="input-option-param2-rangeEnd" style="width:40px">End:</label>
         <input type="number" id="input-option-param2-rangeEnd" style="width:100px !important" placeholder="2" min="1" title="Maximal number of parameters">
-	</span>
+  </span>
 
-	<span id="params2-names" class="hide">
-	&nbsp;&nbsp;
+  <span id="params2-names" class="hide">
+  &nbsp;&nbsp;
         <label for="input-option-param2-params">Names:</label>
         <input type="text" id="input-option-param2-params" style="width:200px !important" title="List of names of parameters to include">
-	</span>
+  </span>
 
-	&nbsp;&nbsp;<a id="button-del-params2" class="button small">Remove</a>
+  &nbsp;&nbsp;<a id="button-del-params2" class="button small">Remove</a>
     </div>
 
     <div class="form-row" id="row-params3" class="hide">
         <label for="input-option-params3" style="width:120px">Parameter set:</label>
         <select id="input-option-params3" style="width:150px !important; color: black" title="Type of the parameter set">
           <option value="none">None</option>
-	  <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
+    <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
           <option value="exhaustive" title="Exhaustive search of parameter combinations">Exhaustive</option>
           <option value="greedy" title="Greedy search of parameter combinations">Greedy</option>
           <option value="greedy-reverse" title="Greedy search, starting from the full set of parameters">Greedy from end</option>
@@ -421,29 +429,29 @@
           <option value="zero" title="The value of the objective function at the default parameter values">Zero parameters</option>
         </select>
 
-	<span id="params3-ranges" class="hide">
-	&nbsp;&nbsp;
+  <span id="params3-ranges" class="hide">
+  &nbsp;&nbsp;
         <label for="input-option-param3-rangeStart" style="width:100px">Range start:</label>
         <input type="number" id="input-option-param3-rangeStart" style="width:100px !important" placeholder="1" min="1" title="Minimal number of parameters">
-	&nbsp;&nbsp;
+  &nbsp;&nbsp;
         <label for="input-option-param3-rangeEnd" style="width:40px">End:</label>
         <input type="number" id="input-option-param3-rangeEnd" style="width:100px !important" placeholder="2" min="1" title="Maximal number of parameters">
-	</span>
+  </span>
 
-	<span id="params3-names" class="hide">
-	&nbsp;&nbsp;
+  <span id="params3-names" class="hide">
+  &nbsp;&nbsp;
         <label for="input-option-param3-params">Names:</label>
         <input type="text" id="input-option-param3-params" style="width:200px !important" title="List of names of parameters to include">
-	</span>
+  </span>
 
-	&nbsp;&nbsp;<a id="button-del-params3" class="button small">Remove</a>
+  &nbsp;&nbsp;<a id="button-del-params3" class="button small">Remove</a>
     </div>
 
     <div class="form-row" id="row-params4" class="hide">
         <label for="input-option-params4" style="width:120px">Parameter set:</label>
         <select id="input-option-params4" style="width:150px !important; color: black" title="Type of the parameter set">
           <option value="none">None</option>
-	  <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
+    <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
           <option value="exhaustive" title="Exhaustive search of parameter combinations">Exhaustive</option>
           <option value="greedy" title="Greedy search of parameter combinations">Greedy</option>
           <option value="greedy-reverse" title="Greedy search, starting from the full set of parameters">Greedy from end</option>
@@ -451,22 +459,22 @@
           <option value="zero" title="The value of the objective function at the default parameter values">Zero parameters</option>
         </select>
 
-	<span id="params4-ranges" class="hide">
-	&nbsp;&nbsp;
+  <span id="params4-ranges" class="hide">
+  &nbsp;&nbsp;
         <label for="input-option-param4-rangeStart" style="width:100px">Range start:</label>
         <input type="number" id="input-option-param4-rangeStart" style="width:100px !important" placeholder="1" min="1" title="Minimal number of parameters">
-	&nbsp;&nbsp;
+  &nbsp;&nbsp;
         <label for="input-option-param4-rangeEnd" style="width:40px">End:</label>
         <input type="number" id="input-option-param4-rangeEnd" style="width:100px !important" placeholder="2" min="1" title="Maximal number of parameters">
-	</span>
+  </span>
 
-	<span id="params4-names" class="hide">
-	&nbsp;&nbsp;
+  <span id="params4-names" class="hide">
+  &nbsp;&nbsp;
         <label for="input-option-param4-params">Names:</label>
         <input type="text" id="input-option-param4-params" style="width:200px !important" title="List of names of parameters to include">
-	</span>
+  </span>
 
-	&nbsp;&nbsp;<a id="button-del-params4" class="button small">Remove</a>
+  &nbsp;&nbsp;<a id="button-del-params4" class="button small">Remove</a>
     </div>
 
     <ul class="actions">

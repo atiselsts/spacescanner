@@ -66,7 +66,8 @@ SPACESCANNER.display = function() {
         }
 
         $("#job" + i + "_name").html("<h2>Job " + job.id + "</h2>\n");
-        $("#job" + i + "_parameters").html("<p>Parameters: " + params + "</p>\n");
+        $("#job" + i + "_parameters").html("Parameters: " + params + "\n");
+        $("#job" + i + "_method").html("Method: " + job.method + "\n");
 
         if (job.active) {
             $("#job" + i + "_actions").show();

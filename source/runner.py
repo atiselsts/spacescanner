@@ -21,7 +21,7 @@
 # Author: Atis Elsts, 2016
 #
 
-import os, sys, time, copy, random, threading
+import os, sys, time, copy, random, threading, shutil
 import psutil
 
 from util import *
@@ -75,7 +75,7 @@ def executeCopasi(runner):
 # with specific parameters and with a single specific method.
 
 class Runner:
-    def __init__(self, job, id, methodName):
+    def __init__(self, job, id, methodName, generation):
         self.job = job
         self.id = id
         self.methodName = methodName
@@ -93,6 +93,7 @@ class Runner:
         self.inputFilename = None
         self.reportFilename = None
         self.copasiFile = None
+        self.generation = generation
 
     def getFullName(self):
         return self.job.getFullName() + "/{} (method '{}')".format(
@@ -122,9 +123,15 @@ class Runner:
                                      self.job.areParametersChangeable):
             return False
 
-        # clean up the report file
+        # rename the old report file, if any expected
         try:
-            os.remove(self.reportFilename)
+            if self.generation > 1:
+                shutil.move(self.reportFilename, self.reportFilename + "_gen" + str(self.generation - 1))
+            else:
+                os.remove(self.reportFilename)
+        except IOError as e:
+            pass
+
         except:
             pass # may not exist, that's fine
 
@@ -162,12 +169,11 @@ class Runner:
             self.process.suspend(yes)
 
     def getAllStats(self):
-        result = []
-
         if bool(g.getConfig("webTestMode")):
             r = 0.0
             t = 0.0
             random.seed(0)
+            result = []
             for i in range(20):
                 r += random.random()
                 t += random.random()
@@ -175,8 +181,17 @@ class Runner:
                 result.append(si)
             return result
 
+        return self.getAllStatsForGeneration(self.generation)
+
+
+    def getAllStatsForGeneration(self, generation):
+        result = []
         try:
-            with open(self.reportFilename, "r") as f:
+            filename = self.reportFilename
+            if generation != self.generation:
+                filename += "_gen" + str(generation)
+
+            with open(filename, "r") as f:
                 inValues = False
                 for line in f:
                     if startsWith(line, "CPU time"):
@@ -192,9 +207,10 @@ class Runner:
                         result.append(si)
 
         except IOError as e:
-            g.log(LOG_DEBUG, "failed to read a report file " + self.reportFilename)
+            g.log(LOG_DEBUG, "failed to read a report file " + filename)
 
         return result
+
 
     def cleanup(self):
         stats = self.getLastStats()

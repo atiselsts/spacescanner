@@ -47,7 +47,8 @@ class Job:
         self.isUsingFallback = False
         self.runners = []
         self.oldRunners = []
-        self.oldCpuTime = 0
+        self.runnerGeneration = 0
+        self.oldCpuTimes = []
         self.convergenceTime = None
         self.convergenceValue = None
         self.copasiFile = None
@@ -86,7 +87,7 @@ class Job:
     def createRunners(self):
         # move the current runners, if any, to the array with old runners
         if self.runners:
-            self.oldCpuTime += max(r.currentCpuTime for r in self.runners)
+            self.oldCpuTimes.append(max(r.currentCpuTime for r in self.runners))
             self.oldRunners.extend(self.runners)
             self.runners = []
 
@@ -94,13 +95,15 @@ class Job:
         self.convergenceTime = None
         self.lastOfUpdateTime = time.time()
 
+        self.runnerGeneration += 1
+
         bestParams = None
         if self.oldRunners and bool(g.getConfig("optimization.restartFromBestValue")):
             # get best params
             bestParams = self.getBestParams()
 
         for id in range(int(g.getConfig("optimization.runsPerJob"))):
-            r = runner.Runner(self, id + 1, self.currentMethod)
+            r = runner.Runner(self, id + 1, self.currentMethod, self.runnerGeneration)
             if not r.prepare(self.workDir, self.copasiFile, bestParams):
                 g.log(LOG_ERROR, "{}: failed to create a runner".format(r.getName()))
                 return False
@@ -170,7 +173,7 @@ class Job:
             return
 
         # use the old CPU time as a basis
-        maxCpuTime += self.oldCpuTime
+        maxCpuTime += sum(self.oldCpuTimes)
         doKillOnTimeLimit = maxCpuTime >= cpuTimeLimit and not consensusReached
         if doKillOnTimeLimit:
             # kill all jobs immediately
@@ -436,10 +439,12 @@ class Job:
             ofValues = []
             if runner.isActive:
                 isActive = True
-            stats = runner.getAllStats()
-            for s in stats:
-                cpuTimes.append(self.oldCpuTime + s.cpuTime)
-                ofValues.append(jsonFixInfinity(s.ofValue, 0.0))
+
+            for generation in range(1, self.runnerGeneration + 1):
+                stats = runner.getAllStatsForGeneration(generation)
+                for s in stats:
+                    cpuTimes.append(sum(self.oldCpuTimes[:generation - 1]) + s.cpuTime)
+                    ofValues.append(jsonFixInfinity(s.ofValue, 0.0))
 
             # always add the current state
             lastOfValue = ofValues[-1] if len(ofValues) else 0.0
