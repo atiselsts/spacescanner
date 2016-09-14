@@ -212,7 +212,7 @@ class Job:
                 for r in self.runners:
                     if r.isActive:
                         r.terminationReason = TERMINATION_REASON_STAGNATION
-                    g.log(LOG_INFO, "terminating {}: Optimization stagnated (did not produce new results) for {} seconds".format(timeStagnated))
+                    g.log(LOG_INFO, "terminating {}: Optimization stagnated (did not produce new results) for {} seconds".format(self.getName(), timeStagnated))
                 return
 
         # We will continue. Check if load balancing needs to be done

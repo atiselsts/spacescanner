@@ -604,7 +604,14 @@ class StrategyManager:
                     time.sleep(1.0)
                     if self.doQuitFlag:
                         return True
-                    pool.refresh()
+
+                    try:
+                        pool.refresh()
+                    except Exception as e:
+                        g.log(LOG_INFO, "Exception while refreshing active joob pool status, terminating the pool: {}".format(e))
+                        self.finishActivePool()
+                        break
+
                     if pool.isDepleted():
                         self.finishActivePool()
                         break               
