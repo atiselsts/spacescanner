@@ -144,11 +144,13 @@ SPACESCANNER.refresh = function() {
         });
     }
 
-    function updateStatusFull(data) {
+    function updateStatusFull(response) {
         if (!$("#dialog-status").dialog('isOpen')) {
             console.log("status dialog hidden");
             return;
         }
+
+	var data = response.stats;
 
         var anyActive = false;
         for (var i = data.length - 1; i >= 0 ; --i) {
