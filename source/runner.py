@@ -228,10 +228,10 @@ class Runner:
             if self.lastReportCheckTime is not None \
                  and now - self.lastReportCheckTime < MIN_REPORT_CHECK_INTERVAL:
                 # too soon, skip
-                return True
+                return False
             if now - self.startTime < 3.0:
                 # too soon after start (copasi may not be launched yet), return
-                return True
+                return False
 
         self.lastReportCheckTime = now
         oldOfValue = self.ofValue
@@ -278,17 +278,6 @@ class Runner:
         except IOError as e:
             g.log(LOG_ERROR, "parsing report file {} failed: {}".format(
                 self.reportFilename, os.strerror(e.errno)))
-
-        if not hasTerminated and not self.terminationReason:
-            g.log(LOG_DEBUG, "checked {}, CPU time: {}".format(self.getName(), self.currentCpuTime))
-            # XXX: hardcoded "slow" method names
-            if self.methodName not in ["ScatterSearch", "SimulatedAnnealing"]:
-                # XXX: reuse consensus time for this
-                maxTimeWithNoValue = float(g.getConfig("optimization.consensusMinDurationSec")) + 10.0
-                if self.job.timeDiffExceeded(now - self.startTime, maxTimeWithNoValue) and \
-                   (not self.stats.isValid or self.ofValue == MIN_OF_VALUE):
-                    g.log(LOG_DEBUG, "terminating {}: no value found in CPU time: {}".format(self.getName(), self.currentCpuTime))
-                    self.terminationReason = TERMINATION_REASON_CPU_TIME_LIMIT
 
         if oldOfValue != self.ofValue:
             # the OF value was updated

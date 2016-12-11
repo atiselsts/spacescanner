@@ -24,7 +24,7 @@ test-param-ranges:
 	@echo Testing parameter range configuration options...
 	@rm -f spacescanner.log
 	$(PYTHON) $(SPACESCANNER) test-param-ranges.json
-	@grep "total 18 parameter combination(s) to try out" spacescanner.log
+	@grep "total 19 parameter combination(s) to try out" spacescanner.log
 	@grep "starting job 1 (optimization parameters: 'Hexokinase' 'Phosphofructokinase' 'Glucose in')" spacescanner.log
 	@grep "terminating job 18" spacescanner.log
 	@grep "results of finished jobs saved" spacescanner.log
@@ -35,8 +35,8 @@ test-param-ranges2:
 	@echo Testing parameter range zero configuration options...
 	@rm -f spacescanner.log
 	$(PYTHON) $(SPACESCANNER) test-param-ranges2.json
-	@grep "total 1 parameter combination(s) to try out" spacescanner.log
-	@grep "starting job 1 (optimization parameters: " spacescanner.log
+	@grep "total 2 parameter combination(s) to try out" spacescanner.log
+	@grep "starting job 0 (optimization parameters: " spacescanner.log
 	@grep "results of finished jobs saved" spacescanner.log
 	@echo ..done
 	@echo ""
@@ -85,7 +85,7 @@ test-broken-1:
 	@echo Testing broken configurations...
 	@rm -f spacescanner.log
 	$(PYTHON) $(SPACESCANNER) test-broken-bad-parameter.json
-	@grep "terminating job 1: failed to evaluate the objective function" spacescanner.log
+	@grep "terminating job 0: failed to evaluate the objective function" spacescanner.log
 	@echo ..done
 	@echo ""
 

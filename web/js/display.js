@@ -31,7 +31,7 @@ SPACESCANNER.display = function() {
         return charts.length == MAX_NUM_CHARTS;
     }
 
-    function drawCharts(allData) {
+    function drawCharts(baseline, allData) {
         if (!isReady()) {
             console.log("charts are not ready");
             return;
@@ -39,7 +39,7 @@ SPACESCANNER.display = function() {
 
         for (var i = 0; i < MAX_NUM_CHARTS; ++i) {
             if (i < allData.length) {
-                showChart(i, charts[i], allData[i]);
+                showChart(i, charts[i], allData[i], baseline);
                 button2jobID[i] = allData[i].id;
                 $('#job' + i).show();
             } else {
@@ -52,7 +52,7 @@ SPACESCANNER.display = function() {
         }
     }
 
-    function showChart(i, chart, job) {
+    function showChart(i, chart, job, baseline) {
         if (job.error) {
             console.log("Job data has an error: " + job.error);
             return;
@@ -101,7 +101,8 @@ SPACESCANNER.display = function() {
         jobData.addColumn('number'); //, 'Time');
         for (var j = 0; j < job.data.length; j++) {
             jobData.addColumn('number', 'Runner ' + (j+1));
-            runnerValues.push(0.0); // start from zero
+	    // start from the baseline (if present), not from zero
+            runnerValues.push(baseline);
         }
 
         $.each(allData, function (_, entry) { 

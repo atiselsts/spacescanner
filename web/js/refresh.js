@@ -40,7 +40,7 @@ SPACESCANNER.refresh = function() {
         var oldHasResults = hasResults;
 
         isModelExecutable = data.isExecutable;
-        isActive = data.jobs.length > 0;
+        isActive = data.isActive;
         hasResults = data.resultsPresent;
 
         if (isActive != oldIsActive) {
@@ -53,7 +53,7 @@ SPACESCANNER.refresh = function() {
                 $("#button-select").removeClass('disabled');
                 if (!resultsButtonClicked) {
                     // remove all charts
-                    SPACESCANNER.display.drawCharts([]);
+                    SPACESCANNER.display.drawCharts(0.0, []);
                 }
             }
         }
@@ -90,8 +90,8 @@ SPACESCANNER.refresh = function() {
                 url: "activestatus",
                 contentType: "application/json",
                 dataType: "json",
-                success: function (data) {
-                    SPACESCANNER.display.drawCharts(data);
+                success: function (response) {
+                    SPACESCANNER.display.drawCharts(response.baseline, response.stats);
                     refreshTimerID = setTimeout(refresh, pageRefreshInterval);
                 },
                 error: function (data, textStatus, xhr) {
@@ -114,8 +114,8 @@ SPACESCANNER.refresh = function() {
             url: "job/" + id,
             contentType: "application/json",
             dataType: "json",
-            success:  function (data) {
-                SPACESCANNER.display.drawCharts([data]);
+            success:  function (response) {
+                SPACESCANNER.display.drawCharts(response.baseline, response.stats);
             },
             error: function (data, textStatus, xhr) {
                 console.log("get job " + id + " status error: " + JSON.stringify(data) + " " + textStatus);
@@ -174,7 +174,8 @@ SPACESCANNER.refresh = function() {
                 s += '<a title="Show job results graph" class="button-results" id="button-results-' + job.id +'" onclick="SPACESCANNER.refresh.showFinishedJobResults(' + job.id + ')">Result graph</a> / ';
             }
             s += "OF value: " + job.of + " / "
-                + "CPU time: " + (Math.round(10 * job.cpu) / 10.0) + " / "
+                + "Max CPU time: " + (Math.round(10 * job.cpu) / 10.0) + " sec / "
+                + "Total CPU time: " + (Math.round(10 * job.totalCpu) / 10.0) + " sec / "
                 + "Status: " + status + " / "
                 + "Method: " + job.method + " / "
                 + params + "\n";

@@ -210,6 +210,12 @@ class Job:
             timeStagnated = time.time() - self.lastOfUpdateTime
             maxAbsoluteTime = float(g.getConfig("optimization.stagnationMaxDurationSec"))
             maxRelativeTime = (time.time() - self.startTime) * float(g.getConfig("optimization.stagnationMaxProportionalDuration"))
+
+            # XXX: specialcase for the non-parameters job: quit it quite quickly (in 10 seconds for each method)
+            if not self.areParametersChangeable:
+                maxAbsoluteTime = 10.0
+                maxRelativeTime = 0.0
+
             if self.timeDiffExceeded(timeStagnated, maxAbsoluteTime) and timeStagnated > maxRelativeTime:
                 # stagnation detected
                 for r in self.runners:
@@ -249,12 +255,18 @@ class Job:
         # if this is not the first method, also should use max from the previous
         maxV = self.getBestOfValue()
 
+        # return False if exited without a result
+        if math.isinf(minV) or math.isinf(maxV):
+            return False
+
         # returns true if either the absolute difference OR relative difference are small
         if floatEqual(minV, maxV, epsilonAbs):
             return True
+
         # XXX: avoid division by zero; this means relative convergence will always fail on 0.0
-        if math.isinf(minV) or math.isinf(maxV) or maxV == 0.0:
+        if maxV == 0.0:
             return False
+
         return abs(1.0 - minV / maxV) < epsilonRel
 
 
@@ -358,7 +370,8 @@ class Job:
 
 
     def getStatus(self):
-        cpuTime = 0
+        maxCpuTime = 0
+        totalCpuTime = 0
         terminationReason = TERMINATION_REASON_MAX
         bestRunner = None
         bestOfValue = MIN_OF_VALUE
@@ -368,14 +381,15 @@ class Job:
             if r.isActive:
                 isActive = True
             terminationReason = min(terminationReason, r.terminationReason)
-            cpuTime += r.currentCpuTime
+            maxCpuTime = max(r.currentCpuTime, maxCpuTime)
+            totalCpuTime += r.currentCpuTime
             if bestOfValue < r.ofValue:
                 bestOfValue = r.ofValue
                 bestRunner = r
 
         # also account the failed methods
         for r in self.oldRunners:
-            cpuTime += r.currentCpuTime
+            totalCpuTime += r.currentCpuTime
             if bestOfValue < r.ofValue:
                 bestOfValue = r.ofValue
                 bestRunner = r
@@ -384,15 +398,18 @@ class Job:
         if bestRunner is not None and bestRunner.getLastStats().isValid:
             bestStats = bestRunner.getLastStats()
 
-        return (bestOfValue, bestStats, cpuTime, isActive, terminationReason)
+        # add the sum of all previosus generations max runners' times
+        maxCpuTime += sum(self.oldCpuTimes)
+
+        return (bestOfValue, bestStats, maxCpuTime, totalCpuTime, isActive, terminationReason)
 
 
     def dumpResults(self, f, allParams):
-        (bestOfValue, bestStats, cpuTime, _, terminationReason) = self.getStatus()
+        (bestOfValue, bestStats, maxCpuTime, totalCpuTime, _, terminationReason) = self.getStatus()
 
-        # OF value,CPU time,Job ID,Stop reason
-        f.write("{},{},{},{},{},{},".format(
-            bestOfValue, cpuTime, self.id, self.currentMethod,
+        # OF value,CPU time,Total CPU time,Job ID,Stop reason
+        f.write("{},{},{},{},{},{},{},".format(
+            bestOfValue, maxCpuTime, totalCpuTime, self.id, self.currentMethod,
             len(self.params), reasonToStr(terminationReason)))
 
         # which parameters are included
@@ -416,12 +433,13 @@ class Job:
 
 
     def getStatsBrief(self):
-        (bestOfValue, _, cpuTime, isActive, terminationReason) = self.getStatus()
+        (bestOfValue, _, maxCpuTime, totalCpuTime, isActive, terminationReason) = self.getStatus()
 
         return {
             "id" : self.id,
             "of" : jsonFixInfinity(bestOfValue, 0.0),
-            "cpu" : cpuTime,
+            "cpu" : maxCpuTime,
+            "totalCpu" : totalCpuTime,
             "active" : isActive,
             "reason" : reasonToStr(terminationReason),
             "method" : self.currentMethod,

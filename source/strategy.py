@@ -256,8 +256,8 @@ class StrategyManager:
         self.isExecutable = False
 
         self.lastNumJobsDumped = 0
-        # job counter, starting from 1
-        self.nextJobID = itertools.count(1)
+        # job counter, starting from 0
+        self.nextJobID = itertools.count(0)
 
         self.copasiConfig = {"params" : []}
         self.jobsByBestOfValue = []
@@ -345,8 +345,9 @@ class StrategyManager:
         g.log(LOG_INFO, '<spacescanner>: results of finished jobs saved in "' + filename + '"')
         return filename
 
+
     def dumpCsvFileHeader(self, f):
-        f.write("OF value,CPU time,Job ID,Method,Number of parameters,Stop reason,")
+        f.write("OF value,Max CPU time,Total CPU time,Job ID,Method,Number of parameters,Stop reason,")
         paramNames = [x.strip("'") for x in self.copasiConfig["params"]]
         f.write(",".join([x + " included" for x in paramNames]))
         f.write("," + ",".join(paramNames))
@@ -370,6 +371,8 @@ class StrategyManager:
             # if this is a zero-parameter job, use the result as a baseline
             if not job.areParametersChangeable:
                 self.topBaseline = job.getBestOfValue()
+                # do no include the result of this job in the "normal" results
+                return
 
             # order the finished-jobs list by OF values.
             # (full re-sorting is suboptimal, but we do not expect *that* many jobs)
@@ -443,28 +446,30 @@ class StrategyManager:
 
 
     def ioGetAllJobs(self, qs):
-        response = []
+        response = { "baseline" : jsonFixInfinity(self.topBaseline, 0.0), "stats" : [] }
         with self.jobLock:
             for id in self.finishedJobs:
-                response.append(self.finishedJobs[id].getStatsBrief())
+                response["stats"].append(self.finishedJobs[id].getStatsBrief())
             if self.activeJobPool:
                 with self.activeJobPool.jobLock:
                     for job in self.activeJobPool.activeJobs:
-                        response.append(job.getStatsBrief())
+                        if job.areParametersChangeable:
+                            response["stats"].append(job.getStatsBrief())
         return response
 
 
     def ioGetActiveJobs(self, qs):
-        response = []
+        response = { "baseline" : jsonFixInfinity(self.topBaseline, 0.0), "stats" : [] }
         with self.jobLock:
             if bool(g.getConfig("webTestMode")):
                 for id in self.finishedJobs:
                     if id < 4:
-                        response.append(self.finishedJobs[id].getStatsFull())
+                        response["stats"].append(self.finishedJobs[id].getStatsFull())
             if self.activeJobPool:
                 with self.activeJobPool.jobLock:
                     for job in self.activeJobPool.activeJobs:
-                        response.append(job.getStatsFull())
+                        if job.areParametersChangeable:
+                            response["stats"].append(job.getStatsFull())
         return response
 
 
@@ -474,6 +479,7 @@ class StrategyManager:
         except:
             return {"error" : "invalid job ID"}
         job = None
+        response = { "baseline" : jsonFixInfinity(self.topBaseline, 0.0), "stats" : [] }
         with self.jobLock:
             if id in self.finishedJobs:
                 job = self.finishedJobs[id]
@@ -483,7 +489,8 @@ class StrategyManager:
         if job is None:
             return {"error" : "job with ID {} not found".format(id)}
 
-        return job.getStatsFull()
+        response["stats"].append(job.getStatsFull())
+        return response
 
 
     def ioGetConfig(self, qs):
@@ -562,7 +569,8 @@ class StrategyManager:
         elif g.getConfig("parameters"):
 
             # Deal with TOP, if required
-            if self.isTOPEnabled():
+            #if self.isTOPEnabled():
+            if True: # always add the zero'th job, needed to show baseline in graphs
                 # add the "zero" at the start
                 g.log(LOG_INFO, "optimizing for zero parameters initially to find the baseline")
                 spec = {"type" : "zero"}
