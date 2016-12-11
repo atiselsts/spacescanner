@@ -30,7 +30,9 @@ import job
 
 #####################################################################
 # the hash is unique as long as each job has unique set of parameters
-def getParamSetHash(parameters, allParameters):
+def getParamSetHash(parameters, allParameters, isZero):
+    if isZero:
+        return 0
     paramState = [2**i for i,x in enumerate(allParameters) if x in parameters]
     return sum(paramState)
 
@@ -64,7 +66,7 @@ class JobPool:
         self.currentParametersIndex += 1
 
         # check if a job with parameters has already been around
-        hash = getParamSetHash(params, self.strategy.copasiConfig["params"])
+        hash = getParamSetHash(params, self.strategy.copasiConfig["params"], not self.areParametersChangeable)
         if hash in self.strategy.startedJobs:
             g.log(LOG_DEBUG, "skipping a job, parameter set already processed: {}".format(params))
             return

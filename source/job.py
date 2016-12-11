@@ -458,14 +458,26 @@ class Job:
             if runner.isActive:
                 isActive = True
 
+            baselineValue = jsonFixInfinity(self.pool.strategy.topBaseline, 0.0)
+
             for generation in range(1, self.runnerGeneration + 1):
                 stats = runner.getAllStatsForGeneration(generation)
                 for s in stats:
-                    cpuTimes.append(sum(self.oldCpuTimes[:generation - 1]) + s.cpuTime)
+                    t = sum(self.oldCpuTimes[:generation - 1]) + s.cpuTime
+                    if len(ofValues) == 0:
+                        # insert a dummy item at the time of the first value found
+                        cpuTimes.append(t)
+                        ofValues.append(baselineValue)
                     ofValues.append(jsonFixInfinity(s.ofValue, 0.0))
+                    cpuTimes.append(t)
 
             # always add the current state
-            lastOfValue = ofValues[-1] if len(ofValues) else 0.0
+            if len(ofValues):
+                # use the last computed OF value
+                lastOfValue = ofValues[-1]
+            else:
+                # use the baseline value
+                lastOfValue = baselineValue
             cpuTimes.append(runner.currentCpuTime)
             ofValues.append(lastOfValue)
 

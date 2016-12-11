@@ -556,6 +556,12 @@ class StrategyManager:
 
     def execute(self):
         parameterSelections = []
+
+        # always add the zero'th job at start, needed to show baseline in graphs and for TOP
+        g.log(LOG_INFO, "optimizing for zero parameters initially to find the baseline")
+        spec = {"type" : "zero"}
+        parameterSelections.append(ParamSelection.create(spec, self))
+
         if g.getConfig("restartOnFile"):
             # Guess which parameters have not been optimized yet based on the .csv result file
             filename = g.getConfig("restartOnFile").replace("@SELF@", SELF_PATH)
@@ -567,16 +573,7 @@ class StrategyManager:
                     parameterSelections.append(x)
 
         elif g.getConfig("parameters"):
-
-            # Deal with TOP, if required
-            #if self.isTOPEnabled():
-            if True: # always add the zero'th job, needed to show baseline in graphs
-                # add the "zero" at the start
-                g.log(LOG_INFO, "optimizing for zero parameters initially to find the baseline")
-                spec = {"type" : "zero"}
-                parameterSelections.append(ParamSelection.create(spec, self))
-
-            # The take the other sets from the file
+            # Take the paramter sets from the file
             for spec in g.getConfig("parameters"):
                 x = ParamSelection.create(spec, self)
                 if x is None:
@@ -601,6 +598,7 @@ class StrategyManager:
         parameterSelections.sort(key = lambda x: x.getSortOrder())
         for sel in parameterSelections:
             areParametersChangeable = sel.type != PARAM_SEL_ZERO
+            g.log(LOG_DEBUG, "processing parameter selection of type {}".format(sel.type))
             for params in sel.getParameterSets():
                 g.log(LOG_DEBUG, "made a new pool of {} jobs".format(len(params)))
                 pool = jobpool.JobPool(self, params, areParametersChangeable)

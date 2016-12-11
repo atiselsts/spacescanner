@@ -14,7 +14,8 @@
         {"type" : "explicit", "parameters" : ["Hexokinase", "Phosphofructokinase", "Glucose in"]}
     ],
     "output" : {
-        "logfile" : "spacescanner.log"
+        "logfile" : "spacescanner.log",
+        "loglevel" : 5
     },
     "testMode" : true
 }

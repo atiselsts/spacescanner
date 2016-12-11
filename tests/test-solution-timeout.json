@@ -14,6 +14,7 @@
         {"type" : "full-set"}
     ],
     "output" : {
-        "logfile" : "spacescanner.log"
+        "logfile" : "spacescanner.log",
+"loglevel" : 5
     }
 }
