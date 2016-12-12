@@ -199,6 +199,7 @@ class HttpServerHandler(BaseHTTPRequestHandler):
             # active jobs
             response = {"isActive" : sm.isActive(),
                         "isExecutable" : sm.isExecutable,
+                        "totalNumJobs" : sm.getTotalNumJobs(),
                         "resultsPresent" : sm.getNumFinishedJobs() > 0}
         elif o.path == '/allstatus':
             response = sm.ioGetAllJobs(qs)
@@ -283,7 +284,12 @@ class HttpServerHandler(BaseHTTPRequestHandler):
         # set it only if not none
         InterruptibleHTTPServer.serverInstance.strategyManager = sm
 
-        self.respondToPost(200, {"status" : "OK"})
+        end = time.time() + 10
+        while time.time() < end:
+            if sm.getTotalNumJobs() >= 0:
+                break
+
+        self.respondToPost(200, {"status" : "OK", "totalNumJobs" : sm.getTotalNumJobs()})
 
     def respondToPost(self, code, response, isJSON = True):
         print("respond to post:")

@@ -60,6 +60,18 @@ class ParamSelection(object):
         # first by type, the by lower bound
         return (self.type, self.start)
 
+    def areParametersChangeable(self):
+        return self.type != PARAM_SEL_ZERO
+
+    def getAllJobHashes(self):
+        hashes = set()
+        for paramSet in self.getParameterSets():
+            for params in paramSet:
+                hash = getParamSetHash(params, self.strategy.copasiConfig["params"],
+                                       not self.areParametersChangeable())
+                hashes.add(hash)
+        return hashes
+
     @staticmethod
     def create(specification, strategy):
         if "type" not in specification:
@@ -246,6 +258,7 @@ class ParamSelectionGreedyReverse(ParamSelection):
 class StrategyManager:
     def __init__(self):
         atexit.register(self.cleanup, self)
+        self.totalNumJobs = -1
 
     def prepare(self, isDummy):
         self.jobLock = threading.Lock()
@@ -281,6 +294,9 @@ class StrategyManager:
     def isActive(self):
         with self.jobLock:
             return self.activeJobPool is not None
+
+    def getTotalNumJobs(self):
+        return max(self.nextJobID - 1, self.totalNumJobs)
 
     def cleanup(self, args):
         sys.stderr.write("<spacescanner>: quitting...\n")
@@ -432,7 +448,7 @@ class StrategyManager:
             isReached = achievedValue >= requiredValue
 
         if isReached:
-            g.log(LOG_INFO, "terminating optimization at {} parameters: good-enough-value criteria reached (required {})".format(numParameters, requiredValue))
+            g.log(LOG_INFO, "Terminating optimization at {} parameters: good-enough-value criteria reached (required {})".format(numParameters, requiredValue))
             return True
         return False
 
@@ -440,8 +456,12 @@ class StrategyManager:
     def getBestParameters(self, k):
         joblist = self.jobsByBestOfValue[k]
         if not joblist:
-            g.log(LOG_ERROR, "Parameter ranges are invalid: best value of {} parameters requested, but no jobs finished".format(k))
-            return None
+            if 0:
+                g.log(LOG_ERROR, "Parameter ranges are invalid: best value of {} parameters requested, but no jobs finished".format(k))
+                return None
+            else:
+                # this is fine and expected for preliminary calculations
+                return self.copasiConfig["params"][:k]
         return joblist[0].params
 
 
@@ -588,20 +608,21 @@ class StrategyManager:
             spec = {"type" : "full-set"}
             parameterSelections.append(ParamSelection.create(spec, self))
 
-        numCombinations = 0
+        hashes = set()
         for sel in parameterSelections:
-            numCombinations += sel.getNumCombinations()
+            hashes = hashes.union(sel.getAllJobHashes())
+        self.totalNumJobs = len(hashes) - 1
 
-        g.log(LOG_INFO, "total {} parameter combination(s) to try out, parameters: {}".format(numCombinations, " ".join(self.copasiConfig["params"])))
+        g.log(LOG_INFO, "total {} parameter combination(s) to try out, parameters: {}".format(
+            self.totalNumJobs, " ".join(self.copasiConfig["params"])))
         g.log(LOG_INFO, "methods enabled: '" + "' '".join(g.getConfig("copasi.methods")) + "'")
 
         parameterSelections.sort(key = lambda x: x.getSortOrder())
         for sel in parameterSelections:
-            areParametersChangeable = sel.type != PARAM_SEL_ZERO
             g.log(LOG_DEBUG, "processing parameter selection of type {}".format(sel.type))
             for params in sel.getParameterSets():
                 g.log(LOG_DEBUG, "made a new pool of {} jobs".format(len(params)))
-                pool = jobpool.JobPool(self, params, areParametersChangeable)
+                pool = jobpool.JobPool(self, params, sel.areParametersChangeable())
                 with self.jobLock:
                     self.activeJobPool = pool
 

@@ -10,6 +10,7 @@ SPACESCANNER.refresh = function() {
     var isModelExecutable = false;
     var isActive = false;
     var hasResults = false;
+    var totalNumJobs = 0;
 
     var resultsButtonClicked = false;
 
@@ -42,6 +43,7 @@ SPACESCANNER.refresh = function() {
         isModelExecutable = data.isExecutable;
         isActive = data.isActive;
         hasResults = data.resultsPresent;
+        totalNumJobs = data.totalNumJobs;
 
         if (isActive != oldIsActive) {
             if (isActive) {
@@ -53,7 +55,7 @@ SPACESCANNER.refresh = function() {
                 $("#button-select").removeClass('disabled');
                 if (!resultsButtonClicked) {
                     // remove all charts
-                    SPACESCANNER.display.drawCharts(0.0, []);
+                    SPACESCANNER.display.drawCharts(0, 0.0, []);
                 }
             }
         }
@@ -91,7 +93,7 @@ SPACESCANNER.refresh = function() {
                 contentType: "application/json",
                 dataType: "json",
                 success: function (response) {
-                    SPACESCANNER.display.drawCharts(response.baseline, response.stats);
+                    SPACESCANNER.display.drawCharts(totalNumJobs, response.baseline, response.stats);
                     refreshTimerID = setTimeout(refresh, pageRefreshInterval);
                 },
                 error: function (data, textStatus, xhr) {
@@ -115,7 +117,7 @@ SPACESCANNER.refresh = function() {
             contentType: "application/json",
             dataType: "json",
             success:  function (response) {
-                SPACESCANNER.display.drawCharts(response.baseline, response.stats);
+                SPACESCANNER.display.drawCharts(totalNumJobs, response.baseline, response.stats);
             },
             error: function (data, textStatus, xhr) {
                 console.log("get job " + id + " status error: " + JSON.stringify(data) + " " + textStatus);
@@ -150,7 +152,7 @@ SPACESCANNER.refresh = function() {
             return;
         }
 
-	var data = response.stats;
+        var data = response.stats;
 
         var anyActive = false;
         for (var i = data.length - 1; i >= 0 ; --i) {
@@ -171,7 +173,7 @@ SPACESCANNER.refresh = function() {
                 }
             }
             s += '<div class="form-row">\n'
-            s += "Job " + job.id + " / ";
+            s += "Job " + job.id + " of " + totalNumJobs + " / ";
             if (!anyActive) {
                 s += '<a title="Show job results graph" class="button-results" id="button-results-' + job.id +'" onclick="SPACESCANNER.refresh.showFinishedJobResults(' + job.id + ')">Result graph</a> / ';
             }

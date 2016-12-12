@@ -29,14 +29,6 @@ import job
 
 
 #####################################################################
-# the hash is unique as long as each job has unique set of parameters
-def getParamSetHash(parameters, allParameters, isZero):
-    if isZero:
-        return 0
-    paramState = [2**i for i,x in enumerate(allParameters) if x in parameters]
-    return sum(paramState)
-
-#####################################################################
 # Pool is a group of jobs without mutual dependencies
 # which all can be executed simultaneously (but are not required to)
 class JobPool:

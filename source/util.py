@@ -290,3 +290,11 @@ def jsonFixInfinity(x, defaultValue):
     if math.isnan(x) or math.isinf(x):
         return defaultValue
     return x
+
+#####################################################################
+# the hash is unique as long as each job has unique set of parameters
+def getParamSetHash(parameters, allParameters, isZero):
+    if isZero:
+        return 0
+    paramState = [2**i for i,x in enumerate(allParameters) if x in parameters]
+    return sum(paramState)

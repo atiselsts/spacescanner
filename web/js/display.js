@@ -6,7 +6,7 @@ SPACESCANNER.display = function() {
     var button2jobID = [];
 
     // this stores the last method name for each chart
-    var methods = [];
+    var methods = []; /* TODO: since jobs can switch charts, this can show wrong results! */
 
     // reset the "methods" array
     function resetMethods() {
@@ -31,7 +31,7 @@ SPACESCANNER.display = function() {
         return charts.length == MAX_NUM_CHARTS;
     }
 
-    function drawCharts(baseline, allData) {
+    function drawCharts(totalNumJobs, baseline, allData) {
         if (!isReady()) {
             console.log("charts are not ready");
             return;
@@ -39,7 +39,7 @@ SPACESCANNER.display = function() {
 
         for (var i = 0; i < MAX_NUM_CHARTS; ++i) {
             if (i < allData.length) {
-                showChart(i, charts[i], allData[i], baseline);
+                showChart(i, charts[i], allData[i], totalNumJobs, baseline);
                 button2jobID[i] = allData[i].id;
                 $('#job' + i).show();
             } else {
@@ -52,7 +52,7 @@ SPACESCANNER.display = function() {
         }
     }
 
-    function showChart(i, chart, job, baseline) {
+    function showChart(i, chart, job, totalNumJobs, baseline) {
         if (job.error) {
             console.log("Job data has an error: " + job.error);
             return;
@@ -65,7 +65,7 @@ SPACESCANNER.display = function() {
             }
         }
 
-        $("#job" + i + "_name").html("<h2>Job " + job.id + "</h2>\n");
+        $("#job" + i + "_name").html("<h2>Job " + job.id + " of " + totalNumJobs + "</h2>\n");
         $("#job" + i + "_parameters").html("Parameters: " + params + "\n");
         $("#job" + i + "_method").html("Method: " + job.method + "\n");
 
