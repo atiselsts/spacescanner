@@ -39,7 +39,8 @@ class Job:
         self.pool = pool
         self.params = params
         self.areParametersChangeable = areParametersChangeable
-        self.id = pool.strategy.nextJobID.next()
+        self.id = pool.strategy.nextJobID
+        pool.strategy.nextJobID += 1
         self.methods = copy.copy(g.getConfig("copasi.methods"))
         assert len(self.methods)
         self.fallbackMethods = copy.copy(g.getConfig("copasi.fallbackMethods"))

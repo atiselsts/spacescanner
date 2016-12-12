@@ -270,7 +270,7 @@ class StrategyManager:
 
         self.lastNumJobsDumped = 0
         # job counter, starting from 0
-        self.nextJobID = itertools.count(0)
+        self.nextJobID = 0
 
         self.copasiConfig = {"params" : []}
         self.jobsByBestOfValue = []
