@@ -263,14 +263,18 @@ class Runner:
                         g.log(LOG_INFO, "{}: new OF value {}".format(self.getName(), self.ofValue))
 
                     # Check for CPU time end condition using the report file
-                    self.currentCpuTime = self.getLastStats().cpuTime
+                    reportCpuTime = self.getLastStats().cpuTime
+                    if self.currentCpuTime < reportCpuTime:
+                        self.currentCpuTime = reportCpuTime
             else:
                 # no report file update; check for CPU time end condition using OS measurements
                 if not hasTerminated:
                     try:
-                        self.currentCpuTime = self.process.getCpuTime()
+                        t = self.process.getCpuTime()
                     except psutil.NoSuchProcess:
                         pass # has already quit
+                    else:
+                        self.currentCpuTime = t
 
         except OSError as e:
             g.log(LOG_ERROR, "accessing report file {} failed: {}".format(

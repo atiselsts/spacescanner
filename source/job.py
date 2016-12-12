@@ -181,7 +181,8 @@ class Job:
             for r in self.runners:
                 if r.isActive:
                     r.terminationReason = TERMINATION_REASON_CPU_TIME_LIMIT
-                    g.log(LOG_INFO, "terminating {}: CPU time limit exceeded ({} vs. {})".format(r.getName(), r.currentCpuTime, cpuTimeLimit))
+                    g.log(LOG_INFO, "terminating {}: CPU time limit exceeded ({} vs. {})".format(
+                        r.getName(), r.currentCpuTime, cpuTimeLimit))
             return
 
         # check if the runs have reached consensus
@@ -463,14 +464,22 @@ class Job:
 
             for generation in range(1, self.runnerGeneration + 1):
                 stats = runner.getAllStatsForGeneration(generation)
+                prevTime = sum(self.oldCpuTimes[:generation - 1])
+                isFirstProcessed = False
                 for s in stats:
-                    t = sum(self.oldCpuTimes[:generation - 1]) + s.cpuTime
-                    if len(ofValues) == 0:
+                    t = prevTime + s.cpuTime
+                    if not isFirstProcessed:
+                        isFirstProcessed = True
                         # insert a dummy item at the time of the first value found
                         cpuTimes.append(t)
                         ofValues.append(baselineValue)
-                    ofValues.append(jsonFixInfinity(s.ofValue, 0.0))
                     cpuTimes.append(t)
+                    ofValues.append(jsonFixInfinity(s.ofValue, 0.0))
+
+                if not isFirstProcessed:
+                    t = sum(self.oldCpuTimes[:generation])
+                    cpuTimes.append(t)
+                    ofValues.append(baselineValue)
 
             # always add the current state
             if len(ofValues):
