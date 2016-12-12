@@ -35,7 +35,7 @@ test-param-ranges2:
 	@echo Testing parameter range zero configuration options...
 	@rm -f spacescanner.log
 	$(PYTHON) $(SPACESCANNER) test-param-ranges2.json
-	@grep "total 1 parameter combination(s) to try out" spacescanner.log
+	@grep "total 0 parameter combination(s) to try out" spacescanner.log
 	@grep "starting job 0 (optimization parameters: " spacescanner.log
 	@grep "results of finished jobs saved" spacescanner.log
 	@echo ..done
