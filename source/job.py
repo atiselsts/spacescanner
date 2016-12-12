@@ -488,7 +488,7 @@ class Job:
             else:
                 # use the baseline value
                 lastOfValue = baselineValue
-            cpuTimes.append(runner.currentCpuTime)
+            cpuTimes.append(sum(self.oldCpuTimes) + runner.currentCpuTime)
             ofValues.append(lastOfValue)
 
             reply.append({"id" : runnerID, "values" : ofValues, 
