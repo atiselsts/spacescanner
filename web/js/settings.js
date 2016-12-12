@@ -57,7 +57,7 @@ SPACESCANNER.settings = function() {
             contentType: "application/json",
             dataType: "json",
             success: function (returnData) {
-                SPACESCANNER.notify("" + returnData.totalNumJobs + " jobs started", "success");
+                SPACESCANNER.notify("" + returnData.totalNumJobs + " jobs queued", "success");
                 console.log("start command: " + JSON.stringify(returnData));
             },
             error: function (data, textStatus, xhr) {
