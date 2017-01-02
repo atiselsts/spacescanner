@@ -11,6 +11,7 @@ SPACESCANNER.refresh = function() {
     var isActive = false;
     var hasResults = false;
     var totalNumJobs = 0;
+    var totalNumParams = 0;
 
     var resultsButtonClicked = false;
 
@@ -39,16 +40,31 @@ SPACESCANNER.refresh = function() {
         var oldIsModelExecutable = isModelExecutable;
         var oldIsActive = isActive;
         var oldHasResults = hasResults;
-
+        var oldTotalNumJobs = totalNumJobs;
+        var oldTotalNumParams = totalNumParams;
+        var doEstimateNumJobs = false;
+        
         isModelExecutable = data.isExecutable;
         isActive = data.isActive;
         hasResults = data.resultsPresent;
         totalNumJobs = data.totalNumJobs;
+        totalNumParams = data.totalNumParams;
+
+        if (oldTotalNumParams != totalNumParams) {
+            $("#params-total-number").html("" + totalNumParams + " total");
+            doEstimateNumJobs = true;
+        }
+        if (oldTotalNumJobs != totalNumJobs) {
+            doEstimateNumJobs = true;
+        }
 
         if (isActive != oldIsActive) {
+            $("#params-job-number").html("" + totalNumJobs);
+
             if (isActive) {
                 resultsButtonClicked = false;
                 $("#button-select").addClass('disabled');
+                $("#params-job-status").html("Queued");
             } else {
                 SPACESCANNER.notify("Optimizations finished");
                 SPACESCANNER.display.resetMethods();
@@ -56,6 +72,9 @@ SPACESCANNER.refresh = function() {
                 if (!resultsButtonClicked) {
                     // remove all charts
                     SPACESCANNER.display.drawCharts(0, 0.0, []);
+                }
+                if (hasResults) {
+                    $("#params-job-status").html("Total");
                 }
             }
         }
@@ -70,6 +89,7 @@ SPACESCANNER.refresh = function() {
             } else {
                 $("#button-start-stop").html('<i class="icon-play" style="margin-top: 3px"></i> Start');
             }
+            doEstimateNumJobs = true;
         }
         if ((isActive || hasResults) != (oldIsActive || oldHasResults)) {
             if (isActive || hasResults) {
@@ -86,6 +106,10 @@ SPACESCANNER.refresh = function() {
             }
         }
 
+        if (doEstimateNumJobs) {
+            SPACESCANNER.settings.estimateNumJobs();
+        }
+        
         if (isActive) {
             $.ajax({
                 type: "GET",
@@ -201,5 +225,6 @@ SPACESCANNER.refresh = function() {
         refreshFull: refreshFull,
         isActive: function () { return isActive },
         showFinishedJobResults: showFinishedJobResults,
+        totalNumParams: function () { return totalNumParams },
     }
 }();

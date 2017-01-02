@@ -66,6 +66,96 @@ SPACESCANNER.settings = function() {
         });
     }
 
+    function factorial(n) {
+        if (n == 0 || n == 1) {
+            return 1;
+        }
+        return factorial(n - 1) * n;
+    }
+
+    function estimateNumJobsPerSet(paramIndex, totalNumParams) {
+        var type = $("#input-option-params" + paramIndex).val();
+        if (type === "zero" || type === "full-set" || type === "explicit") {
+            return 1;
+        }
+
+        var rs = parseInt($( "#input-option-param" + paramIndex + "-rangeStart" ).val());
+        var re = parseInt($( "#input-option-param" + paramIndex + "-rangeEnd" ).val());
+        if (!(rs > 0)) {
+            rs = 1;
+        }
+        if (type === "greedy" || type === "exhaustive") {
+            if (re > totalNumParams) {
+                re = totalNumParams;
+            }
+            if (rs > re) {
+                rs = re;
+            }
+        } else if (type === "greedy-reverse") {
+            if (rs > totalNumParams) {
+                rs = totalNumParams;
+            }
+            if (re > rs) {
+                rs = re;
+            }
+        }
+
+        var result = 0;
+        if (type === "exhaustive") {
+            var nf = factorial(totalNumParams);
+            for (var i = rs; i <= re; ++i) {
+                result += nf / (factorial(i) * factorial(totalNumParams - i));
+            }
+        }
+        if (type === "greedy") {
+            for (var i = rs; i <= re; ++i) {
+                result += i;
+            }
+        }
+        if (type === "greedy-reverse") {
+            for (var i = rs; i >= re; --i) {
+                result += i;
+            }
+        }
+        return result;
+    }
+            
+    function estimateNumJobs() {
+        if (!$( "#dialog-parameters" ).is(':visible')) {
+            return;
+        }
+        if($('#button-start-stop').hasClass('disabled')) {
+            $( "#params-count-row-enabled" ).hide();
+            $( "#params-count-row-disabled" ).show();
+            return;
+        }
+        $( "#params-count-row-disabled" ).hide();
+        $( "#params-count-row-enabled" ).show();
+
+        var totalNumParams = SPACESCANNER.refresh ? SPACESCANNER.refresh.totalNumParams() : 0;
+        if(!totalNumParams) {
+            $("#params-job-status").html("Estimated");
+            $("#params-job-number").html("<i>unknown</i>");
+            return;
+        }
+        var totalNumJobs = 0;
+        var parameters = [];
+        for (var i = 0; i < MAX_DISPLAY_PARAMS; ++i) {
+            // only if (1) visible and (2) the selected type is not "none"
+            if ($( "#row-params" + i ).is(':visible')) {
+                totalNumJobs += estimateNumJobsPerSet(i, totalNumParams);
+            }
+        }
+        $("#params-job-status").html("Estimated");
+        $("#params-job-number").html("" + totalNumJobs);
+    }
+
+    for (var i = 0; i < MAX_DISPLAY_PARAMS; ++i) {
+        $("#input-option-params" + i).change(estimateNumJobs);
+        $("#input-option-param" + i + "-rangeStart").change(estimateNumJobs);
+        $("#input-option-param" + i + "-rangeEnd").change(estimateNumJobs);
+    }
+
     function getd(obj, property, def) {
         return obj.hasOwnProperty(property) ? obj[property] : def;
     }
@@ -106,7 +196,6 @@ SPACESCANNER.settings = function() {
                 doRanges = true;
             } else if (type === "explicit") {
                 doNames = true;
-            } else if (type === "zero") {
             }
         }
 
@@ -177,7 +266,6 @@ SPACESCANNER.settings = function() {
             result.range = [rs, re];
         } else if (type === "explicit") {
             result.parameters = names;
-        } else if (type === "zero") {
         }
         return result;
     }
@@ -241,7 +329,7 @@ SPACESCANNER.settings = function() {
     }
 
     function saveSettings() {
-  // Performance settings
+        // Performance settings
         currentSettings["optimization"]["runsPerJob"] = parseInt($( "#input-option-runsPerJob" ).val());
         currentSettings["optimization"]["maxConcurrentRuns"] = parseInt($( "#input-option-maxConcurrentRuns" ).val());
         currentSettings["optimization"]["timeLimitSec"] = parseInt($( "#input-option-timeLimit" ).val());
@@ -253,7 +341,7 @@ SPACESCANNER.settings = function() {
   currentSettings["optimization"]["stagnationMaxDurationSec"] = parseInt($( "#input-option-stagnationMaxDurationSec" ).val());
         currentSettings["optimization"]["stagnationMaxProportionalDuration"] = $( "#input-option-stagnationMaxProportionalDuration" ).val() / 100.0;
 
-  // Method settings
+        // Method settings
         currentSettings["copasi"]["methods"] = $( "#input-option-methods" ).val().split(",").map(function(x) { return x.trim() });
         currentSettings["copasi"]["fallbackMethods"] = $( "#input-option-fallbackMethods" ).val().split(",").map(function(x) { return x.trim() });
 
@@ -265,7 +353,7 @@ SPACESCANNER.settings = function() {
         if ($( "#input-option-enableTotalOptimization" ).is(":checked"))  {
             currentSettings["optimization"]["optimalityRelativeError"] = $( "#input-option-optimalityRelativeError" ).val() / 100.0;
         } else {
-            currentSettings["optimization"]["optimalityRelativeError"] = 0.0; // disbales it
+            currentSettings["optimization"]["optimalityRelativeError"] = 0.0; // disables it
         }
         currentSettings["optimization"]["bestOfValue"] = parseInt($( "#input-option-bestOfValue" ).val());
 
@@ -312,5 +400,6 @@ SPACESCANNER.settings = function() {
         populateSettings : populateSettings,
         saveSettings : saveSettings,  
         displayParam : displayParam,
+        estimateNumJobs : estimateNumJobs,
     }
 }();

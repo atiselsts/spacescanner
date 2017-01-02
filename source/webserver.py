@@ -200,6 +200,7 @@ class HttpServerHandler(BaseHTTPRequestHandler):
             response = {"isActive" : sm.isActive(),
                         "isExecutable" : sm.isExecutable,
                         "totalNumJobs" : sm.getTotalNumJobs(),
+                        "totalNumParams" : sm.getTotalNumParams(),
                         "resultsPresent" : sm.getNumFinishedJobs() > 0}
         elif o.path == '/allstatus':
             response = sm.ioGetAllJobs(qs)

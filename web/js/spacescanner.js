@@ -92,6 +92,7 @@ var SPACESCANNER = function() {
         var id = $( this ).attr("id");
         var index = parseInt(id.substr(17));
         SPACESCANNER.settings.displayParam(null, index);
+        SPACESCANNER.settings.estimateNumJobs();
     }
     for (var i = 1; i < MAX_DISPLAY_PARAMS; ++i) {
         $("#button-del-params" + i).click(delParams);
@@ -107,6 +108,7 @@ var SPACESCANNER = function() {
         }
         if (found != -1) {
             SPACESCANNER.settings.displayParam({type: "exhaustive", range: [1, 1]}, found);
+            SPACESCANNER.settings.estimateNumJobs();
         } else {
             SPACESCANNER.notify("Max " + MAX_DISPLAY_PARAMS + " different parameter sets");
         }
@@ -120,6 +122,7 @@ var SPACESCANNER = function() {
         height: 400,
         open: function() {
             SPACESCANNER.settings.populateSettings();
+            SPACESCANNER.settings.estimateNumJobs();
         },
         buttons: [
             {

@@ -222,7 +222,7 @@
 
     <div class="form-row">
         <label for="input-option-runsPerJob" style="width:150px">Runs per job</label>
-        <input type="number" id="input-option-runsPerJob" style="width:100px !important" placeholder="4" min="1" title="The number of parallel COPASI executions per each job">
+        <input type="number" id="input-option-runsPerJob" style="width:100px !important" placeholder="2" min="1" title="The number of parallel COPASI executions per each job">
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <label for="input-option-maxConcurrentRuns" style="width:150px">Max concurrent runs</label>
         <input type="number" id="input-option-maxConcurrentRuns" style="width:100px !important" placeholder="4" min="1" title="The number of maximal simultaneous COPASI processes">
@@ -329,10 +329,15 @@
 <div id="dialog-parameters" class="hide">
     <!-- max 5 types of parameters -->
 
+    <div class="form-row">
+      <span id="params-count-row-disabled">No model file loaded on the server</span>
+      <span id="params-count-row-enabled" class="hide">The model has <span id="params-total-number"><i>unknown number of</i></span> parameters to optimize. <span id="params-job-status">Estimated</span> number of jobs: <span id="params-job-number"><i>unknown</i></span></span>
+    </div>
+
     <div class="form-row" id="row-params0">
         <label for="input-option-params0" style="width:120px">Parameter set:</label>
         <select id="input-option-params0" style="width:150px !important; color: black" title="Type of the parameter set">
-    <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
+          <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
           <option value="exhaustive" title="Exhaustive search of parameter combinations">Exhaustive</option>
           <option value="greedy" title="Greedy search of parameter combinations">Greedy</option>
           <option value="greedy-reverse" title="Greedy search, starting from the full set of parameters">Greedy from end</option>
@@ -361,7 +366,7 @@
         <label for="input-option-params1" style="width:120px">Parameter set:</label>
         <select id="input-option-params1" style="width:150px !important; color: black" title="Type of the parameter set">
           <option value="none">None</option>
-    <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
+          <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
           <option value="exhaustive" title="Exhaustive search of parameter combinations">Exhaustive</option>
           <option value="greedy" title="Greedy search of parameter combinations">Greedy</option>
           <option value="greedy-reverse" title="Greedy search, starting from the full set of parameters">Greedy from end</option>
@@ -421,7 +426,7 @@
         <label for="input-option-params3" style="width:120px">Parameter set:</label>
         <select id="input-option-params3" style="width:150px !important; color: black" title="Type of the parameter set">
           <option value="none">None</option>
-    <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
+          <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
           <option value="exhaustive" title="Exhaustive search of parameter combinations">Exhaustive</option>
           <option value="greedy" title="Greedy search of parameter combinations">Greedy</option>
           <option value="greedy-reverse" title="Greedy search, starting from the full set of parameters">Greedy from end</option>
@@ -451,7 +456,7 @@
         <label for="input-option-params4" style="width:120px">Parameter set:</label>
         <select id="input-option-params4" style="width:150px !important; color: black" title="Type of the parameter set">
           <option value="none">None</option>
-    <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
+          <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
           <option value="exhaustive" title="Exhaustive search of parameter combinations">Exhaustive</option>
           <option value="greedy" title="Greedy search of parameter combinations">Greedy</option>
           <option value="greedy-reverse" title="Greedy search, starting from the full set of parameters">Greedy from end</option>
@@ -480,9 +485,7 @@
     <ul class="actions">
       <li><a id="button-add-params" class="button small" title="Add new row of parameter sets">Add another</a></li>
     </ul>
-
 </div>
-
 
 <div id="dialog-export" class="hide">
     <div class="form-row">
@@ -502,10 +505,10 @@
 <script src="https://www.google.com/jsapi"></script>
 <script src="js/fileupload.js"></script>
 <script src="js/spacescanner.js"></script>
+<script src="js/settings.js"></script>
 <script src="js/display.js"></script>
 <script src="js/notifications.js"></script>
 <script src="js/refresh.js"></script>
-<script src="js/settings.js"></script>
 
 </body>
 </html>

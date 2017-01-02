@@ -101,7 +101,7 @@ SPACESCANNER.display = function() {
         jobData.addColumn('number'); //, 'Time');
         for (var j = 0; j < job.data.length; j++) {
             jobData.addColumn('number', 'Runner ' + (j+1));
-	    // start from the baseline (if present), not from zero
+            // start from the baseline (if present), not from zero
             runnerValues.push(baseline);
         }
 
