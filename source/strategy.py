@@ -181,11 +181,11 @@ class ParamSelectionExhaustive(ParamSelection):
     def getParameterSets(self):
         # optimize all combinations of k parameters
         step = -1 if self.isReverse else 1
-        paramCombinations = []
         for k in range(self.start, self.end + step, step):
             # terminate if good enough value already found
             if self.strategy.totalOptimizationPotentialReached(k - 1):
                 return
+            paramCombinations = []
             for it in itertools.combinations(self.allParameters, k):
                 paramCombinations.append(list(it))
             yield paramCombinations
@@ -297,6 +297,13 @@ class StrategyManager:
 
     def getTotalNumJobs(self):
         return max(self.nextJobID - 1, self.totalNumJobs)
+
+    def getTotalNumParams(self):
+        if self.copasiConfig is None:
+            return 0
+        if not self.copasiConfig.get("params"):
+            return 0
+        return len(self.copasiConfig.get("params"))
 
     def cleanup(self, args):
         sys.stderr.write("<spacescanner>: quitting...\n")
@@ -431,6 +438,7 @@ class StrategyManager:
             calculatedTarget = MIN_OF_VALUE
         targetValue = max(configTarget, calculatedTarget)
         if targetValue == MIN_OF_VALUE:
+            g.log(LOG_DEBUG, "TOP: no target value: {} {}".format(configTarget, calculatedTarget))
             return False
 
         achievedValue = MIN_OF_VALUE
@@ -446,6 +454,10 @@ class StrategyManager:
         else:
             requiredValue = (targetValue - self.topBaseline) * proportion + self.topBaseline
             isReached = achievedValue >= requiredValue
+
+        g.log(LOG_DEBUG, "TOP: {} parameters, {} achieved, {} required, {} target, {} configTarget, {} calculatedTarget".format(numParameters, achievedValue, requiredValue,
+                                                                                                                                targetValue, configTarget, calculatedTarget))
+
 
         if isReached:
             g.log(LOG_INFO, "Terminating optimization at {} parameters: good-enough-value criteria reached (required {})".format(numParameters, requiredValue))
@@ -581,6 +593,11 @@ class StrategyManager:
         g.log(LOG_INFO, "optimizing for zero parameters initially to find the baseline")
         spec = {"type" : "zero"}
         parameterSelections.append(ParamSelection.create(spec, self))
+
+        if self.isTOPEnabled():
+            # add all parameters: will define the target value
+            spec = {"type" : "full-set"}
+            parameterSelections.append(ParamSelection.create(spec, self))
 
         if g.getConfig("restartOnFile"):
             # Guess which parameters have not been optimized yet based on the .csv result file
