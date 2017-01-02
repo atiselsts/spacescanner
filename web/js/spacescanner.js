@@ -119,7 +119,7 @@ var SPACESCANNER = function() {
         modal: true,
         autoOpen: false,
         width: 880,
-        height: 400,
+        height: 510,
         open: function() {
             SPACESCANNER.settings.populateSettings();
             SPACESCANNER.settings.estimateNumJobs();
