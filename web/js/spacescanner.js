@@ -65,7 +65,7 @@ var SPACESCANNER = function() {
         title: "Optimization settings",
         modal: true,
         autoOpen: false,
-        width: 740,
+        width: 800,
         height: 600,
         open: function() {
             //SPACESCANNER.settings.querySettings();

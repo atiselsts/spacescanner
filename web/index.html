@@ -221,44 +221,44 @@
     <!-- Performance tab -->
 
     <div class="form-row">
-        <label for="input-option-runsPerJob" style="width:150px">Runs per job</label>
+        <label for="input-option-runsPerJob" style="width:200px">Runs per job</label>
         <input type="number" id="input-option-runsPerJob" style="width:100px !important" placeholder="2" min="1" title="The number of parallel COPASI executions per each job">
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <label for="input-option-maxConcurrentRuns" style="width:150px">Max concurrent runs</label>
+  <label for="input-option-maxConcurrentRuns" style="width:200px">Max concurrent runs</label>
         <input type="number" id="input-option-maxConcurrentRuns" style="width:100px !important" placeholder="4" min="1" title="The number of maximal simultaneous COPASI processes">
     </div>
 
     <br/>
 
     <div class="form-row">
-        <label for="input-option-timeLimit" style="width:150px">Time limit, sec</label>
-        <input type="number" id="input-option-timeLimit" style="width:100px !important"  placeholder="3600" min="10" title="Maximal CPU time for optimization in case the consensus criteria and other end conditions have not been reached">
+        <label for="input-option-timeLimit" style="width:200px">Max CPU time limit, sec</label>
+        <input type="number" id="input-option-timeLimit" style="width:100px !important"  placeholder="3600" min="10" title="Maximal CPU time for optimization in case neither consensus, nor stagnation, nor other termination conditions have been reached">
     </div>
 
 <!--    <br/> -->
     <div class="form-row">
-        <label for="input-option-consensusMinDurationSec" style="width:150px">Consensus minimal duration, sec</label>
+        <label for="input-option-consensusMinDurationSec" style="width:200px">Consensus delay, sec</label>
         <input type="number" id="input-option-consensusMinDurationSec" style="width:100px !important"  placeholder="300" min="10" title="The minimal time to continue after the consensus criteria has been reached">
 <!--    </div>
     <div class="form-row"> -->
 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
-        <label for="input-option-consensusMinProportionalDuration" style="width:216px">Consensus min proportional duration, %</label>
+        <label for="input-option-consensusMinProportionalDuration" style="width:216px">Consensus proportional delay, %</label>
         <input type="number" id="input-option-consensusMinProportionalDuration" style="width:100px !important" placeholder="15" min="0" title="The minimal time to continue after the consensus criteria has been reached, as a proportion of the runtime so-far">
     </div>
     <div class="form-row">
-        <label for="input-option-consensusRelativeError" style="width:150px">Consensus maximal relative error, %</label>
+        <label for="input-option-consensusRelativeError" style="width:200px">Consensus corridor, %</label>
         <input type="number" id="input-option-consensusRelativeError" style="width:100px !important"  placeholder="1" min="0" title="To determine whether the consensus criteria has been reached" step="0.1">
     </div>
 
      <div class="form-row">
-        <label for="input-option-stagnationMaxDurationSec" style="width:150px">Stagnation maximal duration, sec</label>
+        <label for="input-option-stagnationMaxDurationSec" style="width:200px">Stagnation delay, sec</label>
         <input type="number" id="input-option-stagnationMaxDurationSec" style="width:100px !important" placeholder="300" min="10" title="The maximal duration to continue when no runners are finding new Objective Function values">
 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
-        <label for="input-option-stagnationMaxProportionalDuration" style="width:216px">Stagnation max proportional duration, %</label>
+        <label for="input-option-stagnationMaxProportionalDuration" style="width:216px">Stagnation proportional delay, %</label>
         <input type="number" id="input-option-stagnationMaxProportionalDuration" style="width:100px !important" placeholder="15" min="0" title="The maximal duration to continue when no runners are finding new Objective Function values, as a proportion of the runtime so-far">
   </div>
   
@@ -282,7 +282,7 @@
     <div class="form-row">
         <label>&nbsp;</label>
         <input type="checkbox" id="input-option-methodParametersFromFile" style="display: inline-block; width: auto; vertical-align: top;" title="Take optimization method parameters from the SMBL input file">
-        <label for="input-option-methodParametersFromFile" style="width: 70%;">Optimization method parameters from file</label>
+        <label for="input-option-methodParametersFromFile" style="width: 70%;">Use optimization method parameters from the model file</label>
     </div>
     <div class="form-row">
         <label>&nbsp;</label>
@@ -298,16 +298,16 @@
     <div class="form-row">
         <label>&nbsp;</label>
         <input type="checkbox" id="input-option-enableTotalOptimization" style="display: inline-block; width: auto; vertical-align: top;" title="Enable stopping the optimization when a good value has been reached">
-        <label for="input-option-enableTotalOptimization" style="width: 70%;">Enable total optimization</label>
+        <label for="input-option-enableTotalOptimization" style="width: 70%;">Enable total optimization (TOP)</label>
     </div>
 
     <div class="form-row">
-        <label for="input-option-optimalityRelativeError" style="width:150px">Optimality relative error, %</label>
+        <label for="input-option-optimalityRelativeError" style="width:200px">Target fraction of TOP, %</label>
         <input type="number" id="input-option-optimalityRelativeError" style="width:100px !important" class="disabled" placeholder="10" min="0" title="Max difference between the optimal value and a satisfactory value, per cent" step="0.1">
     </div>
 
     <div class="form-row">
-        <label for="input-option-bestOfValue" style="width:150px">The optimal value (optional)</label>
+        <label for="input-option-bestOfValue" style="width:200px">Manually entered TOP value (optional)</label>
         <input type="number" id="input-option-bestOfValue" style="width:100px !important"  placeholder="10.00" title="Optional; all-parameter optimization value used if this is not set, the best of the two used if set" class="disabled" step="0.01">
     </div>
 
@@ -317,7 +317,7 @@
     <!-- Other tab -->
 
     <div class="form-row">
-      <label for="input-option-loglevel" style="width:150px">Output log level (1-4)</label>
+      <label for="input-option-loglevel" style="width:200px">Output log level (1-4)</label>
       Min <input type="range" id="input-option-loglevel" name="loglevel" style="width:300px" min="1" max="4" step="1" title="Console output level (higher means more output)"> Max
     </div>
           </div>
@@ -489,11 +489,11 @@
 
 <div id="dialog-export" class="hide">
     <div class="form-row">
-        <label for="input-export-totallimit" style="width:250px">Limit total number of results</label>
+        <label for="input-export-totallimit" style="width:310px">Limit total number of reported results</label>
         <input type="number" id="input-export-totallimit" style="width:120px !important" min="1" title="The number of the best results to export" placeholder="unlimited">
     </div>
     <div class="form-row">
-        <label for="input-export-paramlimit" style="width:250px">Limit per-number-of-parameters number of results</label>
+        <label for="input-export-paramlimit" style="width:310px">Limit per-number-of-parameters number of reported results</label>
         <input type="number" id="input-export-paramlimit" style="width:120px !important" min="1" title="The number of the best results per a number of parameters to export" placeholder="unlimited">
     </div>
 </div>
