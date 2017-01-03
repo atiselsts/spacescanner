@@ -3,23 +3,28 @@
 [![Build Status](https://travis-ci.org/atiselsts/spacescanner.svg)](https://travis-ci.org/atiselsts/spacescanner/branches)
 
 **SpaceScanner** features:
+
 * run multiple parallel optimization tasks on a biological model, and automatically terminate when the tasks have reached a consensus value;
 * display optimization history graphically for these parallel runs;
 * scan the space of the possible parameters sets to optimize, and determine the minimal subset of parameters that gives "good enough" results for a specific objective function and the minimal number of parameters required for a specific target value.
 
 SpaceScanner requires the following inputs:
+
 * a Copasi model file (`.sbml`)
 
 The file must include:
+
 * the objective function to optimize;
 * list of changeable parameters of the model with their minimal and maximal values;
 * the optimization methods to use and the configurations of these methods.
 
 SpaceScanner produces these global outputs:
+
 * a `.csv` file with the best (or all) optimization results
 * a `.log` file tracing the SpaceScanner execution history;
 
 as well as these outputs for each set of optimization parameters:
+
 * a `.txt` file for each of the several parallel optimization runs; the file includes the history of the Copasi optimization process and the end parameter values;
 * a Copasi model file for each if the optimization runs; in this file, the optimization parameters are listed to their best values.
 
@@ -28,6 +33,7 @@ SpaceScanner internally uses [Copasi](http://copasi.org) to execute the optimiza
 SpaceScanner at the moment supports greedy and exhaustive search strategies when looking for the minimal satisfying number of parameters. "Smarter" search strategies (e.g. global stochastic search, parameter sensitivity-informed search, MFA-value informed search) are planned as future additions.
 
 SpaceScanner is easy to use and configure. There are two ways how to work with SpaceScanner:
+
 * a command-line interface that expects a configuration file in JSON format as the only argument;
 * a web interface that allows the user to interactively configure, start, and stop Copasi optimizations, as well as see their results graphically.
 
@@ -47,6 +53,7 @@ SpaceScanner is easy to use and configure. There are two ways how to work with S
 There's no installation necessary. [Download](https://github.com/atiselsts/spacescanner/archive/master.zip) and extract the SpaceScanner source code. Alternatively, get it through Git: `git clone https://github.com/atiselsts/spacescanner.git`.
 
 **Prerequisites:**
+
 * Python (version 2.7);
 * `psutil` Python module. 
 
@@ -98,27 +105,29 @@ The configuration file contains a number of fields grouped in a number of sectio
 This section defines the model file and optimization methods to use.
 
 Fields:
-* modelFile - COPASI model file name; @SELF@ refers to SpaceScanner source directory
-* methods - list of optimization methods to use; the methods are selected sequentially, each subsequent one is selected when the previous ones fail; can contain a method more than once
-* fallbackMethods - list of optimization methods to use when a method fails to evaluate the objective function in given time; useful for e.g. highly constrained models on which many methods may not find any solutions at all
-* randomizeMethodSelection - whether to pick methods from the configuration randomly or in order (default: false)
-* methodParametersFromFile - whether to use optimization method parameters from COPASI model file (default: false)
+
+* `modelFile` - COPASI model file name; @SELF@ refers to SpaceScanner source directory
+* `methods` - list of optimization methods to use; the methods are selected sequentially, each subsequent one is selected when the previous ones fail; can contain a method more than once
+* `fallbackMethods` - list of optimization methods to use when a method fails to evaluate the objective function in given time; useful for e.g. highly constrained models on which many methods may not find any solutions at all
+* `randomizeMethodSelection` - whether to pick methods from the configuration randomly or in order (default: `false`)
+* `methodParametersFromFile` - whether to use optimization method parameters from COPASI model file (default: `false`)
 
 ### "optimization" section
 
 Defines maximal duration of optimization runs, termination criteria etc.
 
 Fields:
-* timeLimitSec - maximal CPU time for optimization in case the consensus criteria and other end conditions have not been reached (default: 600 sec)
-* consensusRelativeError - to determine whether the consensus criteria has been reached (default: 1%)
-* consensusAbsoluteError - to determine whether the consensus criteria has been reached (default: 1e-6)
-* consensusMinDurationSec - the minimal time to continue after the consensus criteria has been reached (default: 300 sec)
-* consensusMinProportionalDuration - the minimal time to continue after the consensus criteria has been reached as proportion of runtime so-far (default: 15%)
-* optimalityRelativeError - compared to already found solution (default: 0.9, range: (0.0  .. 1.0])
-* bestOfValue - known best value of an already found solution
-* restartFromBestValue - restart each subsequent method from the best point in the search space so far (default: true)
-* maxConcurrentRuns - how many COPASI processes to run by parallel (default: max(4, the number of CPU cores); range: [1 .. number of CPU cores])
-* runsPerJob - how many paraller COPASI executions per each job (i.e. a single set of parameters)
+
+* `timeLimitSec` - maximal CPU time for optimization in case the consensus criteria and other end conditions have not been reached (default: 600 sec)
+* `consensusRelativeError` - to determine whether the consensus criteria has been reached (default: 1%)
+* `consensusAbsoluteError` - to determine whether the consensus criteria has been reached (default: 1e-6)
+* `consensusMinDurationSec` - the minimal time to continue after the consensus criteria has been reached (default: 300 sec)
+* `consensusMinProportionalDuration` - the minimal time to continue after the consensus criteria has been reached as proportion of runtime so-far (default: 15%)
+* `optimalityRelativeError` - compared to already found solution (default: 0.9, range: (0.0  .. 1.0])
+* `bestOfValue` - known best value of an already found solution
+* `restartFromBestValue` - restart each subsequent method from the best point in the search space so far (default: `true`)
+* `maxConcurrentRuns` - how many COPASI processes to run by parallel (default: max(4, the number of CPU cores); range: [1 .. number of CPU cores])
+* `runsPerJob` - how many paraller COPASI executions per each job (i.e. a single set of parameters)
 
 ### "parameters" section
 
@@ -127,38 +136,42 @@ Defines the way how subsets of paramters are selected (optimization parameters t
 The section is an array of records of arbitrary length. If repeating or overlapping records are specified, an optimization job for a given subset of paramters is still run only once.
 
 Records may have the following type:
-* full-set - a single optimization job containing all parameters in the model
-* exhaustive - all possible combinations of `N` to `M` parameters. Field "range" defines the values of `N` and `M`. For example, `"range" : [1, 3]` selects `N` to be equal to 1, `M` to 3. `"range" : [2]` selects `N = M = 2`.
-* greedy - for `N` parameters, take the best set of `N-1` parameters and run all possible optimizations that add one parameter not yet in the set. Unless `N=1`, there must also be a record describing which strategy to use to for `N-1` parameter sets.
-* greedy-reverse - similar to "greedy", but takes away a single parameter from the best `N+1` paramter set instead of adding it.
-* explicit - the names of parameters to use are explicitly named in "parameters" field of the record.
+
+* `full-set` - a single optimization job containing all parameters in the model
+* `exhaustive - all` possible combinations of `N` to `M` parameters. Field "range" defines the values of `N` and `M`. For example, `"range" : [1, 3]` selects `N` to be equal to 1, `M` to 3. `"range" : [2]` selects `N = M = 2`.
+* `greedy` - for `N` parameters, take the best set of `N-1` parameters and run all possible optimizations that add one parameter not yet in the set. Unless `N=1`, there must also be a record describing which strategy to use to for `N-1` parameter sets.
+* `greedy-reverse` - similar to "greedy", but takes away a single parameter from the best `N+1` paramter set instead of adding it.
+* `explicit` - the names of parameters to use are explicitly named in "parameters" field of the record.
 
 By default, these records are present:
-* "full-set";
-* "exhaustive" with range [1..3];
-* "greedy" with range [4..8].
+
+* `full-set`;
+* `exhaustive` with range [1..3];
+* `greedy` with range [4..8].
 
 ### "web" section
 
 Web interface settings.
 
 Fields:
-* enable - whether to run the web interface (default: true). WARNING: access control is not supported by SpaceScanner! Enable this only in trusted environment.
-* port - http port number (default: 19000)
+
+* `enable` - whether to run the web interface (default: `true`). WARNING: access control is not supported by SpaceScanner! Enable this only in trusted environment.
+* `port` - http port number (default: 19000)
 
 ### "output" section
 
 Logging settings.
 
 Fields:
-* filename - the file name to use for optimization results (default: "results-<taskname>-<datetime>.csv")
-* loglevel - debug log level; from 0 to 4, higher means more messages (default: 2)
-* numberOfBestCombinations -  how many of the best parameter combinations to include in results for each number of parameters; 0 means unlimited (default: unlimited)
+
+* `filename` - the file name to use for optimization results (default: "results-<taskname>-<datetime>.csv")
+* `loglevel` - debug log level; from 0 to 4, higher means more messages (default: 2)
+* `numberOfBestCombinations` -  how many of the best parameter combinations to include in results for each number of parameters; 0 means unlimited (default: unlimited)
 
 ### Not in separate sections
 
-* restartOnFile - .csv file name on which to restart optimization runs, trying to complete timeouted jobs (default: null)
-* taskName - the global name of this optimization task
+* `restartOnFile` - .csv file name on which to restart optimization runs, trying to complete timeouted jobs (default: `null`)
+* `taskName` - the global name of this optimization task
 
 ### Example configuration file
 
