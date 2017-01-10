@@ -221,7 +221,7 @@
     <!-- Performance tab -->
 
     <div class="form-row">
-        <label for="input-option-runsPerJob" style="width:200px">Runs per job</label>
+        <label for="input-option-runsPerJob" style="width:200px">Parallel runs per job</label>
         <input type="number" id="input-option-runsPerJob" style="width:100px !important" placeholder="2" min="1" title="The number of parallel COPASI executions per each job">
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <label for="input-option-maxConcurrentRuns" style="width:200px">Max concurrent runs</label>
@@ -237,29 +237,29 @@
 
 <!--    <br/> -->
     <div class="form-row">
-        <label for="input-option-consensusMinDurationSec" style="width:200px">Consensus delay, sec</label>
-        <input type="number" id="input-option-consensusMinDurationSec" style="width:100px !important"  placeholder="300" min="10" title="The minimal time to continue after the consensus criteria has been reached">
+        <label for="input-option-consensusDelaySec" style="width:200px">Consensus delay, sec</label>
+        <input type="number" id="input-option-consensusDelaySec" style="width:100px !important"  placeholder="300" min="10" title="The minimal time to continue after the consensus criteria has been reached">
 <!--    </div>
     <div class="form-row"> -->
 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
-        <label for="input-option-consensusMinProportionalDuration" style="width:216px">Consensus proportional delay, %</label>
-        <input type="number" id="input-option-consensusMinProportionalDuration" style="width:100px !important" placeholder="15" min="0" title="The minimal time to continue after the consensus criteria has been reached, as a proportion of the runtime so-far">
+        <label for="input-option-consensusProportionalDelay" style="width:216px">Consensus proportional delay, %</label>
+        <input type="number" id="input-option-consensusProportionalDelay" style="width:100px !important" placeholder="15" min="0" title="The minimal time to continue after the consensus criteria has been reached, as a proportion of the runtime so-far">
     </div>
     <div class="form-row">
-        <label for="input-option-consensusRelativeError" style="width:200px">Consensus corridor, %</label>
-        <input type="number" id="input-option-consensusRelativeError" style="width:100px !important"  placeholder="1" min="0" title="To determine whether the consensus criteria has been reached" step="0.1">
+        <label for="input-option-consensusCorridor" style="width:200px">Consensus corridor, %</label>
+        <input type="number" id="input-option-consensusCorridor" style="width:100px !important"  placeholder="1" min="0" title="To determine whether the consensus criteria has been reached" step="0.1">
     </div>
 
      <div class="form-row">
-        <label for="input-option-stagnationMaxDurationSec" style="width:200px">Stagnation delay, sec</label>
-        <input type="number" id="input-option-stagnationMaxDurationSec" style="width:100px !important" placeholder="300" min="10" title="The maximal duration to continue when no runners are finding new Objective Function values">
+        <label for="input-option-stagnationDelaySec" style="width:200px">Stagnation delay, sec</label>
+        <input type="number" id="input-option-stagnationDelaySec" style="width:100px !important" placeholder="300" min="10" title="The maximal duration to continue when no runners are finding new Objective Function values">
 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
-        <label for="input-option-stagnationMaxProportionalDuration" style="width:216px">Stagnation proportional delay, %</label>
-        <input type="number" id="input-option-stagnationMaxProportionalDuration" style="width:100px !important" placeholder="15" min="0" title="The maximal duration to continue when no runners are finding new Objective Function values, as a proportion of the runtime so-far">
+        <label for="input-option-stagnationProportionalDelay" style="width:216px">Stagnation proportional delay, %</label>
+        <input type="number" id="input-option-stagnationProportionalDelay" style="width:100px !important" placeholder="15" min="0" title="The maximal duration to continue when no runners are finding new Objective Function values, as a proportion of the runtime so-far">
   </div>
   
           </div>
@@ -302,8 +302,8 @@
     </div>
 
     <div class="form-row">
-        <label for="input-option-optimalityRelativeError" style="width:200px">Target fraction of TOP, %</label>
-        <input type="number" id="input-option-optimalityRelativeError" style="width:100px !important" class="disabled" placeholder="10" min="0" title="Max difference between the optimal value and a satisfactory value, per cent" step="0.1">
+        <label for="input-option-targetFractionOfTOP" style="width:200px">Target fraction of TOP, %</label>
+        <input type="number" id="input-option-targetFractionOfTOP" style="width:100px !important" class="disabled" placeholder="10" min="0" title="Max difference between the optimal value and a satisfactory value, per cent" step="0.1">
     </div>
 
     <div class="form-row">

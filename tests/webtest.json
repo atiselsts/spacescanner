@@ -1,7 +1,7 @@
 {
     "optimization" : {
         "timeLimitSec" : 10,
-        "consensusMinDurationSec" : 10
+        "consensusDelaySec" : 10
     },
     "copasi" : {
         "modelFile" : "@SELF@/models/simple-6params.cps",

@@ -1,7 +1,7 @@
 {
     "optimization" : {
         "timeLimitSec" : 3600,
-        "consensusMinDurationSec" : 300,
+        "consensusDelaySec" : 300,
         "bestOfValue" : 12.73,
         "maxConcurrentRuns" : 8,
         "runsPerJob" : 4

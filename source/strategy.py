@@ -412,8 +412,8 @@ class StrategyManager:
             return len(self.finishedJobs)
 
     def isTOPEnabled(self):
-        optimality = g.getConfig("optimization.optimalityRelativeError")
-        if optimality is None or optimality == 0.0:
+        targetFraction = g.getConfig("optimization.targetFractionOfTOP")
+        if targetFraction is None or targetFraction == 0.0:
             # TOP is disabled
             return False
         # TOP is enabled
@@ -423,7 +423,7 @@ class StrategyManager:
         if not self.isTOPEnabled():
             return False
 
-        optimality = g.getConfig("optimization.optimalityRelativeError")
+        targetFraction = g.getConfig("optimization.targetFractionOfTOP")
 
         # calculate the target value, looking at both config and at the job with all parameters, if any
         try:
@@ -446,13 +446,12 @@ class StrategyManager:
             if joblist:
                 achievedValue = max(achievedValue, joblist[0].getBestOfValue())
 
-        proportion = 1.0 - float(optimality)
         isReached = False
         if self.topBaseline > targetValue:
             isReached = True
             requiredValue = targetValue
         else:
-            requiredValue = (targetValue - self.topBaseline) * proportion + self.topBaseline
+            requiredValue = (targetValue - self.topBaseline) * targetFraction + self.topBaseline
             isReached = achievedValue >= requiredValue
 
         g.log(LOG_DEBUG, "TOP: {} parameters, {} achieved, {} required, {} target, {} configTarget, {} calculatedTarget".format(numParameters, achievedValue, requiredValue,

@@ -6,7 +6,7 @@
     },
     "optimization" : {
         "timeLimitSec" : 10,
-        "consensusMinDurationSec" : 10
+        "consensusDelaySec" : 10
     },
     "parameters" : [
         {"type" : "explicit", "parameters" : ["GAPD"]}

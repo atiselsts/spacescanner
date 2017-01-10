@@ -4,8 +4,8 @@
     },
     "optimization" : {
         "timeLimitSec" : 10,
-        "consensusMinDurationSec" : 10,
-        "consensusRelativeError" : 0.0,
+        "consensusDelaySec" : 10,
+        "consensusCorridor" : 0.0,
         "consensusAbsoluteError" : -1.0
     },
     "parameters" : [

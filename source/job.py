@@ -125,7 +125,7 @@ class Job:
         # if no runners are active, quit
         if not any([r.isActive for r in self.runners]):
             if self.convergenceTime is not None:
-                minAbsoluteTime = float(g.getConfig("optimization.consensusMinDurationSec"))
+                minAbsoluteTime = float(g.getConfig("optimization.consensusDelaySec"))
                 # XXX: do not check the relative time here
                 if self.hasConsensus() and self.timeDiffExceeded(time.time() - self.convergenceTime, minAbsoluteTime):
                     # count COPASI termination as consensus in this case
@@ -195,8 +195,8 @@ class Job:
             # if the runners have converged for long enough time, quit
             else:
                 timeConverged = time.time() - self.convergenceTime
-                minAbsoluteTime = float(g.getConfig("optimization.consensusMinDurationSec"))
-                minRelativeTime = (time.time() - self.startTime) * float(g.getConfig("optimization.consensusMinProportionalDuration"))
+                minAbsoluteTime = float(g.getConfig("optimization.consensusDelaySec"))
+                minRelativeTime = (time.time() - self.startTime) * float(g.getConfig("optimization.consensusProportionalDelay"))
                 if self.timeDiffExceeded(timeConverged, minAbsoluteTime) and timeConverged > minRelativeTime:
                     g.log(LOG_INFO, "terminating {}: consensus reached".format(self.getName()))
                     for r in self.runners:
@@ -210,8 +210,8 @@ class Job:
 
             # check for stagnation's time limit
             timeStagnated = time.time() - self.lastOfUpdateTime
-            maxAbsoluteTime = float(g.getConfig("optimization.stagnationMaxDurationSec"))
-            maxRelativeTime = (time.time() - self.startTime) * float(g.getConfig("optimization.stagnationMaxProportionalDuration"))
+            maxAbsoluteTime = float(g.getConfig("optimization.stagnationDelaySec"))
+            maxRelativeTime = (time.time() - self.startTime) * float(g.getConfig("optimization.stagnationProportionalDelay"))
 
             # XXX: specialcase for the non-parameters job: quit it quite quickly (in 10 seconds for each method)
             if not self.areParametersChangeable:
@@ -248,7 +248,7 @@ class Job:
     # find min and max values and check that they are in 1% range
     def hasConsensus(self):
         epsilonAbs = float(g.getConfig("optimization.consensusAbsoluteError"))
-        epsilonRel = float(g.getConfig("optimization.consensusRelativeError"))
+        epsilonRel = float(g.getConfig("optimization.consensusCorridor"))
 
         if self.convergenceTime is None:
             minV = min([r.ofValue for r in self.runners])

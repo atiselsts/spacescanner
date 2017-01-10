@@ -1,7 +1,7 @@
 {
     "optimization" : {
-        "consensusMinDurationSec" : 5,
-        "consensusRelativeError" : 0.5
+        "consensusDelaySec" : 5,
+        "consensusCorridor" : 0.5
     },
     "copasi" : {
         "modelFile" : "@SELF@/models/simple-6params.cps"

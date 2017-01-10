@@ -6,7 +6,7 @@ SPACESCANNER.settings = function() {
     var defaultSettings = {
         "optimization" : {
             "timeLimitSec" : 10,
-            "consensusMinDurationSec" : 10
+            "consensusDelaySec" : 10
         },
         "copasi" : {
             "modelFile" : "@SELF@/tmpweb/model.cps",
@@ -39,6 +39,9 @@ SPACESCANNER.settings = function() {
                 if ($( "#dialog-settings" ).is(':visible')) {
                     populateSettings();
                 }
+                var relativeError = getd(currentSettings["optimization"], "targetFractionOfTOP", 0.0);
+                // Update top state depending on whether enabled
+                updateTOPState(relativeError && relativeError !== 0.0);
             },
             error: function (data, textStatus, xhr) {
                 console.log("get config error: " + JSON.stringify(data) + " " + textStatus);
@@ -161,15 +164,20 @@ SPACESCANNER.settings = function() {
     }
 
     function updateTOPState(enable) {
-        if (enable) {
-            $( "#input-option-enableTotalOptimization" ).prop("checked", true);
-            $( "#input-option-optimalityRelativeError" ).prop('disabled', false);
-            $( "#input-option-bestOfValue" ).prop('disabled', false);
-        } else {
-            $( "#input-option-enableTotalOptimization" ).prop("checked", false);
-            $( "#input-option-optimalityRelativeError" ).prop('disabled', true);
-            $( "#input-option-bestOfValue" ).prop('disabled', true);
+        if ($( "#dialog-settings" ).is(':visible')) {
+            if (enable) {
+                $( "#input-option-enableTotalOptimization" ).prop("checked", true);
+                $( "#input-option-targetFractionOfTOP" ).prop('disabled', false);
+                $( "#input-option-bestOfValue" ).prop('disabled', false);
+            } else {
+                $( "#input-option-enableTotalOptimization" ).prop("checked", false);
+                $( "#input-option-targetFractionOfTOP" ).prop('disabled', true);
+                $( "#input-option-bestOfValue" ).prop('disabled', true);
+            }
         }
+
+        /* Set the global button state to the inverse of "enable" */
+        $( "#button-parameters" ).prop('disabled', enable);
     }
 
     function toPercent(x) {
@@ -271,22 +279,22 @@ SPACESCANNER.settings = function() {
     }
 
     function populateSettings() {
-  // Performance settings
+        // Performance settings
         $( "#input-option-runsPerJob" ).val(getd(currentSettings["optimization"], "runsPerJob", 4));
         $( "#input-option-maxConcurrentRuns" ).val(getd(currentSettings["optimization"], "maxConcurrentRuns", 4));
         $( "#input-option-timeLimit" ).val(getd(currentSettings["optimization"], "timeLimitSec", 3600));
 
-        $( "#input-option-consensusMinDurationSec" ).val(getd(currentSettings["optimization"], "consensusMinDurationSec", 300));
-        $( "#input-option-consensusMinProportionalDuration" ).val(
-            toPercent(getd(currentSettings["optimization"], "consensusMinProportionalDuration", 0.15)));
-        $( "#input-option-consensusRelativeError" ).val(
-            toPercent(getd(currentSettings["optimization"], "consensusRelativeError", 0.01)));
+        $( "#input-option-consensusDelaySec" ).val(getd(currentSettings["optimization"], "consensusDelaySec", 300));
+        $( "#input-option-consensusProportionalDelay" ).val(
+            toPercent(getd(currentSettings["optimization"], "consensusProportionalDelay", 0.15)));
+        $( "#input-option-consensusCorridor" ).val(
+            toPercent(getd(currentSettings["optimization"], "consensusCorridor", 0.01)));
 
-        $( "#input-option-stagnationMaxDurationSec" ).val(getd(currentSettings["optimization"], "stagnationMaxDurationSec", 300));
-        $( "#input-option-stagnationMaxProportionalDuration" ).val(
-            toPercent(getd(currentSettings["optimization"], "stagnationMaxProportionalDuration", 0.15)));
+        $( "#input-option-stagnationDelaySec" ).val(getd(currentSettings["optimization"], "stagnationDelaySec", 300));
+        $( "#input-option-stagnationProportionalDelay" ).val(
+            toPercent(getd(currentSettings["optimization"], "stagnationProportionalDelay", 0.15)));
 
-  // Method settings  
+        // Method settings
         $( "#input-option-methods" ).val(
             getd(currentSettings["copasi"], "methods", []).join());
         $( "#input-option-fallbackMethods" ).val(
@@ -299,17 +307,17 @@ SPACESCANNER.settings = function() {
             getd(currentSettings["optimization"], "restartFromBestValue", true));
 
         // Total optimization settings
-        var relativeError = getd(currentSettings["optimization"], "optimalityRelativeError", 0.0);
+        var relativeError = getd(currentSettings["optimization"], "targetFractionOfTOP", 0.0);
 
         if (relativeError && relativeError !== 0.0) {
             updateTOPState(true);
-            $( "#input-option-optimalityRelativeError" ).val(
-                toPercent(getd(currentSettings["optimization"], "optimalityRelativeError", 0.0)));
+            $( "#input-option-targetFractionOfTOP" ).val(
+                toPercent(getd(currentSettings["optimization"], "targetFractionOfTOP", 0.0)));
             $( "#input-option-bestOfValue" ).val(
                 getd(currentSettings["optimization"], "bestOfValue", 0.0));
         } else {
             updateTOPState(false);
-            $( "#input-option-optimalityRelativeError" ).val("");
+            $( "#input-option-targetFractionOfTOP" ).val("");
             $( "#input-option-bestOfValue" ).val("");
         }
 
@@ -334,12 +342,12 @@ SPACESCANNER.settings = function() {
         currentSettings["optimization"]["maxConcurrentRuns"] = parseInt($( "#input-option-maxConcurrentRuns" ).val());
         currentSettings["optimization"]["timeLimitSec"] = parseInt($( "#input-option-timeLimit" ).val());
 
-        currentSettings["optimization"]["consensusMinDurationSec"] = parseInt($( "#input-option-consensusMinDurationSec" ).val());
-        currentSettings["optimization"]["consensusMinProportionalDuration"] = $( "#input-option-consensusMinProportionalDuration" ).val() / 100.0;
-        currentSettings["optimization"]["consensusRelativeError"] = $( "#input-option-consensusRelativeError" ).val() / 100.0;
+        currentSettings["optimization"]["consensusDelaySec"] = parseInt($( "#input-option-consensusDelaySec" ).val());
+        currentSettings["optimization"]["consensusProportionalDelay"] = $( "#input-option-consensusProportionalDelay" ).val() / 100.0;
+        currentSettings["optimization"]["consensusCorridor"] = $( "#input-option-consensusCorridor" ).val() / 100.0;
 
-  currentSettings["optimization"]["stagnationMaxDurationSec"] = parseInt($( "#input-option-stagnationMaxDurationSec" ).val());
-        currentSettings["optimization"]["stagnationMaxProportionalDuration"] = $( "#input-option-stagnationMaxProportionalDuration" ).val() / 100.0;
+  currentSettings["optimization"]["stagnationDelaySec"] = parseInt($( "#input-option-stagnationDelaySec" ).val());
+        currentSettings["optimization"]["stagnationProportionalDelay"] = $( "#input-option-stagnationProportionalDelay" ).val() / 100.0;
 
         // Method settings
         currentSettings["copasi"]["methods"] = $( "#input-option-methods" ).val().split(",").map(function(x) { return x.trim() });
@@ -351,9 +359,9 @@ SPACESCANNER.settings = function() {
 
         // Total optimization settings
         if ($( "#input-option-enableTotalOptimization" ).is(":checked"))  {
-            currentSettings["optimization"]["optimalityRelativeError"] = $( "#input-option-optimalityRelativeError" ).val() / 100.0;
+            currentSettings["optimization"]["targetFractionOfTOP"] = $( "#input-option-targetFractionOfTOP" ).val() / 100.0;
         } else {
-            currentSettings["optimization"]["optimalityRelativeError"] = 0.0; // disables it
+            currentSettings["optimization"]["targetFractionOfTOP"] = 0.0; // disables it
         }
         currentSettings["optimization"]["bestOfValue"] = parseInt($( "#input-option-bestOfValue" ).val());
 
@@ -374,7 +382,17 @@ SPACESCANNER.settings = function() {
             }
             currentSettings["parameters"] = parameters;
         }
+
+        if (currentSettings["optimization"]["targetFractionOfTOP"] != 0) {
+            /* TOP enabled; set default params */
+            currentSettings["parameters"] = [
+                {"type" : "full-set"},
+                {"type" : "exhaustive", "range" : [1, 1000]}
+            ];
+        }
     }
+
+    updateTOPState(false); /* Unchecked by default */
 
     $( "#input-option-enableTotalOptimization" ).on("click", function() {
         updateTOPState($( this ).is(":checked"));

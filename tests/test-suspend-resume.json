@@ -2,7 +2,7 @@
     "optimization" : {
         "timeLimitSec" : 20,
         "runsPerJob" : 3,
-        "consensusMinDurationSec" : 20
+        "consensusDelaySec" : 20
     },
     "copasi" : {
         "modelFile" : "@SELF@/models/simple-6params.cps",

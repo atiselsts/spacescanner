@@ -9,13 +9,13 @@
     },
     "optimization" : {
         "timeLimitSec" : 60,
-        "consensusRelativeError" : 0.01,
+        "consensusCorridor" : 0.01,
         "consensusAbsoluteError" : 1e-6,
-        "consensusMinDurationSec" : 60,
-        "consensusMinProportionalDuration" : 0.15,
-	"stagnationMaxDurationSec" : 60,
-        "stagnationMaxProportionalDuration" : 0.15,
-        "optimalityRelativeError" : 0.1,
+        "consensusDelaySec" : 60,
+        "consensusProportionalDelay" : 0.15,
+        "stagnationDelaySec" : 60,
+        "stagnationProportionalDelay" : 0.15,
+        "targetFractionOfTOP" : 0.0,
         "bestOfValue" : -Infinity,
         "restartFromBestValue" : true,
         "maxConcurrentRuns" : 4,
@@ -28,13 +28,13 @@
     ],
     "restartOnFile" : null,
     "web" : {
-	"enable" : true,
-	"port" : 19000
+        "enable" : true,
+        "port" : 19000
     },
     "output" : {
         "filename" : "results.csv",
         "loglevel" : 2,
-	"numberOfBestCombinations" : 0
+        "numberOfBestCombinations" : 0
     },
     "taskName" : null
 }

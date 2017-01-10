@@ -1,8 +1,8 @@
 {
     "optimization" : {
-        "consensusMinDurationSec" : 5,
-        "consensusRelativeError" : 0.9,
-        "optimalityRelativeError" : 0.7,
+        "consensusDelaySec" : 5,
+        "consensusCorridor" : 0.9,
+        "targetFractionOfTOP" : 0.3,
         "bestOfValue" : 100
     },
     "copasi" : {

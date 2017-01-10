@@ -62,13 +62,13 @@ def defaultConfigInitialize():
     DEFCFG[("copasi", "parameters")] = ConfigFileField([]) # all from copasi file
 
     DEFCFG[("optimization", "timeLimitSec")] = ConfigFileField(600)
-    DEFCFG[("optimization", "consensusRelativeError")] = ConfigFileField(0.01)
+    DEFCFG[("optimization", "consensusCorridor")] = ConfigFileField(0.01)
     DEFCFG[("optimization", "consensusAbsoluteError")] = ConfigFileField(1e-6)
-    DEFCFG[("optimization", "consensusMinDurationSec")] = ConfigFileField(300)
-    DEFCFG[("optimization", "consensusMinProportionalDuration")] = ConfigFileField(0.15) # 15% of total run's time
-    DEFCFG[("optimization", "stagnationMaxDurationSec")] = ConfigFileField(300)
-    DEFCFG[("optimization", "stagnationMaxProportionalDuration")] = ConfigFileField(0.15) # 15% of total run's time
-    DEFCFG[("optimization", "optimalityRelativeError")] = ConfigFileField(0.0) # set to 0.0 to disable this
+    DEFCFG[("optimization", "consensusDelaySec")] = ConfigFileField(300)
+    DEFCFG[("optimization", "consensusProportionalDelay")] = ConfigFileField(0.15) # 15% of total run's time
+    DEFCFG[("optimization", "stagnationDelaySec")] = ConfigFileField(300)
+    DEFCFG[("optimization", "stagnationProportionalDelay")] = ConfigFileField(0.15) # 15% of total run's time
+    DEFCFG[("optimization", "targetFractionOfTOP")] = ConfigFileField(0.0) # set to 0.0 to disable this
     DEFCFG[("optimization", "bestOfValue")] = ConfigFileField(float("-inf"))
     DEFCFG[("optimization", "restartFromBestValue")] = ConfigFileField( True) # if yes, each next method will start from the best parameter values so far
     DEFCFG[("optimization", "maxConcurrentRuns")] = ConfigFileField(4)

@@ -1,7 +1,7 @@
 {
     "optimization" : {
         "timeLimitSec" : 60,
-        "consensusMinDurationSec" : 20,
+        "consensusDelaySec" : 20,
         "consensusAbsoluteError" : 0.1,
         "runsPerJob" : 4
     },

@@ -4,68 +4,68 @@
 //
 {
     "copasi" : {
-	// COPASI model file name; @SELF@ refers to SpaceScanner source directory
+        // COPASI model file name; @SELF@ refers to SpaceScanner source directory
         "modelFile" : "@SELF@/models/simple-6params.cps",
-	// which and how many methods to use; can contain a method more than once
+        // which and how many methods to use; can contain a method more than once
         "methods" : ["ParticleSwarm", "GeneticAlgorithm", "GeneticAlgorithmSR", "EvolutionaryProgram", "EvolutionaryStrategySR", "ScatterSearch", "SimulatedAnnealing"],
-	// which and how many methods to use when a method fails to evaluate the objective function in given time
+        // which and how many methods to use when a method fails to evaluate the objective function in given time
         "fallbackMethods" : ["GeneticAlgorithmSR", "EvolutionaryStrategySR"],
-	// whether to pick methods from the configuration randomly or in order (default: false)
+        // whether to pick methods from the configuration randomly or in order (default: false)
         "randomizeMethodSelection" : false,
-	// whether to use optimization method parameters from COPASI model file (default: false)
+        // whether to use optimization method parameters from COPASI model file (default: false)
         "methodParametersFromFile" : false,
     },
     "optimization" : {
-	// maximal CPU time for optimization in case the consensus criteria and other end conditions have not been reached (default: 600 sec)
+        // maximal CPU time for optimization in case the consensus criteria and other end conditions have not been reached (default: 600 sec)
         "timeLimitSec" : 60,
-	// to determine whether the consensus criteria has been reached (default: 1%)
-        "consensusRelativeError" : 0.01,
-	// to determine whether the consensus criteria has been reached (default: 1e-6)
+        // to determine whether the consensus criteria has been reached (default: 1%)
+        "consensusCorridor" : 0.01,
+        // to determine whether the consensus criteria has been reached (default: 1e-6)
         "consensusAbsoluteError" : 1e-6,
-	// the minimal time to continue after the consensus criteria has been reached (default: 300 sec)
-        "consensusMinDurationSec" : 300,
-	// the minimal time to continue after the consensus criteria has been reached, as proportion of runtime so-far (default: 15%)
-        "consensusMinProportionalDuration" : 0.15,
-	// the minimal time to continue when no values are changing (default: 300 sec)
-        "stagnationMaxDurationSec" : 300,
-	// the minimal time to continue when no values are changing, as proportion of runtime so-far (default: 15%)
-        "stagnationMaxProportionalDuration" : 0.15,
-	// compared to already found solution (default: 0.9, range: (0.0  .. 1.0])
-        "optimalityRelativeError" : 0.1,
-	// known best value of an already found solution
+        // the minimal time to continue after the consensus criteria has been reached (default: 300 sec)
+        "consensusDelaySec" : 300,
+        // the minimal time to continue after the consensus criteria has been reached, as proportion of the runtime so-far (default: 15%)
+        "consensusProportionalDelay" : 0.15,
+        // the maximal time to continue when no values are changing (default: 300 sec)
+        "stagnationDelaySec" : 300,
+        // the maximal time to continue when no values are changing, as proportion of the runtime so-far (default: 15%)
+        "stagnationProportionalDelay" : 0.15,
+        // compared to the full-set optimization result or the user-defined TOP value (default: 0.0 (disabled), range: [0.0 .. 1.0])
+        "targetFractionOfTOP" : 0.0,
+        // the user-defined best (TOP) optimization function's value
         "bestOfValue" : -Infinity,
-	// restart each subsequent method from the best point in the search space so far (default: true)
+        // restart each subsequent method from the best point in the search space so far (default: true)
         "restartFromBestValue" : true,
-	// how many COPASI processes to run by parallel (default: max(4, the number of CPU cores); range: [1 .. number of CPU cores])
+        // how many COPASI processes to run by parallel (default: max(4, the number of CPU cores); range: [1 .. number of CPU cores])
         "maxConcurrentRuns" : 4,
-	// how many paraller COPASI executions per each job (i.e. a single set of parameters)
+        // how many paraller COPASI executions per each job (i.e. a single set of parameters)
         "runsPerJob" : 2
     },
     // .csv file name on which to restart optimization runs, trying to complete timeouted jobs (default: null)
     "restartOnFile" : null,
     // parameter ranges which to use for optimization
     "parameters" : [
-	// an optimization the full set of parameters included (default)
+        // an optimization the full set of parameters included (default)
         {"type" : "full-set"},
- 	// an optimization with exhaustive selection of 1 to 3 parameters (default)
+        // an optimization with exhaustive selection of 1 to 3 parameters (default)
         {"type" : "exhaustive", "range" : [1, 3]},
-	// an optimization with greedy selection of 4 to 8 parameters (default)
+        // an optimization with greedy selection of 4 to 8 parameters (default)
         {"type" : "greedy", "range" : [4, 8]}
     ],
     "web" : {
-	// whether to run the web interface (default: true)
-	// WARNING: access control is not supported by SpaceScanner!
-	// Enable this only in trusted environment.
+        // whether to run the web interface (default: true)
+        // WARNING: access control is not supported by SpaceScanner!
+        // Enable this only in trusted environment.
         "enable" : true,
-	// http port number (default: 19000)
+        // http port number (default: 19000)
         "port" : 19000
     },
     "output" : {
-	// optimization results file name (default: "results-<taskname>-<datetime>.csv")
+        // optimization results file name (default: "results-<taskname>-<datetime>.csv")
         "filename" : "results.csv",
-	// debug log level; from 0 to 4, higher means more messages (default: 2)
+        // debug log level; from 0 to 4, higher means more messages (default: 2)
         "loglevel" : 2,
-	// how many of the best parameter combinations to include in results for each number of parameters; 0 means unlimited (default: unlimited)
+        // how many of the best parameter combinations to include in results for each number of parameters; 0 means unlimited (default: unlimited)
         "numberOfBestCombinations" : 0
     },
     // the global name of this optimization task

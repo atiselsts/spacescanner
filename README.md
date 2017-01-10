@@ -119,12 +119,14 @@ Defines maximal duration of optimization runs, termination criteria etc.
 Fields:
 
 * `timeLimitSec` - maximal CPU time for optimization in case the consensus criteria and other end conditions have not been reached (default: 600 sec)
-* `consensusRelativeError` - to determine whether the consensus criteria has been reached (default: 1%)
+* `consensusCorridor` - to determine whether the consensus criteria has been reached (default: 1%)
 * `consensusAbsoluteError` - to determine whether the consensus criteria has been reached (default: 1e-6)
-* `consensusMinDurationSec` - the minimal time to continue after the consensus criteria has been reached (default: 300 sec)
-* `consensusMinProportionalDuration` - the minimal time to continue after the consensus criteria has been reached as proportion of runtime so-far (default: 15%)
-* `optimalityRelativeError` - compared to already found solution (default: 0.9, range: (0.0  .. 1.0])
-* `bestOfValue` - known best value of an already found solution
+* `consensusDelaySec` - the minimal time to continue after the consensus criteria has been reached (default: 300 sec)
+* `consensusProportionalDelay` - the minimal time to continue after the consensus criteria has been reached as proportion of the runtime so-far (default: 15%)
+* `stagnationDelaySec` - the maximal time to continue when no values are changing (default: 300 sec)
+* `stagnationProportionalDelay` - the maximal time to continue when no values are changing, as proportion of the runtime so-far (default: 15%)
+* `targetFractionOfTOP` - compared to the full-set optimization result or the user-defined TOP value (default: 0.0 (i.e., disabled), range: [0.0 .. 1.0])
+* `bestOfValue` - the user-defined best (TOP) optimization function's value
 * `restartFromBestValue` - restart each subsequent method from the best point in the search space so far (default: `true`)
 * `maxConcurrentRuns` - how many COPASI processes to run by parallel (default: max(4, the number of CPU cores); range: [1 .. number of CPU cores])
 * `runsPerJob` - how many paraller COPASI executions per each job (i.e. a single set of parameters)
@@ -186,11 +188,11 @@ Fields:
     },
     "optimization" : {
         "timeLimitSec" : 60,
-        "consensusRelativeError" : 0.01,
+        "consensusCorridor" : 0.01,
         "consensusAbsoluteError" : 1e-6,
-        "consensusMinDurationSec" : 60,
-        "consensusMinProportionalDuration" : 0.15,
-        "optimalityRelativeError" : 0.1,
+        "consensusDelaySec" : 60,
+        "consensusProportionalDelay" : 0.15,
+        "targetFractionOfTOP" : 0.9,
         "bestOfValue" : -Infinity,
         "restartFromBestValue" : true,
         "maxConcurrentRuns" : 4,

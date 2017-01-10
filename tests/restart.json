@@ -1,9 +1,9 @@
 {
     "optimization" : {
         "timeLimitSec" : 30,
-        "consensusMinDurationSec" : 5,
-	"consensusMinProportionalDuration" : 0.15,
-        "optimalityRelativeError" : 0.5,
+        "consensusDelaySec" : 5,
+	"consensusProportionalDelay" : 0.15,
+        "targetFractionOfTOP" : 0.5,
         "maxConcurrentRuns" : 4,
         "runsPerJob" : 2
     },

@@ -1,7 +1,7 @@
 {
     "optimization" : {
         "timeLimitSec" : 10,
-        "consensusMinDurationSec" : 5
+        "consensusDelaySec" : 5
     },
     "copasi" : {
         "modelFile" : "@SELF@/models/complex.cps",
