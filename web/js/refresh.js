@@ -188,6 +188,10 @@ SPACESCANNER.refresh = function() {
         var s = "";
         for (var i = 0; i < data.length; ++i) {
             var job = data[i];
+            if (job.id === 0) {
+                // Do not show the zero-th job; it's for baseline value only
+                continue;
+            }
             var status = job.active ? "running" : job.reason;
             var params = "";
             for (var j = 0; j < job.parameters.length; ++j) {
@@ -205,7 +209,7 @@ SPACESCANNER.refresh = function() {
                 + "Max CPU time: " + (Math.round(10 * job.cpu) / 10.0) + " sec / "
                 + "Total CPU time: " + (Math.round(10 * job.totalCpu) / 10.0) + " sec / "
                 + "Status: " + status + " / "
-                + "Method: " + job.method + " / "
+                + "Final method: " + (job.methods && job.methods.length ? job.methods[0] : "") + " / "
                 + params + "\n";
             s += '</div><br/>\n'
         }

@@ -45,6 +45,7 @@ class Job:
         assert len(self.methods)
         self.fallbackMethods = copy.copy(g.getConfig("copasi.fallbackMethods"))
         self.currentMethod = None
+        self.pastMethods = []
         self.isUsingFallback = False
         self.runners = []
         self.oldRunners = []
@@ -69,6 +70,11 @@ class Job:
 
     def getName(self):
         return "job {}".format(self.id)
+
+
+    def getMethods(self):
+        # in reverse chronological order
+        return [self.currentMethod] + self.pastMethods[::-1]
 
 
     def execute(self, workDir, copasiFile):
@@ -182,7 +188,7 @@ class Job:
                 if r.isActive:
                     r.terminationReason = TERMINATION_REASON_CPU_TIME_LIMIT
                     g.log(LOG_INFO, "terminating {}: CPU time limit exceeded ({} vs. {})".format(
-                        r.getName(), r.currentCpuTime, cpuTimeLimit))
+                        r.getName(), maxCpuTime, cpuTimeLimit))
             return
 
         # check if the runs have reached consensus
@@ -305,6 +311,7 @@ class Job:
                 self.pool.finishJob(self)
                 return
 
+            self.pastMethods.append(self.currentMethod)
             if bool(g.getConfig("optimization.randomizeMethodSelection")):
                 self.currentMethod = random.choice(self.fallbackMethods)
             else:
@@ -325,6 +332,7 @@ class Job:
             return
 
         # go for the next method
+        self.pastMethods.append(self.currentMethod)
         if bool(g.getConfig("optimization.randomizeMethodSelection")):
             self.currentMethod = random.choice(self.methods)
         else:
@@ -444,7 +452,7 @@ class Job:
             "totalCpu" : totalCpuTime,
             "active" : isActive,
             "reason" : reasonToStr(terminationReason),
-            "method" : self.currentMethod,
+            "methods" : self.getMethods(),
             "parameters" : self.unquoteParams()
         }
 
@@ -494,10 +502,12 @@ class Job:
             reply.append({"id" : runnerID, "values" : ofValues, 
                           "time" : cpuTimes, "active" : runner.isActive})
 
+        (bestOfValue, _, maxCpuTime, totalCpuTime, isActive, terminationReason) = self.getStatus()
+
         return {"id" : self.id,
                 "data" : reply,
-                "methods" : self.methods,
-                "method" : self.currentMethod,
+                "methods" : self.getMethods(),
                 "active" : isActive,
+                "reason" : reasonToStr(terminationReason),
                 "parameters": self.unquoteParams()}
 

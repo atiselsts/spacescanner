@@ -5,16 +5,8 @@ SPACESCANNER.display = function() {
     var MAX_NUM_CHARTS = 4;
     var button2jobID = [];
 
-    // this stores the last method name for each chart
-    var methods = []; /* TODO: since jobs can switch charts, this can show wrong results! */
-
-    // reset the "methods" array
-    function resetMethods() {
-        methods = [];
-        for (var i = 0; i < MAX_NUM_CHARTS; ++i) {
-            methods.push(null);
-        }
-    }
+    // this stores the last method name for each job
+    var methods = {};
 
     // onload callback
     function setupChart() {
@@ -23,8 +15,11 @@ SPACESCANNER.display = function() {
                 $('#job' + i + '_chart').get(0)));
             button2jobID.push(0); // no mapping
         }
-
         resetMethods();
+    }
+
+    function resetMethods() {
+        methods = {};
     }
 
     function isReady() {
@@ -32,6 +27,11 @@ SPACESCANNER.display = function() {
     }
 
     function drawCharts(totalNumJobs, baseline, allData) {
+        // copy methods
+        var oldMethods = jQuery.extend({}, methods)
+        // reset methods
+        methods = {};
+
         if (!isReady()) {
             console.log("charts are not ready");
             return;
@@ -50,6 +50,15 @@ SPACESCANNER.display = function() {
         if (allData.length > MAX_NUM_CHARTS) {
             SPACESCANNER.notify("Too many active jobs, showing only first four");
         }
+
+        for(var key in methods) {
+            if (key in oldMethods) {
+                if(oldMethods[key] != methods[key]) {
+                    SPACESCANNER.notify("Switching job " + key.substr(4)
+                                        + " to method " + methods[key]);
+                }
+            }
+        }
     }
 
     function showChart(i, chart, job, totalNumJobs, baseline) {
@@ -64,23 +73,36 @@ SPACESCANNER.display = function() {
                 params += ", ";
             }
         }
+        var method = "";
+        var pastMethods = "";
+        for (var j = 0; j < job.methods.length; ++j) {
+            if(j === 0) {
+                method = job.methods[j];
+            } else {
+                pastMethods += job.methods[j];
+                if (j < job.methods.length - 1) {
+                    pastMethods += ", ";
+                }
+            }
+        }
 
         $("#job" + i + "_name").html("<h2>Job " + job.id + " of " + totalNumJobs + "</h2>\n");
-        $("#job" + i + "_parameters").html("Parameters: " + params + "\n");
-        $("#job" + i + "_method").html("Method: " + job.method + "\n");
+        $("#job" + i + "_parameters").html("Parameters: <i>" + params + "</i>\n");
+        $("#job" + i + "_method").html("Method: <i>" + method
+                                       + (pastMethods ? "</i>&nbsp;&nbsp;(previous methods: <i>" + pastMethods + ")" : "") + "</i>\n");
 
         if (job.active) {
             $("#job" + i + "_actions").show();
+            $("#job" + i + "_reason").hide();
+            $("#job" + i + "_reason").html("");
         } else {
             $("#job" + i + "_actions").hide();
+            $("#job" + i + "_reason").html("Termination reason: <i>" + job.reason + "</i>\n");
+            $("#job" + i + "_reason").show();
         }
 
-        if (methods[i] === null) {
-            methods[i] = job.method;
-        } else if (methods[i] !== job.method) {
-            SPACESCANNER.notify("Switching job " + job.id + " to method " + job.method);
-            methods[i] = job.method;
-        }
+        // save the current method
+        methods["#job" + job.id] = method
 
         var allData = [];
         for (var runner = 0; runner < job.data.length; runner++) {
