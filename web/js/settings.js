@@ -38,10 +38,11 @@ SPACESCANNER.settings = function() {
                 currentSettings = returnData;
                 if ($( "#dialog-settings" ).is(':visible')) {
                     populateSettings();
+                } else {
+                    var relativeError = getd(currentSettings["optimization"], "targetFractionOfTOP", 0.0);
+                    // Update top state depending on whether enabled
+                    updateTOPState(relativeError && relativeError !== 0.0);
                 }
-                var relativeError = getd(currentSettings["optimization"], "targetFractionOfTOP", 0.0);
-                // Update top state depending on whether enabled
-                updateTOPState(relativeError && relativeError !== 0.0);
             },
             error: function (data, textStatus, xhr) {
                 console.log("get config error: " + JSON.stringify(data) + " " + textStatus);
@@ -177,7 +178,11 @@ SPACESCANNER.settings = function() {
         }
 
         /* Set the global button state to the inverse of "enable" */
-        $( "#button-parameters" ).prop('disabled', enable);
+        if(enable) {
+            $( "#button-parameters" ).addClass('disabled');
+        } else {
+            $( "#button-parameters" ).removeClass('disabled');
+        }
     }
 
     function toPercent(x) {

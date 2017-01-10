@@ -229,7 +229,9 @@ var SPACESCANNER = function() {
     });
 
     $('#button-parameters').click(function(){
-        $( "#dialog-parameters" ).dialog( "open" )
+        if (!$( this ).hasClass('disabled')) {
+            $( "#dialog-parameters" ).dialog( "open" )
+        }
     });
 
     $('#button-export').click(function(){
