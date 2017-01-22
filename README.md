@@ -129,7 +129,7 @@ Fields:
 * `bestOfValue` - the user-defined best (TOP) optimization function's value
 * `restartFromBestValue` - restart each subsequent method from the best point in the search space so far (default: `true`)
 * `maxConcurrentRuns` - how many COPASI processes to run by parallel (default: max(4, the number of CPU cores); range: [1 .. number of CPU cores])
-* `runsPerJob` - how many paraller COPASI executions per each job (i.e. a single set of parameters)
+* `runsPerJob` - how many paraller COPASI processes per each job (i.e. a single set of parameters)
 
 ### "parameters" section
 
@@ -223,4 +223,4 @@ SpaceScanner stores the results of finished jobs in `spacescanner/results` direc
 
 Each optimization task (i.e., a collection of jobs) is stored in a separate directory. This directory contains the configuration of that task, the `.log` file of the execution, and `.csv` file where the results of finished jobs are stored.
 
-Each job gets its own subdirectory. These subdirectories contain Copasi model files (stored as `.cps`), and run execution histories (stored as `.txt` files). The `.cps` files contain the input model; for all finished runs they also include the parameter values on which that run achieved its best objective function value.
+Each job gets its own subdirectory. These subdirectories contain Copasi model files (stored as `.cps`), and process execution histories (stored as `.log` files). The `.cps` files contain the input model; for all finished runs they also include the parameter values on which that run achieved its best objective function value.
