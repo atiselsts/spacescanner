@@ -119,14 +119,14 @@ Defines maximal duration of optimization runs, termination criteria etc.
 Fields:
 
 * `timeLimitSec` - maximal CPU time for optimization in case the consensus criteria and other end conditions have not been reached (default: 600 sec)
-* `consensusCorridor` - to determine whether the consensus criteria has been reached (default: 1%)
+* `consensusCorridor` - consensus criteria is satisfied if values of all runs are within consensus corridor range (default: 1%)
 * `consensusAbsoluteError` - to determine whether the consensus criteria has been reached (default: 1e-6)
 * `consensusDelaySec` - the minimal time to continue after the consensus criteria has been reached (default: 300 sec)
 * `consensusProportionalDelay` - the minimal time to continue after the consensus criteria has been reached as proportion of the runtime so-far (default: 15%)
-* `stagnationDelaySec` - the maximal time to continue when no values are changing (default: 300 sec)
-* `stagnationProportionalDelay` - the maximal time to continue when no values are changing, as proportion of the runtime so-far (default: 15%)
-* `targetFractionOfTOP` - compared to the full-set optimization result or the user-defined TOP value (default: 0.0 (i.e., disabled), range: [0.0 .. 1.0])
-* `bestOfValue` - the user-defined best (TOP) optimization function's value
+* `stagnationDelaySec` - the maximal time to continue when no values any parallel run are changing (default: 300 sec)
+* `stagnationProportionalDelay` - the maximal time to continue when no values of any parallel run are changing, as proportion of the runtime so-far (default: 15%)
+* `targetFractionOfTOP` - compared to the full-set objective function value or the user-defined TOP value(default: 0.0 (i.e., disabled), range: [0.0 .. 1.0])
+* `bestOfValue` - the user-defined best (TOP) objective function's value
 * `restartFromBestValue` - restart each subsequent method from the best point in the search space so far (default: `true`)
 * `maxConcurrentRuns` - how many COPASI processes to run by parallel (default: max(4, the number of CPU cores); range: [1 .. number of CPU cores])
 * `runsPerJob` - how many paraller COPASI processes per each job (i.e. a single set of parameters)
@@ -223,4 +223,4 @@ SpaceScanner stores the results of finished jobs in `spacescanner/results` direc
 
 Each optimization task (i.e., a collection of jobs) is stored in a separate directory. This directory contains the configuration of that task, the `.log` file of the execution, and `.csv` file where the results of finished jobs are stored.
 
-Each job gets its own subdirectory. These subdirectories contain Copasi model files (stored as `.cps`), and process execution histories (stored as `.log` files). The `.cps` files contain the input model; for all finished runs they also include the parameter values on which that run achieved its best objective function value.
+Each job gets its own subdirectory. These subdirectories contain Copasi model files (stored as `.cps`), and Copasi process execution histories (stored as `.log` files). The `.cps` files contain the input model; for all finished runs they also include the parameter values on which that run achieved its best objective function value.

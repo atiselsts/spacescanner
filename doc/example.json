@@ -8,12 +8,12 @@
         "parameters": []
     },
     "optimization" : {
-        "timeLimitSec" : 60,
+        "timeLimitSec" : 600,
         "consensusCorridor" : 0.01,
         "consensusAbsoluteError" : 1e-6,
-        "consensusDelaySec" : 60,
+        "consensusDelaySec" : 300,
         "consensusProportionalDelay" : 0.15,
-        "stagnationDelaySec" : 60,
+        "stagnationDelaySec" : 300,
         "stagnationProportionalDelay" : 0.15,
         "targetFractionOfTOP" : 0.0,
         "bestOfValue" : -Infinity,

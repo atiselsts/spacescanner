@@ -16,8 +16,8 @@
         "methodParametersFromFile" : false,
     },
     "optimization" : {
-        // maximal CPU time for optimization in case the consensus criteria and other end conditions have not been reached (default: 600 sec)
-        "timeLimitSec" : 60,
+        // maximal CPU time for optimization in case the consensus criteria and other termination criteria have not been reached (default: 600 sec)
+        "timeLimitSec" : 600,
         // to determine whether the consensus criteria has been reached (default: 1%)
         "consensusCorridor" : 0.01,
         // to determine whether the consensus criteria has been reached (default: 1e-6)
