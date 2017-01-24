@@ -119,11 +119,11 @@ Defines maximal duration of optimization runs, termination criteria etc.
 Fields:
 
 * `timeLimitSec` - maximal CPU time for optimization in case the consensus criteria and other end conditions have not been reached (default: 600 sec)
-* `consensusCorridor` - consensus criteria is satisfied if values of all runs are within consensus corridor range (default: 1%)
+* `consensusCorridor` - the consensus criteria is satisfied if values of all runs are within this consensus corridor range (default: 1%)
 * `consensusAbsoluteError` - to determine whether the consensus criteria has been reached (default: 1e-6)
 * `consensusDelaySec` - the minimal time to continue after the consensus criteria has been reached (default: 300 sec)
 * `consensusProportionalDelay` - the minimal time to continue after the consensus criteria has been reached as proportion of the runtime so-far (default: 15%)
-* `stagnationDelaySec` - the maximal time to continue when no values any parallel run are changing (default: 300 sec)
+* `stagnationDelaySec` - the maximal time to continue when no values of any parallel run are changing (default: 300 sec)
 * `stagnationProportionalDelay` - the maximal time to continue when no values of any parallel run are changing, as proportion of the runtime so-far (default: 15%)
 * `targetFractionOfTOP` - compared to the full-set objective function value or the user-defined TOP value(default: 0.0 (i.e., disabled), range: [0.0 .. 1.0])
 * `bestOfValue` - the user-defined best (TOP) objective function's value
@@ -133,17 +133,17 @@ Fields:
 
 ### "parameters" section
 
-Defines the way how subsets of paramters are selected (optimization parameters themselves are defined in the model file).
+Defines the way how subsets of paramters are selected. Note that the optimization parameters as such are defined in the `.sbml` model file, not here!
 
 The section is an array of records of arbitrary length. If repeating or overlapping records are specified, an optimization job for a given subset of paramters is still run only once.
 
 Records may have the following type:
 
-* `full-set` - a single optimization job containing all parameters in the model
+* `full-set` - a single optimization job containing all parameters in the model as specified in the `.sbml` file
 * `exhaustive - all` possible combinations of `N` to `M` parameters. Field "range" defines the values of `N` and `M`. For example, `"range" : [1, 3]` selects `N` to be equal to 1, `M` to 3. `"range" : [2]` selects `N = M = 2`.
 * `greedy` - for `N` parameters, take the best set of `N-1` parameters and run all possible optimizations that add one parameter not yet in the set. Unless `N=1`, there must also be a record describing which strategy to use to for `N-1` parameter sets.
-* `greedy-reverse` - similar to "greedy", but takes away a single parameter from the best `N+1` paramter set instead of adding it.
-* `explicit` - the names of parameters to use are explicitly named in "parameters" field of the record.
+* `greedy-reverse` - similar to "greedy", but takes away a single parameter from the best `N+1` parameter set instead of adding it.
+* `explicit` - the names of parameters to use are explicitly named in the "parameters" field of the record.
 
 By default, these records are present:
 
@@ -157,7 +157,7 @@ Web interface settings.
 
 Fields:
 
-* `enable` - whether to run the web interface (default: `true`). WARNING: access control is not supported by SpaceScanner! Enable this only in trusted environment.
+* `enable` - whether to run the web interface (default: `true`). **Warning:** access control is not supported by SpaceScanner! Enable this only in trusted environments.
 * `port` - http port number (default: 19000)
 
 ### "output" section
