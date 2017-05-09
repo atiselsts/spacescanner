@@ -104,7 +104,7 @@ def startFromWeb(configFileName):
 # Should replace this with daemonization?
 
 def wait():
-    while True:
+    while not g.doQuit:
         time.sleep(1)
 
 ################################################

@@ -35,6 +35,7 @@ spacescannerStartTime = None
 workDir = None
 taskName = None
 logFileName = None
+doQuit = False
 
 ################################################
 

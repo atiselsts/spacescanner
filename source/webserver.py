@@ -21,7 +21,7 @@
 # Author: Atis Elsts, 2016
 #
 
-import os, signal, select, json, traceback, cgi
+import os, signal, select, json, traceback, cgi, threading
 
 from util import *
 import g
@@ -82,6 +82,11 @@ class InterruptibleHTTPServer(HTTPServer):
 
     def close(self):
         self._BaseServer__shutdown_request = True
+
+################################################
+def doQuit():
+    g.log(LOG_ERROR, "Terminating...")
+    g.doQuit = True
 
 ################################################
 
@@ -220,6 +225,10 @@ class HttpServerHandler(BaseHTTPRequestHandler):
             response = sm.ioStopAll(qs)
         elif o.path[:5] == '/stop':
             response = sm.ioStop(qs, o.path[6:])
+        elif o.path == '/terminate':
+            g.log(LOG_ERROR, "Terminating upon user request")
+            response = {"status" : "ok"}
+            threading.Timer(1.0, doQuit).start()
         else:
             self.serveError(qs)
             return

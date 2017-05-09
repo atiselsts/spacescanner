@@ -38,6 +38,22 @@ var SPACESCANNER = function() {
             }
         });
 
+    $('#button-terminate-server')
+        .on("click",function(e) {
+	    var r = confirm("Are you sure?")
+	    if (r !== true) {
+		return;
+	    }
+	    $.ajax({
+                url: "terminate",
+                success: function (returnData) {
+                    SPACESCANNER.notify("Stopped the server");
+                },
+                error: function (data, textStatus, xhr) {
+                    SPACESCANNER.notify("Failed to stop teh server: " + JSON.stringify(data) + " " + textStatus, "error");
+		}
+	    });
+	});
 
     $( "#dialog-status" ).dialog({
         title: "Job status",

@@ -275,11 +275,11 @@
     <!-- Methods tab -->
 
     <div class="form-row">
-        <label for="input-option-methods">Methods:</label>
+        <label for="input-option-methods">Methods</label>
         <input type="text" id="input-option-methods" title="List of optimization methods">
     </div>
     <div class="form-row">
-        <label for="input-option-fallbackMethods">Fallback methods:</label>
+        <label for="input-option-fallbackMethods">Fallback methods</label>
         <input type="text" id="input-option-fallbackMethods" title="List of optimization methods to use if a method from the first list fails to produce any solutions">
     </div>
     <div class="form-row">
@@ -322,17 +322,24 @@
           </div>
           <div id="dialog-tab-3" class="dialog-tab">
 
-    <!-- Other tab -->
+    <!-- "Other" tab -->
 
     <div class="form-row">
       <label for="input-option-loglevel" style="width:200px">Output log level (1-4)</label>
       Min <input type="range" id="input-option-loglevel" name="loglevel" style="width:300px" min="1" max="4" step="1" title="Console output level (higher means more output)"> Max
     </div>
+
+    <br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+    <div class="form-row">
+      <label for="button-terminate-server" style="width:200px">Terminate the execution</label>
+      <button type="button" class="btn btn-danger" id="button-terminate-server">Stop server</button>
+    </div>
           </div>
        </div>
    </div>
 </div>
-
 
 <div id="dialog-parameters" class="hide">
     <!-- max 5 types of parameters -->
