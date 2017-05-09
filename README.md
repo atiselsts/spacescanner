@@ -217,6 +217,14 @@ Fields:
 }</pre>
 
 
+# Stopping SpaceScanner
+
+* "Stop" button - terminate a specific, currently running job (stops all runners of that job).
+* "Stop all" button - completely stops the analysis of the current model - terminates all running jibs and clears the queue of scheduled jobs.
+
+To terminate the SpaceScanner server, either use the command line (Ctrl+C) or go to *Settings* -> *Other*. Here, a button for that is provided:
+* "Stop server" - terminates the SpaceScanner application itself.
+
 # Accessing the results
 
 SpaceScanner stores the results of finished jobs in `spacescanner/results` directory. **Warning:** for tasks with a large number of jobs these directories can take quite a lot of space on the disk!
