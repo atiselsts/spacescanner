@@ -2,6 +2,11 @@
 
 [![Build Status](https://travis-ci.org/atiselsts/spacescanner.svg)](https://travis-ci.org/atiselsts/spacescanner/branches)
 
+** User manual **
+
+Available [here](doc/SpaceScanner%20User%20Manual%20v03.pdf).
+
+
 **SpaceScanner** features:
 
 * run multiple parallel optimization tasks on a biological model, and automatically terminate when the tasks have reached a consensus value;
