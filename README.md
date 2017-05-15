@@ -2,11 +2,6 @@
 
 [![Build Status](https://travis-ci.org/atiselsts/spacescanner.svg)](https://travis-ci.org/atiselsts/spacescanner/branches)
 
-** User manual **
-
-Available [here](doc/SpaceScanner%20User%20Manual%20v03.pdf).
-
-
 **SpaceScanner** features:
 
 * run multiple parallel optimization tasks on a biological model, and automatically terminate when the tasks have reached a consensus value;
@@ -41,6 +36,11 @@ SpaceScanner is easy to use and configure. There are two ways how to work with S
 
 * a command-line interface that expects a configuration file in JSON format as the only argument;
 * a web interface that allows the user to interactively configure, start, and stop Copasi optimizations, as well as see their results graphically.
+
+
+# User manual
+
+Available [here](doc/SpaceScanner%20User%20Manual%20v03.pdf).
 
 
 # Directory structure of this repository
