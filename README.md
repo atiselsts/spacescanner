@@ -2,6 +2,13 @@
 
 [![Build Status](https://travis-ci.org/atiselsts/spacescanner.svg)](https://travis-ci.org/atiselsts/spacescanner/branches)
 
+**The SpaceScanner publication**:
+
+If you use this software, please cite the relevant application note:
+
+*Atis Elsts, Agris Pentjuss, Egils Stalidzans;* SpaceScanner: COPASI wrapper for automated management of global stochastic optimization experiments. ***Bioinformatics** 2017 btx363.
+DOI: https://doi.org/10.1093/bioinformatics/btx363*
+
 **SpaceScanner** features:
 
 * run multiple parallel optimization tasks on a biological model, and automatically terminate when the tasks have reached a consensus value;
