@@ -302,7 +302,6 @@ class StatsItem:
         self.cpuTime = 0.0
         self.ofValue = MIN_OF_VALUE
         self.numOfEvaluations = 0
-        self.maxRealPart = 0.0
         line = line.strip()
         if not line:
             self.isValid = False
@@ -322,9 +321,8 @@ class StatsItem:
                 g.log(LOG_ERROR, "invalid objective function value {}, using -infinity instead".format(self.ofValue))
                 self.ofValue = MIN_OF_VALUE
             self.numOfEvaluations = int(numbers[2])
-            self.maxRealPart = float(numbers[-1])
             # param value list starts with "(", finishes with ")"
-            for i in range(4, len(numbers) - 2):
+            for i in range(4, len(numbers) - 1):
                 self.params.append(float(numbers[i]))
         except ValueError as e:
             g.log(LOG_DEBUG, "value error {} in line".format(e))
@@ -336,4 +334,4 @@ class StatsItem:
 
     def __str__(self):
         paramStr = " ".join([str(x) for x in self.params])
-        return "{}: {} {} {} ({}) {}".format(self.isValid, self.cpuTime, self.ofValue, self.numOfEvaluations, paramStr, self.maxRealPart)
+        return "{}: {} {} {} ({})".format(self.isValid, self.cpuTime, self.ofValue, self.numOfEvaluations, paramStr)

@@ -1,7 +1,18 @@
 PYTHON = python
 SPACESCANNER = ../source/spacescanner.py
 
-all: test-broken test-fast-consensus test-no-solution test-param-ranges test-param-ranges2 test-solution-timeout test-top test-suspend-resume cleanup
+all: test-broken test-param-estimation test-fast-consensus test-no-solution test-param-ranges test-param-ranges2 test-solution-timeout test-top test-suspend-resume cleanup
+
+test-param-estimation: test-param-estimation-simple
+	@true
+
+test-broken: test-broken-1 test-broken-2 test-broken-3 test-broken-4 test-broken-5 test-broken-6
+	@true
+
+
+###############################################################################
+# Optimization tests
+###############################################################################
 
 test-fast-consensus:
 	@echo Testing a fast consensus...
@@ -78,8 +89,21 @@ test-suspend-resume:
 	@echo ..done
 	@echo ""
 
-test-broken: test-broken-1 test-broken-2 test-broken-3 test-broken-4 test-broken-5 test-broken-6
-	@true
+###############################################################################
+# Parameter estimation tests
+###############################################################################
+
+test-param-estimation-simple:
+	@echo Testing simple parameter estimation...
+	@rm -f spacescanner.log
+	$(PYTHON) $(SPACESCANNER) test-param-estimation-simple.json
+	@grep "terminating job 1: consensus reached" spacescanner.log
+	@echo ..done
+	@echo ""
+
+###############################################################################
+# Tests where failure is expected
+###############################################################################
 
 test-broken-1:
 	@echo Testing broken configurations...
@@ -92,21 +116,21 @@ test-broken-1:
 test-broken-2:
 	@rm -f spacescanner.log
 	$(PYTHON) $(SPACESCANNER) test-broken-no-optimization.json
-	@grep "error while loading COPASI model: optimization task not found in COPASI file" spacescanner.log
+	@grep "error while loading COPASI model: neither optimization nor parameter estimation tasks found in the COPASI file" spacescanner.log
 	@echo ..done
 	@echo ""
 
 test-broken-3:
 	@rm -f spacescanner.log
 	$(PYTHON) $(SPACESCANNER) test-broken-no-of.json
-	@grep "error while loading COPASI model: objective function not defined in COPASI file" spacescanner.log
+	@grep "error while loading COPASI model: objective function not defined in the COPASI file" spacescanner.log
 	@echo ..done
 	@echo ""
 
 test-broken-4:
 	@rm -f spacescanner.log
 	$(PYTHON) $(SPACESCANNER) test-broken-no-parameters.json
-	@grep "error while loading COPASI model: optimization parameters not defined in COPASI file" spacescanner.log
+	@grep "error while loading COPASI model: parameters for optimization task not defined in the COPASI file" spacescanner.log
 	@echo ..done
 	@echo ""
 

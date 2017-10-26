@@ -61,6 +61,8 @@ def defaultConfigInitialize():
     DEFCFG[("copasi", "randomizeMethodSelection")] = ConfigFileField(False)
     DEFCFG[("copasi", "methodParametersFromFile")] = ConfigFileField(False)
     DEFCFG[("copasi", "parameters")] = ConfigFileField([]) # all from copasi file
+    # "parameterFitting" is the alternative to "optimization"
+    DEFCFG[("copasi", "taskType")] = ConfigFileField("optimization")
 
     DEFCFG[("optimization", "timeLimitSec")] = ConfigFileField(600)
     DEFCFG[("optimization", "consensusCorridor")] = ConfigFileField(0.01)
@@ -74,14 +76,18 @@ def defaultConfigInitialize():
     DEFCFG[("optimization", "restartFromBestValue")] = ConfigFileField( True) # if yes, each next method will start from the best parameter values so far
     DEFCFG[("optimization", "maxConcurrentRuns")] = ConfigFileField(4)
     DEFCFG[("optimization", "runsPerJob")] = ConfigFileField(2)
+    DEFCFG[("optimization", "paramEstimationReferenceValueSec")] = ConfigFileField(3.0)
 
     DEFCFG[("parameters", )] = ConfigFileField([
         {"type" : "full-set"}, # include all parameters
         {"type" : "exhaustive", "range" : [1, 3]}, # from 1 to 3
         {"type" : "greedy", "range" : [4, 8]}    # from 4 to 8
     ])
+
     DEFCFG[("web","enable")] = ConfigFileField(True)
     DEFCFG[("web","port")] = ConfigFileField(19000)
+    DEFCFG[("web","logxscale")] = ConfigFileField(False)
+    DEFCFG[("web","logyscale")] = ConfigFileField(False)
 
     DEFCFG[("output", "filename")] = ConfigFileField("results.csv")
     DEFCFG[("output", "loglevel")] = ConfigFileField(2)

@@ -100,6 +100,7 @@ class JobPool:
                 # improved on the OF value! Store the result now.
                 self.bestOfValue = j.getBestOfValue()
                 self.bestParams = copy.copy(j.params)
+            # print("self.strategy.finishJob")
             self.strategy.finishJob(j)
 
     def refresh(self):

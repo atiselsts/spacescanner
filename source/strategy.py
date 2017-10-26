@@ -261,6 +261,8 @@ class StrategyManager:
         self.totalNumJobs = -1
 
     def prepare(self, isDummy):
+        self.taskType = g.getConfig("copasi.taskType")
+
         self.jobLock = threading.Lock()
         self.activeJobPool = None
         self.finishedJobs = {}
@@ -321,7 +323,7 @@ class StrategyManager:
             time.sleep(2.0)
 
 
-    def dumpResults(self, totalLimit = 0, perParamLimit = 0):
+    def dumpResults(self, totalLimit = 0):
         if g.workDir is None:
             return None
         filename = g.getConfig("output.filename")
@@ -341,10 +343,10 @@ class StrategyManager:
             self.lastNumJobsDumped = len(self.finishedJobs)
 
         allJobsByBestOfValue = []
-        if perParamLimit == 0:
-            numberOfBestCombinations = int(g.getConfig("output.numberOfBestCombinations"))
-        else:
-            numberOfBestCombinations = perParamLimit
+        # `numberOfBestCombinations` defines how many of the best parameter combinations
+        # to include in results for each number of parameters; 0 means unlimited (default: unlimited)
+        numberOfBestCombinations = int(g.getConfig("output.numberOfBestCombinations"))
+
         for joblist in self.jobsByBestOfValue:
             if numberOfBestCombinations:
                 lst = joblist[:numberOfBestCombinations]
@@ -370,7 +372,9 @@ class StrategyManager:
 
 
     def dumpCsvFileHeader(self, f):
-        f.write("OF value,Max CPU time,Total CPU time,Job ID,Method,Number of parameters,Stop reason,")
+        evaluationResultName = "OF value" if self.taskType == COPASI_TASK_OPTIMIZATION else "Difference"
+        f.write(evaluationResultName + ",")
+        f.write("Max CPU time,Total CPU time,Job ID,Method,Number of parameters,Stop reason,")
         paramNames = [x.strip("'") for x in self.copasiConfig["params"]]
         f.write(",".join([x + " included" for x in paramNames]))
         f.write("," + ",".join(paramNames))
@@ -378,7 +382,10 @@ class StrategyManager:
 
 
     def loadCopasiFile(self):
-        copasiFile = copasifile.CopasiFile()
+        copasiFile = copasifile.CopasiFile(self.taskType)
+        if not copasiFile.isValid():
+            return None
+
         filename = g.getConfig("copasi.modelFile")
         filename = filename.replace("@SELF@", SELF_PATH)
         g.log(LOG_INFO, "<spacescanner>: opening COPASI model file {}".format(filename))
@@ -537,8 +544,7 @@ class StrategyManager:
 
     def ioGetResults(self, qs):
         totalLimit = int(qs.get("totallimit", 0))
-        perParamLimit = int(qs.get("perparamlimit", 0))
-        filename = self.dumpResults(totalLimit, perParamLimit)
+        filename = self.dumpResults(totalLimit)
         contents = ""
         try: 
             with open(filename) as f:
@@ -588,10 +594,17 @@ class StrategyManager:
     def execute(self):
         parameterSelections = []
 
-        # always add the zero'th job at start, needed to show baseline in graphs and for TOP
-        g.log(LOG_INFO, "optimizing for zero parameters initially to find the baseline")
-        spec = {"type" : "zero"}
-        parameterSelections.append(ParamSelection.create(spec, self))
+        if self.taskType == COPASI_TASK_OPTIMIZATION:
+            # always add the zero'th job at start, needed to show baseline in graphs and for TOP
+            g.log(LOG_INFO, "optimizing for zero parameters initially to find the baseline")
+            spec = {"type" : "zero"}
+            parameterSelections.append(ParamSelection.create(spec, self))
+            hasZerothJob = True
+        else:
+            hasZerothJob = False
+            if self.nextJobID == 0:
+                # start from job1, not job0 (which is ignored by the web interface)
+                self.nextJobID = 1
 
         if self.isTOPEnabled():
             # add all parameters: will define the target value
@@ -627,7 +640,10 @@ class StrategyManager:
         hashes = set()
         for sel in parameterSelections:
             hashes = hashes.union(sel.getAllJobHashes())
-        self.totalNumJobs = len(hashes) - 1
+        self.totalNumJobs = len(hashes)
+        # if the extra "dummy" job0 is scheduled, do not include it in this number
+        if hasZerothJob:
+            self.totalNumJobs -= 1
 
         g.log(LOG_INFO, "total {} parameter combination(s) to try out, parameters: {}".format(
             self.totalNumJobs, " ".join(self.copasiConfig["params"])))

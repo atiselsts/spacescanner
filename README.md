@@ -4,7 +4,7 @@
 
 **SpaceScanner** features:
 
-* run multiple parallel optimization tasks on a biological model, and automatically terminate when the tasks have reached a consensus value;
+* run multiple parallel optimization or parameter estimation tasks on a biological model, and automatically terminate when the tasks have reached a consensus value;
 * display optimization history graphically for these parallel runs;
 * scan the space of the possible parameters sets to optimize, and determine the minimal subset of parameters that gives "good enough" results for a specific objective function and the minimal number of parameters required for a specific target value.
 
@@ -50,7 +50,9 @@ SpaceScanner is easy to use and configure. There are two ways how to work with S
 
 # Installation
 
-There's no installation necessary. [Download](https://github.com/atiselsts/spacescanner/archive/master.zip) and extract the SpaceScanner source code. Alternatively, get it through Git: `git clone https://github.com/atiselsts/spacescanner.git`.
+[Download](https://github.com/atiselsts/spacescanner/archive/master.zip) and extract the SpaceScanner repository, which includes SpaceScanner source code and Web interface launcher, as well as COPASI binaries for Windows, Linux (64-bit) and macOS.
+
+Alternatively, get it through Git: `git clone https://github.com/atiselsts/spacescanner.git`.
 
 **Prerequisites:**
 
@@ -107,6 +109,7 @@ This section defines the model file and optimization methods to use.
 Fields:
 
 * `modelFile` - COPASI model file name; @SELF@ refers to SpaceScanner source directory
+* `taskType` - whether to run an optimization task (code `1`) or a parameter estimation task (code `2`; default: `1`, denoting an optimization task)
 * `methods` - list of optimization methods to use; the methods are selected sequentially, each subsequent one is selected when the previous ones fail; can contain a method more than once
 * `fallbackMethods` - list of optimization methods to use when a method fails to evaluate the objective function in given time; useful for e.g. highly constrained models on which many methods may not find any solutions at all
 * `randomizeMethodSelection` - whether to pick methods from the configuration randomly or in order (default: `false`)
@@ -129,13 +132,14 @@ Fields:
 * `bestOfValue` - the user-defined best (TOP) objective function's value
 * `restartFromBestValue` - restart each subsequent method from the best point in the search space so far (default: `true`)
 * `maxConcurrentRuns` - how many COPASI processes to run by parallel (default: max(4, the number of CPU cores); range: [1 .. number of CPU cores])
-* `runsPerJob` - how many paraller COPASI processes per each job (i.e. a single set of parameters)
+* `runsPerJob` - how many parallel COPASI processes per each job (i.e. a single set of parameters)
+* `paramEstimationReferenceValueSec` - this is used a reference point when to obtain the "initial", baseline value of the objective function (default: 3 seconds of the CPU time)
 
 ### "parameters" section
 
-Defines the way how subsets of paramters are selected. Note that the optimization parameters as such are defined in the `.sbml` model file, not here!
+Defines the way how subsets of parameters are selected. Note that the optimization parameters as such are defined in the `.sbml` model file, not here!
 
-The section is an array of records of arbitrary length. If repeating or overlapping records are specified, an optimization job for a given subset of paramters is still run only once.
+The section is an array of records of arbitrary length. If repeating or overlapping records are specified, an optimization job for a given subset of parameters is still run only once.
 
 Records may have the following type:
 
@@ -158,7 +162,10 @@ Web interface settings.
 Fields:
 
 * `enable` - whether to run the web interface (default: `true`). **Warning:** access control is not supported by SpaceScanner! Enable this only in trusted environments.
-* `port` - http port number (default: 19000)
+* `port` - HTTP port number (default: 19000)
+* `logxaxis` - show x-axis in log scale (default: `false`)
+* `logyaxis` - show y-axis in log scale (default: `false`)
+
 
 ### "output" section
 
@@ -172,7 +179,7 @@ Fields:
 
 ### Not in separate sections
 
-* `restartOnFile` - .csv file name on which to restart optimization runs, trying to complete timeouted jobs (default: `null`)
+* `restartOnFile` - .csv file name on which to restart optimization runs, trying to complete timed-out jobs (default: `null`)
 * `taskName` - the global name of this optimization task
 
 ### Example configuration file

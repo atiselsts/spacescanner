@@ -18,7 +18,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Author: Atis Elsts, 2016
+# Author: Atis Elsts, 2016-2017
 #
 
 from xml.etree import ElementTree
@@ -42,8 +42,6 @@ REPORT_FORMAT = """\
         <Object cn="String=\[Function Evaluations\]"/>
         <Object cn="Separator=&#x09;"/>
         <Object cn="String=\[Best Parameters\]"/>
-        <Object cn="Separator=&#x09;"/>
-        <Object cn="String=maximum real part"/>
       </Header>
       <Body>
         <Object cn="CN=Root,Timer=CPU Time"/>
@@ -53,16 +51,41 @@ REPORT_FORMAT = """\
         <Object cn="CN=Root,Vector=TaskList[Optimization],Problem=Optimization,Reference=Function Evaluations"/>
         <Object cn="Separator=&#x09;"/>
         <Object cn="CN=Root,Vector=TaskList[Optimization],Problem=Optimization,Reference=Best Parameters"/>
-        <Object cn="Separator=&#x09;"/>
-        <Object cn="CN=Root,Vector=TaskList[Steady-State],Eigen Values=Eigenvalues of reduced system Jacobian,Reference=Maximum real part"/>
       </Body>
       <Footer>
         <Object cn="String=&#x0a;"/>
         <Object cn="CN=Root,Vector=TaskList[Optimization],Object=Result"/>
       </Footer>
     </Report>
+
+    <Report key="parameterFitting_report" name="Parameter Estimation" taskType="parameterFitting" separator="&#x09;" precision="6">
+      <Header>
+        <Object cn="CN=Root,Vector=TaskList[Parameter Estimation],Object=Description"/>
+        <Object cn="String=CPU time"/>
+        <Object cn="Separator=&#x09;"/>
+        <Object cn="String=\[Best Value\]"/>
+        <Object cn="Separator=&#x09;"/>
+        <Object cn="String=\[Function Evaluations\]"/>
+        <Object cn="Separator=&#x09;"/>
+        <Object cn="String=\[Best Parameters\]"/>
+      </Header>
+      <Body>
+        <Object cn="CN=Root,Timer=CPU Time"/>
+        <Object cn="Separator=&#x09;"/>
+        <Object cn="CN=Root,Vector=TaskList[Parameter Estimation],Problem=Parameter Estimation,Reference=Best Value"/>
+        <Object cn="Separator=&#x09;"/>
+        <Object cn="CN=Root,Vector=TaskList[Parameter Estimation],Problem=Parameter Estimation,Reference=Function Evaluations"/>
+        <Object cn="Separator=&#x09;"/>
+        <Object cn="CN=Root,Vector=TaskList[Parameter Estimation],Problem=Parameter Estimation,Reference=Best Parameters"/>
+      </Body>
+      <Footer>
+        <Object cn="String=&#x0a;"/>
+        <Object cn="CN=Root,Vector=TaskList[Parameter Estimation],Object=Result"/>
+      </Footer>
+    </Report>
   </ListOfReports>
 """
+
 
 METHOD_SRES = """
       <Method name="Evolution Strategy (SRES)" type="EvolutionaryStrategySR">
@@ -153,182 +176,269 @@ PREDEFINED_METHODS = {
 
 ################################################
 
-class CopasiFile:
-    def __init__(self):
-        self.fileCounter = 0
-        self.xmlroot = None
-        self.optimizationTask = None
+class TaskSettings:
+    def __init__(self, xmlTask):
+        self.xmlTask = xmlTask
         self.paramDict = {}
         self.methodDict = {}
         self.objectiveFunction = None
 
+class CopasiFile:
+    def __init__(self, taskType):
+        self.taskType = taskType
+        self.xmlroot = None
+        self.isFileRead = False
+        # either optimization or parameter estimation
+        self.optimizationTask = None
+        self.paramEstimationTask = None
+        self.modeFileDirectory = ""
+
         ElementTree.register_namespace('', COPASI_SCHEMA)
 
     def read(self, filename):
+        self.modeFileDirectory = os.path.dirname(filename)
+
         if not isReadable(filename):
             g.log(LOG_ERROR, "error while loading COPASI model: file not found or not readable")
             return False
 
+        self.isFileRead = True
         self.optimizationTask = None
-        self.xmlroot = ElementTree.parse(filename).getroot()
+        self.paramEstimationTask = None
+
+        try:
+            self.xmlroot = ElementTree.parse(filename).getroot()
+        except:
+            self.xmlroot = None
+            return False
+
         # Example XML structure:
         #   <xml><ListOfTasks><Task type="optimization">...
         for tasklist in self.xmlroot.findall('copasi:ListOfTasks', COPASI_NS):
             for task in tasklist.findall('copasi:Task', COPASI_NS):
                 if task.get("type").lower() == "optimization":
-                    self.optimizationTask = task
+                    self.optimizationTask = TaskSettings(task)
+                elif task.get("type").lower() == "parameterfitting":
+                    self.paramEstimationTask = TaskSettings(task)
 
-        if self.optimizationTask is None:
-            g.log(LOG_ERROR, "error while loading COPASI model: optimization task not found in COPASI file")
+        if self.optimizationTask is None and self.paramEstimationTask is None:
+            g.log(LOG_ERROR, "error while loading COPASI model: neither optimization nor parameter estimation tasks found in the COPASI file")
             return False
 
-        self.loadParameters()
+        # always load stuff relevant to both optimization and param estimation tasks
+        if self.optimizationTask is not None:
+            self.loadParameters(self.optimizationTask, "optimizationitem")
 
-        if len(self.paramDict) == 0:
-            g.log(LOG_ERROR, "error while loading COPASI model: optimization parameters not defined in COPASI file")
-            return False
+            # do validation only if required
+            if self.taskType == COPASI_TASK_OPTIMIZATION:
+                if len(self.optimizationTask.paramDict) == 0:
+                    g.log(LOG_ERROR, "error while loading COPASI model: parameters for optimization task not defined in the COPASI file")
+                    return False
 
-        if not self.objectiveFunction:
-            g.log(LOG_ERROR, "error while loading COPASI model: objective function not defined in COPASI file")
-            return False
+                if not self.optimizationTask.objectiveFunction:
+                    g.log(LOG_ERROR, "error while loading COPASI model: objective function not defined in the COPASI file")
+                    return False
 
-        return True
+        if self.paramEstimationTask is not None:
+            self.loadParameters(self.paramEstimationTask, "fititem")
+
+            # do validation only if required
+            if self.taskType == COPASI_TASK_PARAM_ESTIMATION:
+                if len(self.paramEstimationTask.paramDict) == 0:
+                    g.log(LOG_ERROR, "error while loading COPASI model: parameters for parameter estimation task not defined in the COPASI file")
+                    return False
+
+        # return true only if the current state is functional
+        return self.isValid()
 
 
-    def loadParameters(self):
-        assert self.optimizationTask is not None
+    def loadParameters(self, task, paramGroupName):
+        assert task is not None
 
-        problem = self.optimizationTask.find('copasi:Problem', COPASI_NS)
+        problem = task.xmlTask.find('copasi:Problem', COPASI_NS)
         if problem is None:
             g.log(LOG_ERROR, "'Problem' not found in the optimization task")
-            return []
+            return False
 
-        self.paramDict = {}
-        self.methodDict = {}
+        task.paramDict = {}
+        task.methodDict = {}
 
         # Example XML structure:
         #   Task type="optimization"><ParameterGroup name="OptimizationItem"><Parameter> ...
         for paramGroup in problem.findall('copasi:ParameterGroup', COPASI_NS):
             if paramGroup.get("name").lower() == "optimizationitemlist":
                 for paramGroup2 in paramGroup.findall('copasi:ParameterGroup', COPASI_NS):
-                    if paramGroup2.get("name").lower() != "optimizationitem": continue
+
+                    if paramGroup2.get("name").lower() != paramGroupName: continue
 
                     # Example XML syntax:
                     #   <Parameter name="ObjectCN" type="cn" value="CN=Root,Model=Galazzo1990_FermentationPathwayKinetics,Vector=Reactions[Pyruvate kinase],ParameterGroup=Parameters,Parameter=Vm6,Reference=Value"/>
                     for param in paramGroup2.findall('copasi:Parameter', COPASI_NS):
+
                         if param.get("name").lower() != "objectcn": continue
                         val = param.get("value")
+                        #g.log(LOG_ERROR, "param: {} {}".format(param.get("name"), val))
                         if not val: continue
                         val = [x.split("=") for x in  val.split(",")]
                         for (k,v) in val:
                             if 0:
                                 if k.lower() == "parameter":
-                                    self.paramDict["'" + v + "'"] = paramGroup2
+                                    task.paramDict["'" + v + "'"] = paramGroup2
                             else:
                                 if k.lower() == "vector":
                                     if "[" in v and "]" in v:
                                         v = v[v.find("[")+1:v.find("]")]
-                                    self.paramDict["'" + v + "'"] = paramGroup2
+                                    task.paramDict["'" + v + "'"] = paramGroup2
 
-        self.objectiveFunction = None
+        task.objectiveFunction = None
         for paramText in problem.findall('copasi:ParameterText', COPASI_NS):
            if paramText.get("name").lower() == "objectiveexpression":
-               self.objectiveFunction = paramText.text.strip()
+               task.objectiveFunction = paramText.text.strip()
 
         # parse methods as well
-        for method in self.optimizationTask.findall('copasi:Method', COPASI_NS):
+        for method in task.xmlTask.findall('copasi:Method', COPASI_NS):
             mtype = method.get("type").lower()
-            self.methodDict[mtype] = method
+            task.methodDict[mtype] = method
+
+        return True
 
 
     def queryParameters(self):
-        return self.paramDict.keys()
+        if not self.isValid():
+            return []
+
+        if self.taskType == COPASI_TASK_OPTIMIZATION:
+            return list(self.optimizationTask.paramDict.keys())
+        if self.taskType == COPASI_TASK_PARAM_ESTIMATION:
+            return list(self.paramEstimationTask.paramDict.keys())
+
+        return []
 
 
-    def writeParam(self, outf, param, startParamValues, areParametersChangeable):
-        xml = self.paramDict[param]
+    def writeParam(self, outf, paramName, paramValue, startParamValues, areParametersChangeable):
 
         if areParametersChangeable:
-            if startParamValues is None or param not in startParamValues:
+            if startParamValues is None or paramName not in startParamValues:
                 # no need to preprocess; write directly back in the file
-                outf.write('          ' + str(ElementTree.tostring(xml)))
+                outf.write('          ' + xmlEscapeTabs(ElementTree.tostring(paramValue)))
                 return
         else:
             if startParamValues is None:
                 startParamValues = {}
-            for sub in xml.iterfind("*", COPASI_NS):
+            for sub in paramValue.iterfind("*", COPASI_NS):
                 if "ParameterGroup" in sub.tag: continue
-                if sub.get("name").lower() == "startvalue" and param not in startParamValues:
+                if sub.get("name").lower() == "startvalue" and paramName not in startParamValues:
                     # read it directly from the file
                     try:
                         v = sub.get("value")
-                        startParamValues[param] = float(v)
+                        startParamValues[paramName] = float(v)
                     except:
-                        g.log(LOG_ERROR, "Getting start value of a parameter " + param + " failed:" + sub.get("value"))
+                        g.log(LOG_ERROR, "Getting start value of a parameter " + paramName + " failed:" + sub.get("value"))
 
-        outf.write(' <ParameterGroup name="OptimizationItem">\n')
-        for sub in xml.iterfind("*", COPASI_NS):
+        paramGroupName = "OptimizationItem" if self.taskType == "optimization" else "FitItem"
+        outf.write(' <ParameterGroup name="{}">\n'.format(paramGroupName))
+        for sub in paramValue.iterfind("*", COPASI_NS):
             if "ParameterGroup" in sub.tag: continue
+
             if sub.get("name").lower() == "startvalue" \
                and startParamValues is not None \
-               and param in startParamValues:
-                outf.write('          <Parameter name="StartValue" type="float" value="{}"/>\n'.format(startParamValues[param]))
+               and paramName in startParamValues:
+                # from start values
+                val = startParamValues[paramName]
+                outf.write('          <Parameter name="StartValue" type="float" value="{}"/>\n'.format(val))
                 continue
 
             if sub.get("name").lower() in ["lowerbound", "upperbound"] \
                and not areParametersChangeable \
                and startParamValues is not None \
-               and param in startParamValues:
+               and paramName in startParamValues:
                 # unchangeable; set the bounds to the start value
-                val = startParamValues[param]
+                val = startParamValues[paramName]
                 outf.write('          <Parameter name="{}" type="cn" value="{}"/>\n'.format(sub.get("name"), val))
                 continue
 
             # by default, just write back whatever was in the file
-            outf.write('          ' + str(ElementTree.tostring(sub)))
+            outf.write('          ' + xmlEscapeTabs(ElementTree.tostring(sub)))
 
         outf.write(' </ParameterGroup>\n')
 
+    def fixupExperimentSet(self, paramGroup):
+        for subgroup in paramGroup.iterfind("*", COPASI_NS):
+            for elem in subgroup.iterfind("*", COPASI_NS):
+                if "type" in elem.attrib and elem.get("type").lower() == "file":
+                    # convert relative to absolute path in the same folder where the model resides
+                    elem.attrib["value"] = os.path.abspath(
+                        os.path.join(self.modeFileDirectory, elem.get("value")))
 
-    def serializeOptimizationTask(self, reportFilename, outf, parameters, methodNames, startParamValues, areParametersChangeable):
-        # Note: 'scheduled' is always set to true, as is 'update model' to save the final parameter values in the .cps file.
-        outf.write('  <Task key="{}" name="Optimization" type="optimization" scheduled="true" updateModel="true">\n'.format(self.optimizationTask.get("key")))
+    def serializeScheduledTask(self, reportFilename, outf, parameters, methodNames,
+                               startParamValues, areParametersChangeable):
+
+        taskRef = self.optimizationTask if self.taskType == "optimization" else self.paramEstimationTask
+
+        # Note: 'scheduled' is always set to true to enabled this task when executing from command line.
+        # 'update model' is also set to true: to save the final parameter values in the .cps files on which COPASI is run
+        outf.write('  <Task key="{}" name="Scheduled Task" type="{}" scheduled="true" updateModel="true">\n'.format(
+            taskRef.xmlTask.get("key"), self.taskType))
 
         # 1. Fix report target file name
         # <Report reference="Report_10" target="./report.log" append="1"/>
-        report = self.optimizationTask.find('copasi:Report', COPASI_NS)
+        report = taskRef.xmlTask.find('copasi:Report', COPASI_NS)
         if report is not None:
             report.set("target", reportFilename)
-            report.set("reference", "optimization_report")
-            outf.write('    ' + str(ElementTree.tostring(report)))
+            report.set("reference", self.taskType + "_report")
+            outf.write('    ' + xmlEscapeTabs(ElementTree.tostring(report)))
 
         # 2. Include only required parameters
-        problem = self.optimizationTask.find('copasi:Problem', COPASI_NS)
+        problem = taskRef.xmlTask.find('copasi:Problem', COPASI_NS)
         outf.write('    <Problem>\n')
         for elem in problem.iterfind("*", COPASI_NS):
-            if "Problem" in elem.tag: continue
-            if "ParameterGroup" not in elem.tag or elem.get("name").lower() != "optimizationitemlist":
-                if "Parameter" in elem.tag and elem.get("name").lower() == "randomize start values":
-                    # never randomize them
-                    outf.write('    <Parameter name="Randomize Start Values" type="bool" value="0"/>\n')
-                else:
-                    outf.write('    ' + str(ElementTree.tostring(elem)))
+            if "Problem" in elem.tag:
                 continue
+
+            if "ParameterGroup" in elem.tag:
+                if elem.get("name").lower() == "optimizationitemlist":
+                    continue # handled separately
+
+                if elem.get("name").lower() == "experiment set":
+                    # modify this element to fix the experiment file name
+                    self.fixupExperimentSet(elem)
+
+                # just write whatever is there
+                outf.write('    ' + xmlEscapeTabs(ElementTree.tostring(elem)))
+                continue
+    
+            if "Parameter" in elem.tag and elem.get("name").lower() == "randomize start values":
+                # never randomize them
+                outf.write('    <Parameter name="Randomize Start Values" type="bool" value="0"/>\n')
+                continue
+
+            # just write whatever is there
+            outf.write('    ' + xmlEscapeTabs(ElementTree.tostring(elem)))
+            continue
+
 
         #print("parameters in the file:", self.paramDict.keys())
         outf.write(' <ParameterGroup name="OptimizationItemList">\n')
         for p in parameters:
-            if p in self.paramDict:
-                self.writeParam(outf, p, startParamValues, areParametersChangeable)
+            if p in taskRef.paramDict:
+                v = taskRef.paramDict[p]
+                self.writeParam(outf, p, v, startParamValues, areParametersChangeable)
         outf.write(' </ParameterGroup>\n')
         outf.write(' </Problem>\n')
 
         # 3. Include only required methods
         #print("methods in the file:", self.methodDict.keys())
+        self.serializeMethdods(outf, taskRef, methodNames)
+
+        # finish off
+        outf.write('\n  </Task>\n')
+
+
+    def serializeMethdods(self, outf, taskRef, methodNames):
         for m in methodNames:
-            methodFromFile = self.methodDict.get(m.lower())
+            methodFromFile = taskRef.methodDict.get(m.lower())
             if bool(g.getConfig("methodParametersFromFile")) and methodFromFile is not None:
-                outf.write('        ' + str(ElementTree.tostring(methodFromFile)))
+                outf.write('        ' + xmlEscapeTabs(ElementTree.tostring(methodFromFile)))
             else:
                 predefinedMethod = PREDEFINED_METHODS.get(m)
                 if predefinedMethod is None:
@@ -336,15 +446,23 @@ class CopasiFile:
                 else:
                     outf.write('        ' + predefinedMethod)
 
-        # finish off
-        outf.write('\n  </Task>\n')
+    def isValid(self):
+        if self.taskType == COPASI_TASK_OPTIMIZATION:
+            if not self.isFileRead: return True
+            return self.optimizationTask is not None
+        if self.taskType == COPASI_TASK_PARAM_ESTIMATION:
+            if not self.isFileRead: return True
+            return self.paramEstimationTask is not None
+        return False
 
 
-    def createCopy(self, configFilename, reportFilename, parameters, methods, startParamValues, areParametersChangeable):
-        if self.optimizationTask is None:
+    def createCopy(self, configFilename, reportFilename, parameters, methods,
+                   startParamValues, areParametersChangeable):
+
+        if not self.isValid():
             return False
 
-        with open(configFilename, "w") as outf:
+        with open(configFilename, "wt") as outf:
             outf.write('<?xml version="1.0" encoding="UTF-8"?>\n')
             outf.write('<!-- generated with SpaceScanner ' + SPACESCANNER_VERSION + ' at ' + getCurrentTime() +' -->\n')
             vmaj = self.xmlroot.get("versionMajor")
@@ -356,25 +474,30 @@ class CopasiFile:
                     outf.write('  <ListOfTasks>\n')
                     for sub in elem.iterfind("*", COPASI_NS):
                         if "ListOfTasks" in sub.tag: continue
-                        if sub == self.optimizationTask:
-                            self.serializeOptimizationTask(reportFilename, outf, parameters, methods, startParamValues, areParametersChangeable)
+
+                        if (sub == self.optimizationTask.xmlTask and self.taskType == COPASI_TASK_OPTIMIZATION) or \
+                           (sub == self.paramEstimationTask.xmlTask and self.taskType == COPASI_TASK_PARAM_ESTIMATION):
+                            # This is the scheduled task type, serialize it as such, in a special way
+                            self.serializeScheduledTask(reportFilename, outf, parameters, methods,
+                                                        startParamValues, areParametersChangeable)
                         else:
-                            # make sure all other tasks are unscheduled
+                            # This is some other task; make sure it is *not* scheduled
+                            # and serialize it in the normal way.
                             sub.attrib["scheduled"] = "false"
-                            outf.write('  ' + str(ElementTree.tostring(sub)))
+                            outf.write('  ' + xmlEscapeTabs(ElementTree.tostring(sub)))
+
                     outf.write('  </ListOfTasks>\n')
                 elif "ListOfReports" in elem.tag:
                     outf.write(REPORT_FORMAT)
                 else:
-                    outf.write('  ' + str(ElementTree.tostring(elem)))
+                    outf.write('  ' + xmlEscapeTabs(ElementTree.tostring(elem)))
             outf.write('</COPASI>\n')
 
         return True
 
 #####################################################
-def test():
-    print("Copasi XML file manager test")
-    cf = CopasiFile()
+def testOptimizationTask():
+    cf = CopasiFile(COPASI_TASK_OPTIMIZATION)
     print("opening a file")
     if not cf.read("../models/complex.cps"):
         return -1
@@ -382,8 +505,26 @@ def test():
     params = cf.queryParameters()
     print("parameter names: ", params)
     print("writing a copy")
-    cf.createCopy("./input.cps", "./output.log", [params[0], params[-1]], ["ParticleSwarm"], None, True)
+    cf.createCopy("./input-optimization-task.cps", "./output.log",
+                  [params[0], params[-1]], ["ParticleSwarm"],
+                  None, True)
+    print("all done")
+
+def testParamEstimationTask():
+    cf = CopasiFile(COPASI_TASK_PARAM_ESTIMATION)
+    print("opening a file")
+    if not cf.read("../models/metformin-parameter-estimation.cps"):
+        return -1
+    print("querying parameters")
+    params = cf.queryParameters()
+    print("parameter names: ", params)
+    print("writing a copy")
+    cf.createCopy("./input-param-estimation-task.cps", "./output.log",
+                  [params[0], params[-1]], ["ParticleSwarm"],
+                  None, True)
     print("all done")
 
 if __name__ == "__main__":
-    test()
+    print("Copasi XML file manager test")
+    testOptimizationTask()
+    testParamEstimationTask()

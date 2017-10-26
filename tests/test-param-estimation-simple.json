@@ -1,0 +1,16 @@
+{
+    "copasi" : {
+        "modelFile" : "@SELF@/models/metformin-parameter-estimation.cps",
+	"taskType" : "parameterFitting"
+    },
+    "optimization" : {
+        "consensusDelaySec" : 5,
+        "consensusCorridor" : 0.5
+    },
+    "parameters" : [
+        {"type" : "full-set"}
+    ],
+    "output" : {
+        "logfile" : "spacescanner.log"
+    }
+}

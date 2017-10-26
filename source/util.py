@@ -54,6 +54,9 @@ def getCygwinDir():
 ################################################
 # Constants
 
+COPASI_TASK_OPTIMIZATION     = "optimization"
+COPASI_TASK_PARAM_ESTIMATION = "parameterFitting"
+
 # paths
 DEFAULT_CONFIG_FILE = "config.json"
 SELF_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -290,6 +293,12 @@ def jsonFixInfinity(x, defaultValue):
     if math.isnan(x) or math.isinf(x):
         return defaultValue
     return x
+
+# escape the TAB characters with the ascii code for them
+def xmlEscapeTabs(s):
+    if isPython3():
+        s = s.decode("ascii")
+    return s.replace("	", "&#x09;")
 
 #####################################################################
 # the hash is unique as long as each job has unique set of parameters

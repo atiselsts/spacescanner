@@ -298,6 +298,7 @@ class Job:
             # remove the already-used method to avoid infinite looping between methods
             self.fallbackMethods.remove(self.currentMethod)
 
+
         assert (self.currentMethod in self.methods)
         self.methods.remove(self.currentMethod)
 
@@ -510,4 +511,3 @@ class Job:
                 "active" : isActive,
                 "reason" : reasonToStr(terminationReason),
                 "parameters": self.unquoteParams()}
-
