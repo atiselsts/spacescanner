@@ -1,7 +1,7 @@
 PYTHON = python
 SPACESCANNER = ../source/spacescanner.py
 
-all: test-broken test-param-estimation test-fast-consensus test-no-solution test-param-ranges test-param-ranges2 test-solution-timeout test-top test-suspend-resume cleanup
+all: check-version test-broken test-param-estimation test-fast-consensus test-no-solution test-param-ranges test-param-ranges2 test-solution-timeout test-top test-suspend-resume cleanup
 
 test-param-estimation: test-param-estimation-simple
 	@true
@@ -9,6 +9,9 @@ test-param-estimation: test-param-estimation-simple
 test-broken: test-broken-1 test-broken-2 test-broken-3 test-broken-4 test-broken-5 test-broken-6
 	@true
 
+check-version:
+	@echo printing Python version...
+	@echo `python -V`
 
 ###############################################################################
 # Optimization tests
