@@ -238,7 +238,7 @@ class Job:
             if numActiveRunners > self.maxCores:
                 # not converged yet + too many active; limit some runners
                 cpuTimes = [(r.currentCpuTime, r) for r in self.runners if r.isActive]
-                cpuTimes.sort()
+                cpuTimes.sort(key=lambda x: x[0])
                 # continue first `maxCores` runners, suspend the rest
                 resumeRunners = cpuTimes[:self.maxCores]
                 suspendRunners = cpuTimes[self.maxCores:]

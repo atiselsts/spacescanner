@@ -56,7 +56,7 @@ Alternatively, get it through Git: `git clone https://github.com/atiselsts/space
 
 **Prerequisites:**
 
-* Python (version 2.7);
+* Python (both version 2 and version 3 are supported);
 * `psutil` Python module. 
 
 Install `psutil` with PIP, Python package manager, e.g.:
