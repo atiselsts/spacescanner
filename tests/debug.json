@@ -4,7 +4,7 @@
         "consensusDelaySec" : 10
     },
     "copasi" : {
-        "modelFile" : "@SELF@/models/simple-6params.cps"
+        "modelFile" : "@SELF@/dependencies/models/simple-6params.cps"
     },
     "parameters" : [
         {"type" : "exhaustive", "range" : [1, 2]},

@@ -4,7 +4,7 @@
 	"runsPerJob" : 10
     },
     "copasi" : {
-        "modelFile" : "@SELF@/models/complex.cps"
+        "modelFile" : "@SELF@/dependencies/models/complex.cps"
     },
     "parameters" : [
         {"type" : "exhaustive", "range" : [15]}

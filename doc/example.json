@@ -1,6 +1,6 @@
 {
     "copasi" : {
-        "modelFile" : "@SELF@/models/simple-6params.cps",
+        "modelFile" : "@SELF@/dependencies/models/simple-6params.cps",
         "methods" : ["ParticleSwarm", "GeneticAlgorithm", "GeneticAlgorithmSR", "EvolutionaryProgram", "EvolutionaryStrategySR", "ScatterSearch", "SimulatedAnnealing"],
         "fallbackMethods" : ["GeneticAlgorithmSR", "EvolutionaryStrategySR"],
         "randomizeMethodSelection" : false,

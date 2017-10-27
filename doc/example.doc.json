@@ -5,7 +5,7 @@
 {
     "copasi" : {
         // COPASI model file name; @SELF@ refers to SpaceScanner source directory
-        "modelFile" : "@SELF@/models/simple-6params.cps",
+        "modelFile" : "@SELF@/dependencies/models/simple-6params.cps",
         // which and how many methods to use; can contain a method more than once
         "methods" : ["ParticleSwarm", "GeneticAlgorithm", "GeneticAlgorithmSR", "EvolutionaryProgram", "EvolutionaryStrategySR", "ScatterSearch", "SimulatedAnnealing"],
         // which and how many methods to use when a method fails to evaluate the objective function in given time
