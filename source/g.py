@@ -18,7 +18,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Author: Atis Elsts, 2016
+# Author: Atis Elsts, 2016-2017
 #
 
 import os, sys, shutil, copy, json, multiprocessing
@@ -73,7 +73,7 @@ def defaultConfigInitialize():
     DEFCFG[("optimization", "stagnationDelaySec")] = ConfigFileField(300)
     DEFCFG[("optimization", "stagnationProportionalDelay")] = ConfigFileField(0.15) # 15% of total run's time
     DEFCFG[("optimization", "targetFractionOfTOP")] = ConfigFileField(0.0) # set to 0.0 to disable this
-    DEFCFG[("optimization", "bestOfValue")] = ConfigFileField(float("-inf"))
+    DEFCFG[("optimization", "bestOfValue")] = ConfigFileField(None)
     DEFCFG[("optimization", "restartFromBestValue")] = ConfigFileField( True) # if yes, each next method will start from the best parameter values so far
     DEFCFG[("optimization", "maxConcurrentRuns")] = ConfigFileField(4)
     DEFCFG[("optimization", "runsPerJob")] = ConfigFileField(2)

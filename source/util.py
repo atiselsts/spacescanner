@@ -18,7 +18,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Author: Atis Elsts, 2016
+# Author: Atis Elsts, 2016-2017
 #
 
 import os, sys, time, re, datetime, math, platform, json, csv
@@ -79,7 +79,7 @@ if not COPASI_DIR:
 else:
     COPASI_DIR = os.path.join(COPASI_DIR, "bin")
 
-SPACESCANNER_VERSION = "0.1.0 (c) 2016 http://biosystems.lv"
+SPACESCANNER_VERSION = "0.2.0 (c) 2017 http://biosystems.lv"
 
 LOG_FATAL = 0
 LOG_ERROR = 1
@@ -96,6 +96,7 @@ TERMINATION_REASON_STAGNATION         = 5
 TERMINATION_REASON_MAX                = 5
 
 MIN_OF_VALUE = float("-inf") # minimal objective function value
+MAX_OF_VALUE = float("inf")  # maximal objective function value
 
 ENC = json.JSONEncoder()
 
@@ -290,7 +291,7 @@ def getNonconvergedResults(filename):
     return results
 
 def jsonFixInfinity(x, defaultValue):
-    if math.isnan(x) or math.isinf(x):
+    if x is None or math.isnan(x) or math.isinf(x):
         return defaultValue
     return x
 

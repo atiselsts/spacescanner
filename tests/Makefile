@@ -1,9 +1,9 @@
-PYTHON = python
+PYTHON = python3
 SPACESCANNER = ../source/spacescanner.py
 
 all: check-version test-broken test-param-estimation test-fast-consensus test-no-solution test-param-ranges test-param-ranges2 test-solution-timeout test-top test-suspend-resume cleanup
 
-test-param-estimation: test-param-estimation-simple
+test-param-estimation: test-param-estimation-simple test-param-estimation-reference-time test-param-estimation-top
 	@true
 
 test-broken: test-broken-1 test-broken-2 test-broken-3 test-broken-4 test-broken-5 test-broken-6
@@ -78,7 +78,7 @@ test-solution-timeout-allmethods:
 test-top:
 	@echo Testing that the optimization is stopped when an acceptable total optimization potential \(TOP\) value is reached...
 	@rm -f spacescanner.log
-	$(PYTHON) $(SPACESCANNER) test-potential-value-reached.json
+	$(PYTHON) $(SPACESCANNER) test-top.json
 	@grep -e "good-enough-value criteria reached" spacescanner.log
 	@echo ..done
 	@echo ""
@@ -101,6 +101,22 @@ test-param-estimation-simple:
 	@rm -f spacescanner.log
 	$(PYTHON) $(SPACESCANNER) test-param-estimation-simple.json
 	@grep "terminating job 1: consensus reached" spacescanner.log
+	@echo ..done
+	@echo ""
+
+test-param-estimation-reference-time:
+	@echo Testing parameter estimation with a different reference time...
+	@rm -f spacescanner.log
+	$(PYTHON) $(SPACESCANNER) test-param-estimation-reference-time.json
+	@grep "terminating job 1: consensus reached" spacescanner.log
+	@echo ..done
+	@echo ""
+
+test-param-estimation-top:
+	@echo Testing that the optimization is stopped when an acceptable total optimization potential \(TOP\) value is reached...
+	@rm -f spacescanner.log
+	$(PYTHON) $(SPACESCANNER) test-param-estimation-top.json
+	@grep -e "good-enough-value criteria reached" spacescanner.log
 	@echo ..done
 	@echo ""
 

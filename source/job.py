@@ -18,7 +18,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Author: Atis Elsts, 2016
+# Author: Atis Elsts, 2016-2017
 #
 
 import os, sys, time, copy, random, math, threading
@@ -39,6 +39,7 @@ class Job:
         self.pool = pool
         self.params = params
         self.areParametersChangeable = areParametersChangeable
+        self.isFullSet = (params == pool.strategy.copasiConfig["params"])
         self.id = pool.strategy.nextJobID
         pool.strategy.nextJobID += 1
         self.methods = copy.copy(g.getConfig("copasi.methods"))
@@ -62,6 +63,8 @@ class Job:
         # lifetime, but the code will not react to that, keeping maxCores constant
         self.maxCores = maxCores
         self.loadBalanceFactor = float(g.getConfig("optimization.runsPerJob")) / maxCores
+        # this might actually be after X seconds, not 3 seconds - if so configured
+        self.bestOfValueAfter3Sec = None
 
 
     def getFullName(self):
@@ -93,7 +96,7 @@ class Job:
 
     def createRunners(self):
         # move the current runners, if any, to the array with old runners
-        if self.runners:
+        if len(self.runners):
             self.oldCpuTimes.append(max(r.currentCpuTime for r in self.runners))
             self.oldRunners.extend(self.runners)
             self.runners = []
@@ -105,7 +108,7 @@ class Job:
         self.runnerGeneration += 1
 
         bestParams = None
-        if self.oldRunners and bool(g.getConfig("optimization.restartFromBestValue")):
+        if len(self.oldRunners) and bool(g.getConfig("optimization.restartFromBestValue")):
             # get best params
             bestParams = self.getBestParams()
 
@@ -125,6 +128,12 @@ class Job:
 
     def timeDiffExceeded(self, measuredDiff, requiredDiff):
         return measuredDiff > requiredDiff * self.loadBalanceFactor
+
+
+    def getWorstOfValue(self):
+        fn = self.pool.strategy.getOfValueSelectionFn()
+        # negate the OF values in order to select MIN of optimization tasks and MAX for other
+        return -fn([-r.ofValue for r in self.runners])
 
 
     def checkReports(self):
@@ -166,6 +175,14 @@ class Job:
                         anyUpdated = True
                     maxCpuTime = max(maxCpuTime, r.currentCpuTime)
 
+        checkCpuTime = float(g.getConfig("optimization.paramEstimationReferenceValueSec"))
+        if self.bestOfValueAfter3Sec is None and maxCpuTime >= checkCpuTime:
+            value = self.getBestOfValue()
+            # check if the value is actually present
+            if value != self.pool.strategy.getInitialOfValue():
+                # store the best OF value after 3 sec or whatever amount of time
+                self.bestOfValueAfter3Sec = value
+
         if not self.areParametersChangeable:
             # it is simple; as soon as the first value is read, return
             if anyUpdated:
@@ -196,7 +213,7 @@ class Job:
             if self.convergenceTime is None:
                 g.log(LOG_DEBUG, self.getName() + ": reached consensus, waiting for guard time before termination")
                 self.convergenceTime = now
-                self.convergenceValue = min([r.ofValue for r in self.runners])
+                self.convergenceValue = self.getWorstOfValue()
 
             # if the runners have converged for long enough time, quit
             else:
@@ -253,29 +270,65 @@ class Job:
 
     # find min and max values and check that they are in 1% range
     def hasConsensus(self):
+        if self.convergenceTime is None:
+            worst = self.getWorstOfValue()
+        else:
+            worst = self.convergenceValue
+        # if this is not the first method, also should use max from the previous
+        best = self.getBestOfValue()
+
+        # return False if exited without a result
+        if math.isinf(worst) or math.isinf(best):
+            #print("worst or best are inf:", worst, best)
+            return False
+
+        if self.pool.strategy.taskType == "optimization":
+            return self.hasConsensusOptimizationTask(worst, best)
+        return self.hasConsensusParameterEstimationTask(worst, best)
+
+
+    def hasConsensusOptimizationTask(self, worst, best):
         epsilonAbs = float(g.getConfig("optimization.consensusAbsoluteError"))
         epsilonRel = float(g.getConfig("optimization.consensusCorridor"))
 
-        if self.convergenceTime is None:
-            minV = min([r.ofValue for r in self.runners])
-        else:
-            minV = self.convergenceValue
-        # if this is not the first method, also should use max from the previous
-        maxV = self.getBestOfValue()
-
-        # return False if exited without a result
-        if math.isinf(minV) or math.isinf(maxV):
-            return False
-
         # returns true if either the absolute difference OR relative difference are small
-        if floatEqual(minV, maxV, epsilonAbs):
+        if floatEqual(worst, best, epsilonAbs):
             return True
 
         # XXX: avoid division by zero; this means relative convergence will always fail on 0.0
-        if maxV == 0.0:
+        if best == 0.0:
             return False
 
-        return abs(1.0 - minV / maxV) < epsilonRel
+        return abs(1.0 - worst / best) < epsilonRel
+
+
+    def hasConsensusParameterEstimationTask(self, worst, best):
+        epsilonAbs = float(g.getConfig("optimization.consensusAbsoluteError"))
+        epsilonRel = float(g.getConfig("optimization.consensusCorridor"))
+
+        # if the reference value is not yet set, assume no consensus
+        if self.bestOfValueAfter3Sec is None:
+            #print("has cons: no 3sec value!")
+            return False
+
+        # this also avoids divison by zero
+        if floatEqual(self.bestOfValueAfter3Sec, best, epsilonAbs):
+            #print("has cons: best == starting")
+            #print("base:", self.bestOfValueAfter3Sec)
+            #print("best:", best)
+            #print("worst:", worst)
+
+            # detect consensus if and only if the worst value is also the same as the reference value
+            return floatEqual(self.bestOfValueAfter3Sec, worst, epsilonAbs)
+
+        #print("base:", self.bestOfValueAfter3Sec)
+        #print("best:", best)
+        #print("worst:", worst)
+
+        diffWorst = self.bestOfValueAfter3Sec - worst
+        diffBest = self.bestOfValueAfter3Sec - best
+
+        return abs(1.0 - diffWorst / float(diffBest)) < epsilonRel
 
 
     def decideTermination(self):
@@ -323,7 +376,13 @@ class Job:
             g.log(LOG_INFO, "switching {} to a fallback method {}".format(self.getName(), self.currentMethod))
             self.isUsingFallback = True
             # switch to the fallback method
-            if not self.createRunners():
+            try:
+                success = self.createRunners()
+            except Exception as e:
+                g.log(LOG_INFO, "Exception while switching {} to a fallback method: {}".format(
+                    self.getName(), e))
+                success = False
+            if not success:
                 self.pool.finishJob(self)
             return
 
@@ -347,24 +406,30 @@ class Job:
 
 
     def getBestOfValue(self):
-        value = MIN_OF_VALUE
-        if self.oldRunners:
-             value = max([r.ofValue for r in self.oldRunners])
-        if self.runners:
-             value = max(value, max([r.ofValue for r in self.runners]))
+        value = self.pool.strategy.getInitialOfValue()
+        # either `min()` or `max()`
+        fn = self.pool.strategy.getOfValueSelectionFn()
+        if len(self.oldRunners):
+             value = fn([r.ofValue for r in self.oldRunners])
+        if len(self.runners):
+             value = fn(value, fn([r.ofValue for r in self.runners]))
         return value
 
 
     def getBestParams(self):
-        if not self.oldRunners:
+        if not len(self.oldRunners):
             return None
-        best = self.oldRunners[0]
+
+        bestRunner = self.oldRunners[0]
+        fn = self.pool.strategy.getOfValueSelectionFn()
         for r in self.oldRunners[1:]:
-            if r.ofValue > best.ofValue:
-                best = r
-        stats = best.getLastStats()
+            if fn(r.ofValue, bestRunner.ofValue) != bestRunner.ofValue:
+                bestRunner = r
+
+        stats = bestRunner.getLastStats()
         if not stats.isValid:
             return None
+
         result = {}
         for i,p in enumerate(self.params):
             result[p] = stats.params[i]
@@ -385,8 +450,9 @@ class Job:
         totalCpuTime = 0
         terminationReason = TERMINATION_REASON_MAX
         bestRunner = None
-        bestOfValue = MIN_OF_VALUE
+        bestOfValue = self.pool.strategy.getInitialOfValue()
         isActive = False
+        fn = self.pool.strategy.getOfValueSelectionFn()
 
         for r in self.runners:
             if r.isActive:
@@ -394,14 +460,14 @@ class Job:
             terminationReason = min(terminationReason, r.terminationReason)
             maxCpuTime = max(r.currentCpuTime, maxCpuTime)
             totalCpuTime += r.currentCpuTime
-            if bestOfValue < r.ofValue:
+            if fn(r.ofValue, bestOfValue) != bestOfValue:
                 bestOfValue = r.ofValue
                 bestRunner = r
 
         # also account the failed methods
         for r in self.oldRunners:
             totalCpuTime += r.currentCpuTime
-            if bestOfValue < r.ofValue:
+            if fn(r.ofValue, bestOfValue) != bestOfValue:
                 bestOfValue = r.ofValue
                 bestRunner = r
 

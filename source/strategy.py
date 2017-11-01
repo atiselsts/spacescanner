@@ -18,7 +18,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Author: Atis Elsts, 2016
+# Author: Atis Elsts, 2016-2017
 #
 
 import os, sys, time, copy, itertools, random, math
@@ -277,7 +277,7 @@ class StrategyManager:
         self.copasiConfig = {"params" : []}
         self.jobsByBestOfValue = []
 
-        self.topBaseline = 0.0
+        self.topBaseline = None
 
         self.copasiFile = self.loadCopasiFile()
         if not self.copasiFile:
@@ -292,6 +292,31 @@ class StrategyManager:
         if not isDummy:
             self.isExecutable = True
         return True
+
+    # Returns true if `a` is better than `b`.
+    # For maximization tasks: if a > b
+    # For minimization tasks: if a < b
+    def isOfValueBetter(self, a, b):
+        if self.taskType == "optimization":
+            return a > b
+        return a < b
+
+    def getOfValueSelectionFn(self):
+        if self.taskType == "optimization":
+            return max
+        return min
+
+    def isOfValueSortReverse(self):
+        if self.taskType == "optimization":
+            # sort from biggest to smallest
+            return True
+        # sort from smallest to biggest
+        return False
+
+    def getInitialOfValue(self):
+        if self.taskType == "optimization":
+            return MIN_OF_VALUE
+        return MAX_OF_VALUE
 
     def isActive(self):
         with self.jobLock:
@@ -354,7 +379,8 @@ class StrategyManager:
                 lst = joblist
             for job in lst:
                 allJobsByBestOfValue.append(job)
-        allJobsByBestOfValue.sort(key=lambda x: x.getBestOfValue(), reverse=True)
+        allJobsByBestOfValue.sort(key=lambda x: x.getBestOfValue(),
+                                  reverse=self.isOfValueSortReverse())
 
         allParams = self.copasiConfig["params"]
 
@@ -398,17 +424,27 @@ class StrategyManager:
         with self.jobLock:
             self.finishedJobs[job.id] = job
 
-            # if this is a zero-parameter job, use the result as a baseline
-            if not job.areParametersChangeable:
-                self.topBaseline = job.getBestOfValue()
-                # do no include the result of this job in the "normal" results
-                return
+            if self.taskType == "optimization":
+                # optimization; if this is the zero-parameter job, use the result as a baseline
+                if not job.areParametersChangeable:
+                    self.topBaseline = job.getBestOfValue()
+                    # do no include the result of this job in the "normal" results
+                    return
+            else:
+                # parameter estimation; use the value of the full-parameter job after 3 sec as the baseline
+                if job.isFullSet:
+                    if job.bestOfValueAfter3Sec is None or math.isinf(job.bestOfValueAfter3Sec):
+                        g.log(LOG_INFO, "Cannot set TOP baseline: value at evaluation point is {}, using best value {} instead".format(
+                            job.bestOfValueAfter3Sec, job.getBestOfValue()))
+                        self.topBaseline = job.getBestOfValue()
+                    else:
+                        self.topBaseline = job.bestOfValueAfter3Sec
 
             # order the finished-jobs list by OF values.
             # (full re-sorting is suboptimal, but we do not expect *that* many jobs)
             self.jobsByBestOfValue[len(job.params)].append(job)
             self.jobsByBestOfValue[len(job.params)].sort(
-                key=lambda x: x.getBestOfValue(), reverse=True)
+                key=lambda x: x.getBestOfValue(), reverse=self.isOfValueSortReverse())
 
         # save the intermediate results after each finished job
         self.dumpResults()
@@ -430,36 +466,80 @@ class StrategyManager:
         if not self.isTOPEnabled():
             return False
 
-        targetFraction = g.getConfig("optimization.targetFractionOfTOP")
+        targetFraction = float(g.getConfig("optimization.targetFractionOfTOP"))
 
         # calculate the target value, looking at both config and at the job with all parameters, if any
         try:
-            configTarget = float(g.getConfig("optimization.bestOfValue"))
+            configTargetS = g.getConfig("optimization.bestOfValue")
+            if configTargetS is None:
+                # this effectively disables it
+                configTarget = self.getInitialOfValue()
+            else:
+                configTarget = float(configTargetS)
         except:
-            g.log(LOG_INFO, "Bad bestOfValue in config: {}".format(g.getConfig("optimization.bestOfValue")))
+            g.log(LOG_INFO, "Bad bestOfValue in config: {}".format(
+                  g.getConfig("optimization.bestOfValue")))
             return False
+
+        # get the joblist describing the execution with "full-set" parameters
         joblist = self.jobsByBestOfValue[-1]
         if joblist:
             calculatedTarget = joblist[0].getBestOfValue()
         else:
-            calculatedTarget = MIN_OF_VALUE
-        targetValue = max(configTarget, calculatedTarget)
-        if targetValue == MIN_OF_VALUE:
+            calculatedTarget = self.getInitialOfValue()
+
+        targetValue = calculatedTarget
+        if self.isOfValueBetter(configTarget, targetValue):
+            # the configured value is better, use it
+            targetValue = configTarget
+
+        if targetValue == self.getInitialOfValue():
             g.log(LOG_DEBUG, "TOP: no target value: {} {}".format(configTarget, calculatedTarget))
             return False
 
-        achievedValue = MIN_OF_VALUE
+        achievedValue = self.getInitialOfValue()
         for joblist in self.jobsByBestOfValue[:numParameters + 1]:
             if joblist:
-                achievedValue = max(achievedValue, joblist[0].getBestOfValue())
+                joblistOfValue = joblist[0].getBestOfValue()
+                if self.isOfValueBetter(joblistOfValue, achievedValue):
+                    achievedValue = joblistOfValue
+
+        if self.topBaseline is None:
+            g.log(LOG_DEBUG, "TOP: no baseline value: {} {}".format(configTarget, calculatedTarget))
+            return False
 
         isReached = False
-        if self.topBaseline > targetValue:
-            isReached = True
+        if self.taskType == "optimization":
+            # Optimization; maximize
+
             requiredValue = targetValue
+
+            if self.isOfValueBetter(self.topBaseline, targetValue):
+                # a corner case: the baseline value is already better than the target!
+                isReached = True
+            else:
+                # the normal case; stop if the current value is close enough to the target
+                requiredValue = (targetValue - self.topBaseline) * targetFraction + self.topBaseline
+                isReached = achievedValue >= requiredValue
+
         else:
-            requiredValue = (targetValue - self.topBaseline) * targetFraction + self.topBaseline
-            isReached = achievedValue >= requiredValue
+            # Parameter estimation; minimize
+
+            requiredValue = targetValue
+
+            if self.topBaseline <= targetValue:
+                # a corner case: the baseline value is already better than the target
+                isReached = achievedValue <= self.topBaseline # is current better than the baseline?
+            elif achievedValue > self.topBaseline:
+                # corner case: the baseline has not been reached yet
+                isReached = False
+            else:
+                # normal case
+                normalizationFactor = self.topBaseline - targetValue # always strictly positive
+                # e.g. for target fraction 0.9 the condition 90% of the interval between baseline and target must be covered
+                requiredValue = (1.0 - targetFraction) * normalizationFactor + targetValue
+                isReached = achievedValue <= requiredValue
+
 
         g.log(LOG_DEBUG, "TOP: {} parameters, {} achieved, {} required, {} target, {} configTarget, {} calculatedTarget".format(numParameters, achievedValue, requiredValue,
                                                                                                                                 targetValue, configTarget, calculatedTarget))

@@ -18,7 +18,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Author: Atis Elsts, 2016
+# Author: Atis Elsts, 2016-2017
 #
 
 import os, sys, time, copy, random, threading, shutil
@@ -79,8 +79,9 @@ class Runner:
         self.job = job
         self.id = id
         self.methodName = methodName
-        self.ofValue = MIN_OF_VALUE
-        self.stats = StatsItem("")
+        self.initialOfValue = job.pool.strategy.getInitialOfValue()
+        self.ofValue = self.initialOfValue
+        self.stats = StatsItem("", self.initialOfValue)
         self.isError = False
         self.isActive = False
         self.isSuspended = False
@@ -135,6 +136,8 @@ class Runner:
         except:
             pass # may not exist, that's fine
 
+
+
         copasiExe = os.path.join(COPASI_DIR, COPASI_EXECUTABLE)
         if not isExecutable(copasiExe):
             g.log(LOG_ERROR, 'COPASI binary is not executable or does not exist under "' + copasiExe + '"')
@@ -177,7 +180,8 @@ class Runner:
             for i in range(20):
                 r += random.random()
                 t += random.random()
-                si = StatsItem("{} {} 1 ( 74.24 ) -1.81914".format(r, t))
+                si = StatsItem("{} {} 1 ( 74.24 ) -1.81914".format(r, t),
+                               self.initialOfValue)
                 result.append(si)
             return result
 
@@ -202,7 +206,7 @@ class Runner:
                     if startsWith(line, "Optimization Result"):
                         break
 
-                    si = StatsItem(line)
+                    si = StatsItem(line, self.initialOfValue)
                     if si.isValid:
                         result.append(si)
 
@@ -241,6 +245,8 @@ class Runner:
             if self.lastReportModificationTime is None \
                     or st.st_mtime > self.lastReportModificationTime:
                 self.lastReportModificationTime = st.st_mtime
+                # a short sleep to avoid race conditions when opening the file before writing is finished
+                time.sleep(0.001)
                 with open(self.reportFilename, "r") as f:
                     self.stats.isValid = False
                     inValues = False
@@ -250,14 +256,17 @@ class Runner:
                             continue
                         if not inValues: continue
 
-                        if startsWith(line, "Optimization Result"):
+                        # this marks COPASI having finished
+                        if startsWith(line, "Optimization Result") or \
+                           startsWith(line, "Parameter Estimation Result"):
                             break
 
-                        si = StatsItem(line)
+                        si = StatsItem(line, self.initialOfValue)
                         if si.isValid:
                             self.stats = si
 
                 if self.stats.isValid:
+#                    print("last stats=", self.getLastStats(), "for", self.getName())
                     self.ofValue = self.getLastStats().ofValue
                     if oldOfValue != self.ofValue:
                         g.log(LOG_INFO, "{}: new OF value {}".format(self.getName(), self.ofValue))
@@ -293,19 +302,19 @@ class Runner:
 # Parsing statistics
 
 class StatsItem:
-    def __init__(self, line):
+    def __init__(self, line, initialOfValue):
         # input example:
-        # CPU time [Best Value] [Function Evaluations] [Best Parameters] maximum real part
-        # 0.043704 3.24353 1 (	74.248	2.27805	) -1.81914
-        self.isValid = True
+        # CPU time [Best Value] [Function Evaluations] [Best Parameters]
+        # 0.043704 3.24353 1 (	74.248	2.27805	)
+        self.isValid = False
         self.params = []
         self.cpuTime = 0.0
-        self.ofValue = MIN_OF_VALUE
+        self.ofValue = initialOfValue
         self.numOfEvaluations = 0
         line = line.strip()
         if not line:
-            self.isValid = False
             return
+
         if "\t" in line:
             numbers = line.split("\t")
         else:
@@ -318,19 +327,19 @@ class StatsItem:
             if math.isnan(self.ofValue) or \
                    (math.isinf(self.ofValue) and self.ofValue > 0.0):
                 # XXX: something went wrong, what's the best action?
-                g.log(LOG_ERROR, "invalid objective function value {}, using -infinity instead".format(self.ofValue))
-                self.ofValue = MIN_OF_VALUE
+                g.log(LOG_ERROR, "invalid objective function value {}, using initial OF value instead".format(self.ofValue))
+                self.ofValue = initialOfValue
             self.numOfEvaluations = int(numbers[2])
             # param value list starts with "(", finishes with ")"
             for i in range(4, len(numbers) - 1):
                 self.params.append(float(numbers[i]))
+            self.isValid = True
         except ValueError as e:
             g.log(LOG_DEBUG, "value error {} in line".format(e))
             g.log(LOG_DEBUG, line)
         except:
             g.log(LOG_DEBUG, "unexpected error {} in line".format(sys.exc_info()[0]))
             g.log(LOG_DEBUG, line)
-            self.isValid = False
 
     def __str__(self):
         paramStr = " ".join([str(x) for x in self.params])

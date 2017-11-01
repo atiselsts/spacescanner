@@ -18,7 +18,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Author: Atis Elsts, 2016
+# Author: Atis Elsts, 2016-2017
 #
 
 import os, sys, time, copy, math, threading
@@ -42,7 +42,7 @@ class JobPool:
         self.numUsableCores = max(1, int(g.getConfig("optimization.maxConcurrentRuns")))
         self.numRunnersPerJob = max(1, int(g.getConfig("optimization.runsPerJob")))
         self.maxNumParallelJobs = int(math.ceil(float(self.numUsableCores) / self.numRunnersPerJob))
-        self.bestOfValue = MIN_OF_VALUE
+        self.bestOfValue = strategy.getInitialOfValue()
         self.bestParams = []
 
     def start(self):
@@ -96,11 +96,11 @@ class JobPool:
             if j not in self.activeJobs:
                 return
             self.activeJobs.remove(j)
-            if self.bestOfValue < j.getBestOfValue():
+            # if job's OF value is better than the current best value...
+            if self.strategy.isOfValueBetter(j.getBestOfValue(), self.bestOfValue):
                 # improved on the OF value! Store the result now.
                 self.bestOfValue = j.getBestOfValue()
                 self.bestParams = copy.copy(j.params)
-            # print("self.strategy.finishJob")
             self.strategy.finishJob(j)
 
     def refresh(self):

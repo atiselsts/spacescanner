@@ -24,14 +24,14 @@
 #
 # The idea in a nutshell: given a Copasi configuration file
 # with an optimization task, optimization parameters, and methods,
-# determine the minimal subset of parameters that give "good enough" result.
+# determine the minimal subset of parameters that gives "good enough" result.
 #
 # Supports greedy and exhaustive search strategies.
 # "Smarter" search strategies are planned as future additions.
 #
 
 #
-# Author: Atis Elsts, 2016
+# Author: Atis Elsts, 2016-2017
 #
 
 import os, sys, traceback
