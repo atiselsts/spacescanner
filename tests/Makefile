@@ -1,4 +1,4 @@
-PYTHON = python3
+PYTHON = python
 SPACESCANNER = ../source/spacescanner.py
 
 all: check-version test-broken test-param-estimation test-fast-consensus test-no-solution test-param-ranges test-param-ranges2 test-solution-timeout test-top test-suspend-resume cleanup
