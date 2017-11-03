@@ -71,7 +71,7 @@ SPACESCANNER.refresh = function() {
                 $("#button-select").removeClass('disabled');
                 if (!resultsButtonClicked) {
                     // remove all charts
-                    SPACESCANNER.display.drawCharts(0, 0.0, []);
+                    SPACESCANNER.display.drawCharts(0, "optimization", 0.0, []);
                 }
                 if (hasResults) {
                     $("#params-job-status").html("Total");
@@ -117,7 +117,10 @@ SPACESCANNER.refresh = function() {
                 contentType: "application/json",
                 dataType: "json",
                 success: function (response) {
-                    SPACESCANNER.display.drawCharts(totalNumJobs, response.baseline, response.stats);
+                    SPACESCANNER.display.drawCharts(totalNumJobs,
+                                                    response.taskType,
+                                                    response.baseline,
+                                                    response.stats);
                     refreshTimerID = setTimeout(refresh, pageRefreshInterval);
                 },
                 error: function (data, textStatus, xhr) {
@@ -141,7 +144,11 @@ SPACESCANNER.refresh = function() {
             contentType: "application/json",
             dataType: "json",
             success:  function (response) {
-                SPACESCANNER.display.drawCharts(totalNumJobs, response.baseline, response.stats);
+                SPACESCANNER.display.drawCharts(
+                    totalNumJobs,
+                    response.taskType,
+                    response.baseline,
+                    response.stats);
             },
             error: function (data, textStatus, xhr) {
                 console.log("get job " + id + " status error: " + JSON.stringify(data) + " " + textStatus);

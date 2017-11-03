@@ -8,25 +8,33 @@ var SPACESCANNER = function() {
         title: "Select a model",
         modal: true,
         autoOpen: false,
-        width: 600,
-        height: 230,
+        width: 750,
+        height: 300,
         open: function() {
-            $( '#input-import-taskName' ).val(SPACESCANNER.settings.get("taskName"));
+            SPACESCANNER.settings.populateSettings();
         },
     });
 
     $('#dialog-select-model').fileUpload({
         success: function (data, textStatus, jqXHR) {
             var filename = $( '#input-import-filename' ).val();
+            if (filename) {
+                // remove the "C:\fakepath" part of it, if present
+                filename = filename.substring(filename.lastIndexOf('\\') + 1);
+            }
             SPACESCANNER.notify("Model file selected:\n" + filename, "success");
             $( "#dialog-select-model" ).dialog("close");
-            $( 'title' ).text("Model file '" + filename + "'");
-            SPACESCANNER.settings.set("taskName", $( '#input-import-taskName' ).val());
+            SPACESCANNER.settings.saveSettings();
+            var title = SPACESCANNER.settings.get("copasi")["taskType"] === "optimization" ?
+                "Optimization task" :
+                "Parameter fitting task";
+            title += ": model file '" + filename + "'";
+            $( 'title' ).text(title);
         },
         error: function (data, textStatus, err) {
             SPACESCANNER.notify("Failed to use the model file: " + JSON.stringify(data), "error");
         },
-        action: "model"
+        action: "modelfile"
     });
 
     $('#button-upload-model')
@@ -35,25 +43,35 @@ var SPACESCANNER = function() {
             if (!filename || filename.length == 0) {
                 e.preventDefault();
                 SPACESCANNER.notify("Model file not specified", "error");
+                return;
+            }
+            var taskType = $('input[name=input-import-taskType]:checked').val();
+            if (taskType === "parameterFitting") {
+                var expFilename = $( '#input-import-experimentalFilename' ).val();
+                if (!expFilename || expFilename.length == 0) {
+                    e.preventDefault();
+                    SPACESCANNER.notify("Experimental data file not specified", "error");
+                    return;
+                }
             }
         });
 
     $('#button-terminate-server')
         .on("click",function(e) {
-	    var r = confirm("Are you sure?")
-	    if (r !== true) {
-		return;
-	    }
-	    $.ajax({
+            var r = confirm("Are you sure?")
+            if (r !== true) {
+                return;
+            }
+            $.ajax({
                 url: "terminate",
                 success: function (returnData) {
                     SPACESCANNER.notify("Stopped the server");
                 },
                 error: function (data, textStatus, xhr) {
-                    SPACESCANNER.notify("Failed to stop teh server: " + JSON.stringify(data) + " " + textStatus, "error");
-		}
-	    });
-	});
+                    SPACESCANNER.notify("Failed to stop the server: " + JSON.stringify(data) + " " + textStatus, "error");
+                }
+            });
+        });
 
     $( "#dialog-status" ).dialog({
         title: "Job status",
@@ -81,8 +99,8 @@ var SPACESCANNER = function() {
         title: "Optimization settings",
         modal: true,
         autoOpen: false,
-        width: 800,
-        height: 600,
+        width: 1150,
+        height: 700,
         open: function() {
             //SPACESCANNER.settings.querySettings();
             SPACESCANNER.settings.populateSettings();
@@ -257,7 +275,7 @@ var SPACESCANNER = function() {
     });
 
     $(function() {
-        console.log("loading spacescanner web interface...")
+        console.log("loading SpaceScanner web interface...")
     });
 
     return {

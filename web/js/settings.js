@@ -20,6 +20,10 @@ SPACESCANNER.settings = function() {
         "output" : {
             "loglevel" : 3
         },
+        "web" : {
+            "logxaxis" : false,
+            "logyaxis" : false,
+        },
         "webTestMode" : true,
         "testMode" : true
     };
@@ -123,7 +127,7 @@ SPACESCANNER.settings = function() {
         }
         return result;
     }
-            
+
     function estimateNumJobs() {
         if (!$( "#dialog-parameters" ).is(':visible')) {
             return;
@@ -178,7 +182,7 @@ SPACESCANNER.settings = function() {
         }
 
         /* Set the global button state to the inverse of "enable" */
-        if(enable) {
+        if (enable) {
             $( "#button-parameters" ).addClass('disabled');
         } else {
             $( "#button-parameters" ).removeClass('disabled');
@@ -283,7 +287,22 @@ SPACESCANNER.settings = function() {
         return result;
     }
 
+    function onTaskTypeChanged() {
+        var taskType = $('input[name=input-import-taskType]:checked').val();
+        console.log("onTaskTypeChanged")
+        $( "#input-import-experimentalFilename" ).prop(
+            'disabled', taskType !== "parameterFitting");
+    }
+
     function populateSettings() {
+        // Task settings
+        $( '#input-import-taskName' ).val(currentSettings["taskName"]);
+        $( '#input-import-taskType' ).val(currentSettings["copasi"]["taskType"]);
+        // disable the experiment filename field if and only if `parameterFitting` is not selected
+        $( "#input-import-experimentalFilename" ).prop(
+            'disabled', currentSettings["copasi"]["taskType"] !== "parameterFitting");
+        $( 'input[type=radio][name=input-import-taskType]' ).change(onTaskTypeChanged);
+
         // Performance settings
         $( "#input-option-runsPerJob" ).val(getd(currentSettings["optimization"], "runsPerJob", 4));
         $( "#input-option-maxConcurrentRuns" ).val(getd(currentSettings["optimization"], "maxConcurrentRuns", 4));
@@ -298,6 +317,8 @@ SPACESCANNER.settings = function() {
         $( "#input-option-stagnationDelaySec" ).val(getd(currentSettings["optimization"], "stagnationDelaySec", 300));
         $( "#input-option-stagnationProportionalDelay" ).val(
             toPercent(getd(currentSettings["optimization"], "stagnationProportionalDelay", 0.15)));
+
+        $( "#input-option-paramEstimationReferenceValueSec" ).val(getd(currentSettings["optimization"], "paramEstimationReferenceValueSec", 3.0));
 
         // Method settings
         $( "#input-option-methods" ).val(
@@ -326,11 +347,17 @@ SPACESCANNER.settings = function() {
             $( "#input-option-bestOfValue" ).val("");
         }
 
-        // other settings
+        // Display settings
+        $( "#input-option-logxaxis" ).prop("checked",
+            getd(currentSettings["web"], "logxaxis", false));
+        $( "#input-option-logyaxis" ).prop("checked",
+            getd(currentSettings["web"], "logyaxis", false));
+
+        // Other settings
         $( "#input-option-loglevel" ).val(
             getd(currentSettings["output"], "loglevel", 2));
 
-        // parameter settings
+        // Parameter settings
         var parameters = currentSettings["parameters"];
         for (var i = 0; i < MAX_DISPLAY_PARAMS; ++i) {
             if (i < parameters.length) {
@@ -342,6 +369,10 @@ SPACESCANNER.settings = function() {
     }
 
     function saveSettings() {
+        // Task settings
+        currentSettings["taskName"] = $( '#input-import-taskName' ).val();
+        currentSettings["copasi"]["taskType"] = $('input[name=input-import-taskType]:checked').val();
+
         // Performance settings
         currentSettings["optimization"]["runsPerJob"] = parseInt($( "#input-option-runsPerJob" ).val());
         currentSettings["optimization"]["maxConcurrentRuns"] = parseInt($( "#input-option-maxConcurrentRuns" ).val());
@@ -351,8 +382,10 @@ SPACESCANNER.settings = function() {
         currentSettings["optimization"]["consensusProportionalDelay"] = $( "#input-option-consensusProportionalDelay" ).val() / 100.0;
         currentSettings["optimization"]["consensusCorridor"] = $( "#input-option-consensusCorridor" ).val() / 100.0;
 
-  currentSettings["optimization"]["stagnationDelaySec"] = parseInt($( "#input-option-stagnationDelaySec" ).val());
+        currentSettings["optimization"]["stagnationDelaySec"] = parseInt($( "#input-option-stagnationDelaySec" ).val());
         currentSettings["optimization"]["stagnationProportionalDelay"] = $( "#input-option-stagnationProportionalDelay" ).val() / 100.0;
+
+        currentSettings["optimization"]["paramEstimationReferenceValueSec"] = $( "#input-option-paramEstimationReferenceValueSec" ).val() / 1.0;
 
         // Method settings
         currentSettings["copasi"]["methods"] = $( "#input-option-methods" ).val().split(",").map(function(x) { return x.trim() });
@@ -369,6 +402,10 @@ SPACESCANNER.settings = function() {
             currentSettings["optimization"]["targetFractionOfTOP"] = 0.0; // disables it
         }
         currentSettings["optimization"]["bestOfValue"] = parseInt($( "#input-option-bestOfValue" ).val());
+
+        // display settings
+        currentSettings["web"]["logxaxis"] = $( "#input-option-logxaxis" ).is(":checked");
+        currentSettings["web"]["logyaxis"] = $( "#input-option-logyaxis" ).is(":checked");
 
         // other settings
         currentSettings["output"]["loglevel"] = $( "#input-option-loglevel" ).val();
@@ -395,6 +432,9 @@ SPACESCANNER.settings = function() {
                 {"type" : "exhaustive", "range" : [1, 1000]}
             ];
         }
+
+        // in case graphical settings have changed
+        SPACESCANNER.display.refresh();
     }
 
     updateTOPState(false); /* Unchecked by default */
@@ -414,7 +454,9 @@ SPACESCANNER.settings = function() {
     });
 
     return {
-        get : function(property) { return currentSettings[property] },
+        get : function(property) {
+            return currentSettings[property]
+        },
         set : function(property, value) {
             currentSettings[property] = value;
         },

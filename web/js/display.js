@@ -8,6 +8,14 @@ SPACESCANNER.display = function() {
     // this stores the last method name for each job
     var methods = {};
 
+    // this stores the last arguments
+    var lastArguments = {
+        totalNumJobs: 0,
+        taskType: "optimization",
+        baseline: 0,
+        allData: []
+    };
+
     // onload callback
     function setupChart() {
         for (var i = 0; i < MAX_NUM_CHARTS; ++i) {
@@ -26,11 +34,17 @@ SPACESCANNER.display = function() {
         return charts.length == MAX_NUM_CHARTS;
     }
 
-    function drawCharts(totalNumJobs, baseline, allData) {
+    function drawCharts(totalNumJobs, taskType, baseline, allData) {
         // copy methods
         var oldMethods = jQuery.extend({}, methods)
         // reset methods
         methods = {};
+
+        // copy the arguments
+        lastArguments.totalNumJobs = totalNumJobs;
+        lastArguments.taskType = taskType;
+        lastArguments.baseline = baseline;
+        lastArguments.allData = allData.slice();
 
         if (!isReady()) {
             console.log("charts are not ready");
@@ -39,7 +53,7 @@ SPACESCANNER.display = function() {
 
         for (var i = 0; i < MAX_NUM_CHARTS; ++i) {
             if (i < allData.length) {
-                showChart(i, charts[i], allData[i], totalNumJobs, baseline);
+                showChart(i, charts[i], allData[i], totalNumJobs, taskType, baseline);
                 button2jobID[i] = allData[i].id;
                 $('#job' + i).show();
             } else {
@@ -61,7 +75,7 @@ SPACESCANNER.display = function() {
         }
     }
 
-    function showChart(i, chart, job, totalNumJobs, baseline) {
+    function showChart(i, chart, job, totalNumJobs, taskType, baseline) {
         if (job.error) {
             console.log("Job data has an error: " + job.error);
             return;
@@ -86,7 +100,8 @@ SPACESCANNER.display = function() {
             }
         }
 
-        $("#job" + i + "_name").html("<h2>Job " + job.id + " of " + totalNumJobs + "</h2>\n");
+        var name = taskType === "optimization" ? "Optimization" : "Parameter estimation";
+        $("#job" + i + "_name").html("<h2>" + name + " job " + job.id + " of " + totalNumJobs + "</h2>\n");
         $("#job" + i + "_parameters").html("Parameters: <i>" + params + "</i>\n");
         $("#job" + i + "_method").html("Method: <i>" + method
                                        + (pastMethods ? "</i>&nbsp;&nbsp;(previous methods: <i>" + pastMethods + "</i>)" : "</i>") + "\n");
@@ -139,11 +154,22 @@ SPACESCANNER.display = function() {
             jobData.addRow(row);
         });
 
+        var webConfig = SPACESCANNER.settings.get("web");
+        var taskName = taskType === "optimization" ?
+            "Objective function" :
+            "Parameter estimation error";
+
         var options =  {
             height: 400,
             width: $("#main").width(),
-            vAxis : {title: "Best objective function values"},
-            hAxis : {title: "CPU time, seconds"}
+            vAxis : {
+                title: taskName + " values",
+                scaleType: webConfig["logyaxis"] === true ? 'log' : null,
+            },
+            hAxis : {
+                title: "CPU time, seconds",
+                scaleType:  webConfig["logxaxis"] === true ? 'log' : null,
+            }
         };
         chart.draw(jobData, options);
 
@@ -160,6 +186,14 @@ SPACESCANNER.display = function() {
     return {
         drawCharts : drawCharts,
         resetMethods : resetMethods,
+        refresh : function () {
+            // simply redraw the last state;
+            // useful when e.g. display settings have changed.
+            drawCharts(lastArguments.totalNumJobs,
+                       lastArguments.taskType,
+                       lastArguments.baseline,
+                       lastArguments.allData);
+        },
         getJobID : function (i) { return button2jobID[i] }
     };
 
