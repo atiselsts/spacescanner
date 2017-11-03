@@ -6,6 +6,8 @@
     "copasi" : {
         // COPASI model file name; @SELF@ refers to SpaceScanner source directory
         "modelFile" : "@SELF@/dependencies/models/simple-6params.cps",
+        // whether to run an optimization task ("optimization") or a parameter estimation ("parameterFitting") task; default: "optimization")
+        "taskType" : "optimization",
         // which and how many methods to use; can contain a method more than once
         "methods" : ["ParticleSwarm", "GeneticAlgorithm", "GeneticAlgorithmSR", "EvolutionaryProgram", "EvolutionaryStrategySR", "ScatterSearch", "SimulatedAnnealing"],
         // which and how many methods to use when a method fails to evaluate the objective function in given time
@@ -33,9 +35,11 @@
         // compared to the full-set optimization result or the user-defined TOP value (default: 0.0 (disabled), range: [0.0 .. 1.0])
         "targetFractionOfTOP" : 0.0,
         // the user-defined best (TOP) optimization function's value
-        "bestOfValue" : -Infinity,
+        "bestOfValue" : null,
         // restart each subsequent method from the best point in the search space so far (default: true)
         "restartFromBestValue" : true,
+        // this is used a reference point when to obtain the initial baseline value of the objective function
+        "paramEstimationReferenceValueSec" : 3,
         // how many COPASI processes to run by parallel (default: max(4, the number of CPU cores); range: [1 .. number of CPU cores])
         "maxConcurrentRuns" : 4,
         // how many paraller COPASI executions per each job (i.e. a single set of parameters)
@@ -58,7 +62,11 @@
         // Enable this only in trusted environment.
         "enable" : true,
         // http port number (default: 19000)
-        "port" : 19000
+        "port" : 19000,
+        // show x-axis in log scale
+        "logxaxis" : false,
+        // show y-axis in log scale
+        "logyaxis" : false
     },
     "output" : {
         // optimization results file name (default: "results-<taskname>-<datetime>.csv")

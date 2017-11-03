@@ -108,8 +108,8 @@ This section defines the model file and optimization methods to use.
 
 Fields:
 
-* `modelFile` - COPASI model file name; @SELF@ refers to SpaceScanner source directory
-* `taskType` - whether to run an optimization task (code `1`) or a parameter estimation task (code `2`; default: `1`, denoting an optimization task)
+* `modelFile` - COPASI model file name; `@SELF@` refers to SpaceScanner source directory
+* `taskType` - whether to run an optimization task ("optimization") or a parameter estimation ("parameterFitting") task; default: "optimization")
 * `methods` - list of optimization methods to use; the methods are selected sequentially, each subsequent one is selected when the previous ones fail; can contain a method more than once
 * `fallbackMethods` - list of optimization methods to use when a method fails to evaluate the objective function in given time; useful for e.g. highly constrained models on which many methods may not find any solutions at all
 * `randomizeMethodSelection` - whether to pick methods from the configuration randomly or in order (default: `false`)
@@ -129,11 +129,11 @@ Fields:
 * `stagnationDelaySec` - the maximal time to continue when no values of any parallel run are changing (default: 300 sec)
 * `stagnationProportionalDelay` - the maximal time to continue when no values of any parallel run are changing, as proportion of the runtime so-far (default: 15%)
 * `targetFractionOfTOP` - compared to the full-set objective function value or the user-defined TOP value(default: 0.0 (i.e., disabled), range: [0.0 .. 1.0])
-* `bestOfValue` - the user-defined best (TOP) objective function's value
+* `bestOfValue` - the user-defined best (TOP) objective function's value (default: `null`)
 * `restartFromBestValue` - restart each subsequent method from the best point in the search space so far (default: `true`)
+* `paramEstimationReferenceValueSec` - this is used a reference point when to obtain the initial baseline value of the objective function (default: 3 seconds of the CPU time)
 * `maxConcurrentRuns` - how many COPASI processes to run by parallel (default: max(4, the number of CPU cores); range: [1 .. number of CPU cores])
 * `runsPerJob` - how many parallel COPASI processes per each job (i.e. a single set of parameters)
-* `paramEstimationReferenceValueSec` - this is used a reference point when to obtain the "initial", baseline value of the objective function (default: 3 seconds of the CPU time)
 
 ### "parameters" section
 
@@ -200,8 +200,9 @@ Fields:
         "consensusAbsoluteError" : 1e-6,
         "consensusDelaySec" : 60,
         "consensusProportionalDelay" : 0.15,
+        "paramEstimationReferenceValueSec" : 3.0,
         "targetFractionOfTOP" : 0.9,
-        "bestOfValue" : -Infinity,
+        "bestOfValue" : null,
         "restartFromBestValue" : true,
         "maxConcurrentRuns" : 4,
         "runsPerJob" : 2

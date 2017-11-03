@@ -1,6 +1,7 @@
 {
     "copasi" : {
         "modelFile" : "@SELF@/dependencies/models/simple-6params.cps",
+        "taskType" : "optimization",
         "methods" : ["ParticleSwarm", "GeneticAlgorithm", "GeneticAlgorithmSR", "EvolutionaryProgram", "EvolutionaryStrategySR", "ScatterSearch", "SimulatedAnnealing"],
         "fallbackMethods" : ["GeneticAlgorithmSR", "EvolutionaryStrategySR"],
         "randomizeMethodSelection" : false,
@@ -16,7 +17,8 @@
         "stagnationDelaySec" : 300,
         "stagnationProportionalDelay" : 0.15,
         "targetFractionOfTOP" : 0.0,
-        "bestOfValue" : -Infinity,
+        "bestOfValue" : null,
+        "paramEstimationReferenceValueSec" : 3,
         "restartFromBestValue" : true,
         "maxConcurrentRuns" : 4,
         "runsPerJob" : 2
@@ -29,7 +31,9 @@
     "restartOnFile" : null,
     "web" : {
         "enable" : true,
-        "port" : 19000
+        "port" : 19000,
+        "logxaxis" : false,
+        "logyaxis" : false
     },
     "output" : {
         "filename" : "results.csv",
