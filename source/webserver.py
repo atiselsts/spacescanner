@@ -216,7 +216,7 @@ class HttpServerHandler(BaseHTTPRequestHandler):
             response = sm.ioGetJob(qs, o.path[5:])
         elif o.path[:7] == '/config':
             response = sm.ioGetConfig(qs)
-            print("config=", response)
+            #print("config=", response)
         elif o.path[:8] == '/results':
             response = sm.ioGetResults(qs)
             isJSON = False # the results are in .csv format
@@ -249,7 +249,8 @@ class HttpServerHandler(BaseHTTPRequestHandler):
             return self.serveError(qs, 503, "Already running")
 
         contentLength = int(self.headers.get('content-length', 0))
-        received = ""
+        receivedModel = ""
+        receivedExperimentalData = ""
 
         # Parse the form data posted
         form = cgi.FieldStorage(
@@ -259,22 +260,44 @@ class HttpServerHandler(BaseHTTPRequestHandler):
                        'CONTENT_TYPE': self.headers['Content-Type'],
                    })
         for field in form.keys():
-            field_item = form[field]
-            if field_item.filename:
-                # The field contains an uploaded file
-                received = field_item.file.read(contentLength).decode("utf-8")
-                break
+            field_items = form[field]
+            if type(field_items) is not list:
+                field_items = [field_items]
+            for field_item in field_items:
+                if field_item.filename:
+                    # The field contains an uploaded file
+                    received = field_item.file.read(contentLength).decode("utf-8")
+                    # quick-and-dirty decision;
+                    # also, should look at the charset declared in the file *before* decoding as "utf-8"
+                    if startsWith(received, "<?xml"):
+                        receivedModel = received
+                    else:
+                        receivedExperimentalData = received
 
-        if not received:
-            return self.serveError(qs, 400, "No valid file data received")
+        if not receivedModel:
+            return self.serveError(qs, 400, "No valid model file received")
 
-        # write the model
-        filename = self.saveInFile(received, "model.cps")
+        # replace the exp data file name in the model file with "exp-data.txt"
+        EXP_DATA_FILE_NAME = "exp-data.txt"
+        MODEL_FILE_NAME = "model.cps"
+        marker = '<Parameter name="File Name" type="file" value="'
+
+        index = receivedModel.find(marker)
+        if index != -1:
+            end = index + len(marker)
+            while end < len(receivedModel) and receivedModel[end] != '"':
+                end += 1
+            receivedModel = receivedModel[:index+len(marker)] + EXP_DATA_FILE_NAME + receivedModel[end:]
+
+        # write the model and data files
+        modelFilename = self.saveInFile(receivedModel, MODEL_FILE_NAME)
+        expDataFilename = self.saveInFile(receivedExperimentalData, EXP_DATA_FILE_NAME)
+
         # check if the model is all right
         InterruptibleHTTPServer.serverInstance.strategyManager.prepare(isDummy = False)
 
         # self.respondToPost(200, filename, False) # these req/resp are not in json format
-        self.respondToPost(200, {"filename" : filename})
+        self.respondToPost(200, {"filename" : modelFilename})
 
 
     def postConfig(self, qs):
@@ -315,7 +338,7 @@ class HttpServerHandler(BaseHTTPRequestHandler):
         o = urlparse(self.path)
         qs = parse_qs(o.query)
    
-        if o.path == "/model":
+        if o.path == "/modelfile":
             self.postModel(qs)
         elif o.path == "/start":
             self.postConfig(qs)

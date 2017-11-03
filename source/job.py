@@ -65,6 +65,8 @@ class Job:
         self.loadBalanceFactor = float(g.getConfig("optimization.runsPerJob")) / maxCores
         # this might actually be after X seconds, not 3 seconds - if so configured
         self.bestOfValueAfter3Sec = None
+        # wait this much seconds for other runners to terminate after the first one
+        self.waitForTerminationSec = 10
 
 
     def getFullName(self):
@@ -139,10 +141,11 @@ class Job:
     def checkReports(self):
         # if no runners are active, quit
         if not any([r.isActive for r in self.runners]):
+            self.waitForTerminationSec = 10 # for next time
             if self.convergenceTime is not None:
                 minAbsoluteTime = float(g.getConfig("optimization.consensusDelaySec"))
                 # XXX: do not check the relative time here
-                if self.hasConsensus() and self.timeDiffExceeded(time.time() - self.convergenceTime, minAbsoluteTime):
+                if self.hasConsensus(False) and self.timeDiffExceeded(time.time() - self.convergenceTime, minAbsoluteTime):
                     # count COPASI termination as consensus in this case
                     # XXX: note that this does *not* overwrite "time limit exceeded" exit code!
                     for r in self.runners:
@@ -153,11 +156,14 @@ class Job:
             return
 
         if not all([r.isActive for r in self.runners]):
-            # some but not all have quit; quit the others with "stagnation"
-            # (not technically true, but the best match from the existing codes)
-            for r in self.runners:
-                if r.isActive and not r.terminationReason:
-                    r.terminationReason = TERMINATION_REASON_STAGNATION
+            if self.waitForTerminationSec > 0:
+                self.waitForTerminationSec -= 1
+            else:
+                # some but not all have quit; quit the others with "stagnation"
+                # (not technically true, but the best match from the existing codes)
+                for r in self.runners:
+                    if r.isActive and not r.terminationReason:
+                        r.terminationReason = TERMINATION_REASON_STAGNATION
             return
 
         numActiveRunners = 0
@@ -176,6 +182,9 @@ class Job:
                     maxCpuTime = max(maxCpuTime, r.currentCpuTime)
 
         checkCpuTime = float(g.getConfig("optimization.paramEstimationReferenceValueSec"))
+        # XXX: Note that this is not 100% correct if some (`k`) of the `n` runners are
+        # not running yet / are suspended. In that case only `n-k` out of `n` runners
+        # are considered for the "best" value instead of all `n` runners.
         if self.bestOfValueAfter3Sec is None and maxCpuTime >= checkCpuTime:
             value = self.getBestOfValue()
             # check if the value is actually present
@@ -191,7 +200,7 @@ class Job:
                         r.terminationReason = TERMINATION_REASON_CONSENSUS
                 return
 
-        consensusReached = self.hasConsensus()
+        consensusReached = self.hasConsensus(True)
 
         if all([r.terminationReason for r in self.runners]):
             return
@@ -269,7 +278,7 @@ class Job:
 
 
     # find min and max values and check that they are in 1% range
-    def hasConsensus(self):
+    def hasConsensus(self, isStillRunning):
         if self.convergenceTime is None:
             worst = self.getWorstOfValue()
         else:
@@ -279,12 +288,12 @@ class Job:
 
         # return False if exited without a result
         if math.isinf(worst) or math.isinf(best):
-            #print("worst or best are inf:", worst, best)
+            #print("{}: worst or best are inf: {} {}".format(self.getName(), worst, best))
             return False
 
         if self.pool.strategy.taskType == "optimization":
             return self.hasConsensusOptimizationTask(worst, best)
-        return self.hasConsensusParameterEstimationTask(worst, best)
+        return self.hasConsensusParameterEstimationTask(worst, best, isStillRunning)
 
 
     def hasConsensusOptimizationTask(self, worst, best):
@@ -302,18 +311,26 @@ class Job:
         return abs(1.0 - worst / best) < epsilonRel
 
 
-    def hasConsensusParameterEstimationTask(self, worst, best):
+    def hasConsensusParameterEstimationTask(self, worst, best, isStillRunning):
         epsilonAbs = float(g.getConfig("optimization.consensusAbsoluteError"))
         epsilonRel = float(g.getConfig("optimization.consensusCorridor"))
 
         # if the reference value is not yet set, assume no consensus
         if self.bestOfValueAfter3Sec is None:
-            #print("has cons: no 3sec value!")
-            return False
+            if isStillRunning:
+                # does not have this set yet; wait
+                #print("{}: no 3sec value!".format(self.getName()))
+                return False
+            else:
+                # this handles the corner case when a runner is already finished
+                # before 3 second limit; just use the current best as the reference
+                referenceValue = best
+        else:
+            referenceValue = self.bestOfValueAfter3Sec
 
         # this also avoids divison by zero
         if floatEqual(self.bestOfValueAfter3Sec, best, epsilonAbs):
-            #print("has cons: best == starting")
+            #print("{}: best == starting".format(self.getName()))
             #print("base:", self.bestOfValueAfter3Sec)
             #print("best:", best)
             #print("worst:", worst)
@@ -321,6 +338,7 @@ class Job:
             # detect consensus if and only if the worst value is also the same as the reference value
             return floatEqual(self.bestOfValueAfter3Sec, worst, epsilonAbs)
 
+        #print("{}: best != starting".format(self.getName()))
         #print("base:", self.bestOfValueAfter3Sec)
         #print("best:", best)
         #print("worst:", worst)
@@ -379,7 +397,7 @@ class Job:
             try:
                 success = self.createRunners()
             except Exception as e:
-                g.log(LOG_INFO, "Exception while switching {} to a fallback method: {}".format(
+                g.log(LOG_INFO, "exception while switching {} to a fallback method: {}".format(
                     self.getName(), e))
                 success = False
             if not success:
@@ -398,7 +416,7 @@ class Job:
         else:
             self.currentMethod = self.methods[0]
 
-        g.log(LOG_INFO, "switching {} to the next method {}".format(
+        g.log(LOG_INFO, "switching {} to next method: {}".format(
             self.getName(), self.currentMethod))
         if not self.createRunners():
             self.pool.finishJob(self)

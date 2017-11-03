@@ -137,7 +137,6 @@ class Runner:
             pass # may not exist, that's fine
 
 
-
         copasiExe = os.path.join(COPASI_DIR, COPASI_EXECUTABLE)
         if not isExecutable(copasiExe):
             g.log(LOG_ERROR, 'COPASI binary is not executable or does not exist under "' + copasiExe + '"')
@@ -203,7 +202,8 @@ class Runner:
                         continue
                     if not inValues: continue
 
-                    if startsWith(line, "Optimization Result"):
+                    if startsWith(line, "Optimization Result") or \
+                       startsWith(line, "Parameter Estimation Result"):
                         break
 
                     si = StatsItem(line, self.initialOfValue)
@@ -245,8 +245,8 @@ class Runner:
             if self.lastReportModificationTime is None \
                     or st.st_mtime > self.lastReportModificationTime:
                 self.lastReportModificationTime = st.st_mtime
-                # a short sleep to avoid race conditions when opening the file before writing is finished
-                time.sleep(0.001)
+                # a short sleep to avoid race conditions when opening the file before writing is finished?
+                #time.sleep(0.001)
                 with open(self.reportFilename, "r") as f:
                     self.stats.isValid = False
                     inValues = False
@@ -266,7 +266,7 @@ class Runner:
                             self.stats = si
 
                 if self.stats.isValid:
-#                    print("last stats=", self.getLastStats(), "for", self.getName())
+                    # print("last stats=", self.getLastStats(), "for", self.getName())
                     self.ofValue = self.getLastStats().ofValue
                     if oldOfValue != self.ofValue:
                         g.log(LOG_INFO, "{}: new OF value {}".format(self.getName(), self.ofValue))
@@ -280,7 +280,9 @@ class Runner:
                 if not hasTerminated:
                     try:
                         t = self.process.getCpuTime()
-                    except psutil.NoSuchProcess:
+                    except psutil.NoSuchProcess as e:
+                        g.log(LOG_DEBUG, "{}: getting CPU time failed: {}".format(
+                            self.getName(), e))
                         pass # has already quit
                     else:
                         self.currentCpuTime = t

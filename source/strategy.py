@@ -261,8 +261,6 @@ class StrategyManager:
         self.totalNumJobs = -1
 
     def prepare(self, isDummy):
-        self.taskType = g.getConfig("copasi.taskType")
-
         self.jobLock = threading.Lock()
         self.activeJobPool = None
         self.finishedJobs = {}
@@ -279,6 +277,14 @@ class StrategyManager:
 
         self.topBaseline = None
 
+        # check if the configured task type is valid and if it is, store it in `self`
+        taskType = g.getConfig("copasi.taskType")
+        if taskType not in [COPASI_TASK_OPTIMIZATION, COPASI_TASK_PARAM_ESTIMATION]:
+            g.log(LOG_ERROR, "bogus task type: {}".format(taskType))
+            return False
+        self.taskType = taskType
+
+        # try to load the file
         self.copasiFile = self.loadCopasiFile()
         if not self.copasiFile:
             return False
@@ -564,7 +570,11 @@ class StrategyManager:
 
 
     def ioGetAllJobs(self, qs):
-        response = { "baseline" : jsonFixInfinity(self.topBaseline, 0.0), "stats" : [] }
+        response = {
+            "taskType" : self.taskType,
+            "baseline" : jsonFixInfinity(self.topBaseline, 0.0),
+            "stats" : []
+        }
         with self.jobLock:
             for id in self.finishedJobs:
                 response["stats"].append(self.finishedJobs[id].getStatsBrief())
@@ -577,7 +587,10 @@ class StrategyManager:
 
 
     def ioGetActiveJobs(self, qs):
-        response = { "baseline" : jsonFixInfinity(self.topBaseline, 0.0), "stats" : [] }
+        response = {
+            "taskType" : self.taskType,
+            "baseline" : jsonFixInfinity(self.topBaseline, 0.0), "stats" : []
+        }
         with self.jobLock:
             if bool(g.getConfig("webTestMode")):
                 for id in self.finishedJobs:
@@ -597,7 +610,11 @@ class StrategyManager:
         except:
             return {"error" : "invalid job ID"}
         job = None
-        response = { "baseline" : jsonFixInfinity(self.topBaseline, 0.0), "stats" : [] }
+        response = {
+            "taskType" : self.taskType,
+            "baseline" : jsonFixInfinity(self.topBaseline, 0.0),
+            "stats" : []
+        }
         with self.jobLock:
             if id in self.finishedJobs:
                 job = self.finishedJobs[id]
@@ -747,7 +764,7 @@ class StrategyManager:
                     try:
                         pool.refresh()
                     except Exception as e:
-                        g.log(LOG_INFO, "Exception while refreshing active joob pool status, terminating the pool: {}".format(e))
+                        g.log(LOG_INFO, "exception while refreshing active joob pool status, terminating the pool: {}".format(e))
                         self.finishActivePool()
                         break
 
