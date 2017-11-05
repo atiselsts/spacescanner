@@ -111,12 +111,8 @@ class HttpServerHandler(BaseHTTPRequestHandler):
         except:
             pass
         filename = os.path.join(dirname, filename)
-        if isPython3():
-            with open(filename, "wb") as f:
-                f.write(contents.encode("UTF-8"))
-        else:
-            with open(filename, "w") as f:
-                f.write(contents)
+        with open(filename, "wb") as f:
+            f.write(contents.encode("UTF-8"))
         return filename
 
     def sendDefaultHeaders(self, contents, isJSON = True, contentType = None):
@@ -256,20 +252,31 @@ class HttpServerHandler(BaseHTTPRequestHandler):
         receivedModel = ""
         receivedExperimentalData = ""
 
-        # a hack in order to tell Python-3 to open the file as a binary (UTF-8 encoded)
-        # otherwirse the CGI module breaks down internally, due to mixing up str/bytes
-        headers = copy.copy(self.headers)
-        headers['Content-disposition'] = ";filename=tmpweb.form"
+        if self.headers['Content-Type'] == "application/json":
+            try:
+                contents = self.rfile.read(contentLength)
+                if type(contents) is not str:
+                    contents = contents.decode("utf-8")
+                j = json.loads(contents)
+                receivedModel = j.get("model", "")
+                receivedExperimentalData = j.get("experiment", "")
+            except Exception as ex:
+                g.log(LOG_INFO, "Failed to parse the mode as JSON data: {}".format(ex))
+        else:
+          try:
+            # a hack in order to tell Python-3 to open the file as a binary (UTF-8 encoded)
+            # otherwirse the CGI module breaks down internally, due to mixing up str/bytes
+            headers = copy.copy(self.headers)
+            headers['Content-disposition'] = ";filename=tmpweb.form"
 
-        # Parse the form data posted
-        form = cgi.FieldStorage(
-            fp = self.rfile, 
-            headers = headers,
-            environ = {'REQUEST_METHOD' : 'POST',
-                       'CONTENT_TYPE': self.headers['Content-Type'],
-                   })
+            # Parse the form data posted
+            form = cgi.FieldStorage(
+                fp = self.rfile, 
+                headers = headers,
+                environ = {'REQUEST_METHOD' : 'POST',
+                           'CONTENT_TYPE': self.headers['Content-Type'],
+                })
 
-        try:
             for field in form.keys():
                 field_items = form[field]
                 if type(field_items) is not list:
@@ -284,13 +291,9 @@ class HttpServerHandler(BaseHTTPRequestHandler):
                             receivedModel = received
                         else:
                             receivedExperimentalData = received
-        except TypeError as te:
-            # the TypeError "not indexable" happens when trying the web test
-            g.log(LOG_INFO, "Failed to parse CGI form, trying value directly: {}".format(te))
-            if type(form.value) is str:
-                receivedModel = form.value
-            else:
-                receivedModel = form.value.decode("utf-8")
+          except TypeError as te:
+              # the TypeError "not indexable" happens when trying the web test
+              g.log(LOG_INFO, "Failed to parse CGI form: {}".format(te))
 
         if not receivedModel:
             return self.serveError(qs, 400, "No valid model file received")

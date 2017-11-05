@@ -1,5 +1,6 @@
 PYTHON = python
 SPACESCANNER = ../source/spacescanner.py
+NODEJS?=nodejs
 
 all: check-version test-broken test-web test-param-estimation test-fast-consensus test-no-solution test-param-ranges test-param-ranges2 test-solution-timeout test-top test-suspend-resume cleanup
 
@@ -125,14 +126,10 @@ test-param-estimation-top:
 ###############################################################################
 
 test-web:
-	@echo Testing web API... installing prerequisites
-	@npm install -S 'jquery@>=2.1'
-	@npm install -S 'jsdom@3.1.2'
-	@npm install sleep
-	@echo Prerequisite installation done
+	@echo Testing web API...
 	$(PYTHON) $(SPACESCANNER) web &  # start in background
-	@echo Starting web API tests
-	@nodejs webtest.js
+	@echo Starting web API tests, NODEJS=$(NODEJS)
+	@$(NODEJS) webtest.js
 	@sleep 2 # wait as bit for SpaceScanner to terminate to be on the safe side
 	@echo ..done
 	@echo ""

@@ -1,7 +1,7 @@
 //
 // To run this install node.js modules:
 //  $ npm install -S 'jquery@>=2.1'
-//  $ npm install -S 'jsdom@3.1.2'
+//  $ npm install -S 'jsdom@<7'
 //  $ npm install sleep
 //
 // Then run:
@@ -39,9 +39,10 @@ function test1()
     $.ajax({
         type: "POST",
         url: "http://localhost:19000/modelfile",
-        data: contents,
-        contentType: "application/xml",
-        timeout: 1000,
+        data: JSON.stringify({ model : contents }),
+        contentType: "application/json",
+	dataType: "json",
+        timeout: 2000,
         crossDomain: true,
         success: function (returnData) {
             console.log("model file command: " + returnData);
@@ -53,6 +54,8 @@ function test1()
         },
         error: function (data, textStatus, xhr) {
             console.log("post model file: error: " + data + " " + textStatus);
+	    console.log(JSON.stringify(data))
+	    console.log(JSON.stringify(xhr))
             failTests();
         }
     });
