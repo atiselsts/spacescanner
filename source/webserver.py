@@ -18,10 +18,10 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Author: Atis Elsts, 2016
+# Author: Atis Elsts, 2016-2017
 #
 
-import os, signal, select, json, traceback, cgi, threading
+import os, signal, select, json, traceback, cgi, threading, copy
 
 from util import *
 import g
@@ -111,8 +111,12 @@ class HttpServerHandler(BaseHTTPRequestHandler):
         except:
             pass
         filename = os.path.join(dirname, filename)
-        with open(filename, "w") as f:
-            f.write(contents.encode("UTF-8"))
+        if isPython3():
+            with open(filename, "wb") as f:
+                f.write(contents.encode("UTF-8"))
+        else:
+            with open(filename, "w") as f:
+                f.write(contents)
         return filename
 
     def sendDefaultHeaders(self, contents, isJSON = True, contentType = None):
@@ -252,27 +256,41 @@ class HttpServerHandler(BaseHTTPRequestHandler):
         receivedModel = ""
         receivedExperimentalData = ""
 
+        # a hack in order to tell Python-3 to open the file as a binary (UTF-8 encoded)
+        # otherwirse the CGI module breaks down internally, due to mixing up str/bytes
+        headers = copy.copy(self.headers)
+        headers['Content-disposition'] = ";filename=tmpweb.form"
+
         # Parse the form data posted
         form = cgi.FieldStorage(
             fp = self.rfile, 
-            headers = self.headers,
+            headers = headers,
             environ = {'REQUEST_METHOD' : 'POST',
                        'CONTENT_TYPE': self.headers['Content-Type'],
                    })
-        for field in form.keys():
-            field_items = form[field]
-            if type(field_items) is not list:
-                field_items = [field_items]
-            for field_item in field_items:
-                if field_item.filename:
-                    # The field contains an uploaded file
-                    received = field_item.file.read(contentLength).decode("utf-8")
-                    # quick-and-dirty decision;
-                    # also, should look at the charset declared in the file *before* decoding as "utf-8"
-                    if startsWith(received, "<?xml"):
-                        receivedModel = received
-                    else:
-                        receivedExperimentalData = received
+
+        try:
+            for field in form.keys():
+                field_items = form[field]
+                if type(field_items) is not list:
+                    field_items = [field_items]
+                for field_item in field_items:
+                    if field_item.filename:
+                        # The field contains an uploaded file
+                        received = field_item.file.read(contentLength).decode("utf-8")
+                        # quick-and-dirty decision;
+                        # also, should look at the charset declared in the file *before* decoding as "utf-8"
+                        if startsWith(received, "<?xml"):
+                            receivedModel = received
+                        else:
+                            receivedExperimentalData = received
+        except TypeError as te:
+            # the TypeError "not indexable" happens when trying the web test
+            g.log(LOG_INFO, "Failed to parse CGI form, trying value directly: {}".format(te))
+            if type(form.value) is str:
+                receivedModel = form.value
+            else:
+                receivedModel = form.value.decode("utf-8")
 
         if not receivedModel:
             return self.serveError(qs, 400, "No valid model file received")

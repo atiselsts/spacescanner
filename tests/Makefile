@@ -1,7 +1,7 @@
 PYTHON = python
 SPACESCANNER = ../source/spacescanner.py
 
-all: check-version test-broken test-param-estimation test-fast-consensus test-no-solution test-param-ranges test-param-ranges2 test-solution-timeout test-top test-suspend-resume cleanup
+all: check-version test-broken test-web test-param-estimation test-fast-consensus test-no-solution test-param-ranges test-param-ranges2 test-solution-timeout test-top test-suspend-resume cleanup
 
 test-param-estimation: test-param-estimation-simple test-param-estimation-reference-time test-param-estimation-top
 	@true
@@ -119,6 +119,25 @@ test-param-estimation-top:
 	@grep -e "good-enough-value criteria reached" spacescanner.log
 	@echo ..done
 	@echo ""
+
+###############################################################################
+# Web tests
+###############################################################################
+
+test-web:
+	@echo Testing web API... installing prerequisites
+	@npm install -S 'jquery@>=2.1'
+	@npm install -S 'jsdom@3.1.2'
+	@npm install sleep
+	@echo Prerequisite installation done
+	$(PYTHON) $(SPACESCANNER) web &  # start in background
+	@echo Starting web API tests
+	@nodejs webtest.js
+	@sleep 2 # wait as bit for SpaceScanner to terminate to be on the safe side
+	@echo ..done
+	@echo ""
+
+
 
 ###############################################################################
 # Tests where failure is expected
