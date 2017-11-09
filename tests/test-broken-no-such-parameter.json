@@ -4,7 +4,7 @@
         "consensusDelaySec" : 5
     },
     "copasi" : {
-        "modelFile" : "@SELF@/dependencies/models/complex.cps",
+        "modelFile" : "@SELF@/models/complex.cps",
         "methods" : ["ParticleSwarm"],
         "fallbackMethods" : []
     },

@@ -43,7 +43,7 @@ SpaceScanner is easy to use and configure. There are two ways how to work with S
 * `source` - SpaceScanner source code;
 * `doc` - an example SpaceScanner configuration file with comments and the default settings;
 * `tests` - testing code, including several SpaceScanner configuration files examples;
-* `dependencies/models` - several Copasi model examples;
+* `models` - several Copasi model examples;
 * `copasi` - Copasi executables;
 * `web` - SpaceScanner web interface source code.
 

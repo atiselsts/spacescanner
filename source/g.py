@@ -56,7 +56,7 @@ DEFCFG = {}
 
 def defaultConfigInitialize():
     DEFCFG[("copasi", "modelFile")] = ConfigFileField(os.path.join(
-        SELF_PATH, "dependencies", "models", "simple-6params.cps"))
+        SELF_PATH, "models", "simple-6params.cps"))
     DEFCFG[("copasi", "methods")] = ConfigFileField(["ParticleSwarm", "GeneticAlgorithm", "GeneticAlgorithmSR", "EvolutionaryProgram", "EvolutionaryStrategySR"])
     DEFCFG[("copasi", "fallbackMethods")] = ConfigFileField (["GeneticAlgorithmSR", "EvolutionaryStrategySR"])
     DEFCFG[("copasi", "randomizeMethodSelection")] = ConfigFileField(False)
