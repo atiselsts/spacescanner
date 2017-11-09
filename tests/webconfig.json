@@ -14,7 +14,5 @@
     ],
     "output" : {
         "loglevel" : 3
-    },
-    "webTestMode" : true,
-    "testMode" : true
+    }
 }

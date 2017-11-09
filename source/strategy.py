@@ -260,13 +260,14 @@ class StrategyManager:
         atexit.register(self.cleanup, self)
         self.totalNumJobs = -1
 
-    def prepare(self, isDummy):
+    def prepare(self, isDummy, taskType = None):
         self.jobLock = threading.Lock()
         self.activeJobPool = None
         self.finishedJobs = {}
         self.startedJobs = set()
         self.doQuitFlag = False
         self.isExecutable = False
+        self.lastError = ""
 
         self.lastNumJobsDumped = 0
         # job counter, starting from 0
@@ -277,21 +278,29 @@ class StrategyManager:
 
         self.topBaseline = None
 
+        # if no task type passed, use the globally configured value
+        if taskType is None:
+            taskType = g.getConfig("copasi.taskType")
+
         # check if the configured task type is valid and if it is, store it in `self`
-        taskType = g.getConfig("copasi.taskType")
         if taskType not in [COPASI_TASK_OPTIMIZATION, COPASI_TASK_PARAM_ESTIMATION]:
-            g.log(LOG_ERROR, "bogus task type: {}".format(taskType))
-            return False
+            s = "bogus task type: {}".format(taskType)
+            g.log(LOG_ERROR, s)
+            return False, s
         self.taskType = taskType
 
         # try to load the file
-        self.copasiFile = self.loadCopasiFile()
+        self.copasiFile, error = self.loadCopasiFile()
         if not self.copasiFile:
+            if not isDummy:
+                self.lastError = error
             return False
 
         g.log(LOG_DEBUG, "querying COPASI optimization parameters")
         self.copasiConfig["params"] = self.copasiFile.queryParameters()
         if not self.copasiConfig["params"]:
+            if not isDummy:
+                self.lastError = "failed to get task parameters from the COPASI model"
             return False
 
         self.jobsByBestOfValue = [[] for _ in range(1 + len(self.copasiConfig["params"]))]
@@ -416,14 +425,15 @@ class StrategyManager:
     def loadCopasiFile(self):
         copasiFile = copasifile.CopasiFile(self.taskType)
         if not copasiFile.isValid():
-            return None
+            return None, "the COPASI file is not valid"
 
         filename = g.getConfig("copasi.modelFile")
         filename = filename.replace("@SELF@", SELF_PATH)
         g.log(LOG_INFO, "<spacescanner>: opening COPASI model file {}".format(filename))
-        if not copasiFile.read(filename):
-            return None
-        return copasiFile
+        ok, s = copasiFile.read(filename)
+        if not ok:
+            return None, s
+        return copasiFile, "load ok"
 
 
     def finishJob(self, job):
@@ -699,9 +709,6 @@ class StrategyManager:
             hasZerothJob = True
         else:
             hasZerothJob = False
-            if self.nextJobID == 0:
-                # start from job1, not job0 (which is ignored by the web interface)
-                self.nextJobID = 1
 
         if self.isTOPEnabled():
             # add all parameters: will define the target value
@@ -741,6 +748,9 @@ class StrategyManager:
         # if the extra "dummy" job0 is scheduled, do not include it in this number
         if hasZerothJob:
             self.totalNumJobs -= 1
+        else:
+            # start from job1, not job0 (which is ignored by the web interface)
+            self.nextJobID = 1
 
         g.log(LOG_INFO, "total {} parameter combination(s) to try out, parameters: {}".format(
             self.totalNumJobs, " ".join(self.copasiConfig["params"])))

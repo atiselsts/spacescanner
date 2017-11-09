@@ -133,6 +133,18 @@ def getConfig(name, default = None, useHardcodedConfig = True):
         value, ok = defaultConfigGet(path)
     return value if ok else default
 
+def setConfig(name, value):
+    path = name.split(".")
+    compartment = config
+    # go to the right subdictionary
+    for elem in path[:-1]:
+        if elem not in compartment:
+            # create a new section
+            compartment[elem] = {}
+        compartment = compartment[elem]
+    compartment[path[-1]] = value
+
+
 def loadConfig(filename, isQuiet = False):
     global config
     global configFileName
@@ -160,9 +172,7 @@ def loadConfig(filename, isQuiet = False):
     numMaxRuns = int(getConfig("optimization.maxConcurrentRuns", numCores))
     if numMaxRuns > numCores:
         log(LOG_INFO, "warning: reducing the number of maximal concurrent optimizations rune to the number of CPU cores: {}".format(numCores))
-        if "optimization" not in config:
-            config["optimization"] = {}
-        config["optimization"]["maxConcurrentRuns"] = numCores
+        setConfig("optimization.maxConcurrentRuns", numCores)
 
 def getAllConfig():
     cfg = copy.copy(config)

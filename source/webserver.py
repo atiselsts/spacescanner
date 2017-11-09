@@ -206,7 +206,10 @@ class HttpServerHandler(BaseHTTPRequestHandler):
                         "isExecutable" : sm.isExecutable,
                         "totalNumJobs" : sm.getTotalNumJobs(),
                         "totalNumParams" : sm.getTotalNumParams(),
-                        "resultsPresent" : sm.getNumFinishedJobs() > 0}
+                        "resultsPresent" : sm.getNumFinishedJobs() > 0,
+                        "error" : sm.lastError }
+            # XXX: perhaps resetting this should be timer based?
+            sm.lastError = None
         elif o.path == '/allstatus':
             response = sm.ioGetAllJobs(qs)
         elif o.path == '/activestatus':
@@ -314,11 +317,21 @@ class HttpServerHandler(BaseHTTPRequestHandler):
         modelFilename = self.saveInFile(receivedModel, MODEL_FILE_NAME)
         expDataFilename = self.saveInFile(receivedExperimentalData, EXP_DATA_FILE_NAME)
 
-        # check if the model is all right
-        InterruptibleHTTPServer.serverInstance.strategyManager.prepare(isDummy = False)
+        # XXX: this is a hack that allows to guess the task type without the web
+        # server to explicitly sending it. This assumes that exp data is only set for
+        # parameter estimation tasks
+        if receivedExperimentalData:
+            taskType = COPASI_TASK_PARAM_ESTIMATION
+        else:
+            taskType = COPASI_TASK_OPTIMIZATION
 
-        # self.respondToPost(200, filename, False) # these req/resp are not in json format
-        self.respondToPost(200, {"filename" : modelFilename})
+        # check if the model is all right
+        sm = InterruptibleHTTPServer.serverInstance.strategyManager
+        if sm.prepare(isDummy = False, taskType = taskType):
+            self.respondToPost(200, {"filename" : modelFilename})
+        else:
+            # report errors if any happened while loading the model file
+            self.respondToPost(200, {"error" : sm.lastError})
 
 
     def postConfig(self, qs):
@@ -338,6 +351,7 @@ class HttpServerHandler(BaseHTTPRequestHandler):
         # set it only if not none
         InterruptibleHTTPServer.serverInstance.strategyManager = sm
 
+        # wait for the execution to start
         end = time.time() + 10
         while time.time() < end:
             if sm.getTotalNumJobs() >= 0:

@@ -113,7 +113,7 @@ class Runner:
         dirname = os.path.join(workDir, "job{}".format(self.job.id))
         try:
             os.mkdir(dirname)
-        except:
+        except Exception as ex:
             pass # may already exist, that's fine
 
         self.inputFilename = os.path.join(dirname, "input_" + filename + ".cps")
@@ -133,7 +133,7 @@ class Runner:
         except IOError as e:
             pass
 
-        except:
+        except Exception as ex:
             pass # may not exist, that's fine
 
 

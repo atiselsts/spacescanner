@@ -23,9 +23,7 @@ SPACESCANNER.settings = function() {
         "web" : {
             "logxaxis" : false,
             "logyaxis" : false,
-        },
-        "webTestMode" : true,
-        "testMode" : true
+        }
     };
 
     // make a copy
@@ -289,9 +287,15 @@ SPACESCANNER.settings = function() {
 
     function onTaskTypeChanged() {
         var taskType = $('input[name=input-import-taskType]:checked').val();
-        console.log("onTaskTypeChanged")
-        $( "#input-import-experimentalFilename" ).prop(
-            'disabled', taskType !== "parameterFitting");
+        if (taskType === "parameterFitting") {
+            // enable experiment filename field
+            $( "#input-import-experimentalFilename" ).prop('disabled', false);
+        } else {
+            // clear and disable experiment filename field: the fact that this field
+            // is clear is used by the SpaceScanner backend to decide the task type
+            $( "#input-import-experimentalFilename" ).val("");
+            $( "#input-import-experimentalFilename" ).prop('disabled', true);
+        }
     }
 
     function populateSettings() {
@@ -299,8 +303,15 @@ SPACESCANNER.settings = function() {
         $( '#input-import-taskName' ).val(currentSettings["taskName"]);
         $( '#input-import-taskType' ).val(currentSettings["copasi"]["taskType"]);
         // disable the experiment filename field if and only if `parameterFitting` is not selected
-        $( "#input-import-experimentalFilename" ).prop(
-            'disabled', currentSettings["copasi"]["taskType"] !== "parameterFitting");
+        if (currentSettings["copasi"]["taskType"] === "parameterFitting") {
+            // enable experiment filename field
+            $( "#input-import-experimentalFilename" ).prop('disabled', false);
+        } else {
+            // clear and disable experiment filename field: the fact that this field
+            // is clear is used by the SpaceScanner backend to decide the task type
+            $( "#input-import-experimentalFilename" ).val("");
+            $( "#input-import-experimentalFilename" ).prop('disabled', true);
+        }
         $( 'input[type=radio][name=input-import-taskType]' ).change(onTaskTypeChanged);
 
         // Performance settings

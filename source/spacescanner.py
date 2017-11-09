@@ -71,7 +71,8 @@ def start(configFileName):
 
     # read COPASI model file etc.
     strategyManager = strategy.StrategyManager()
-    if not strategyManager.prepare(isDummy = False):
+    ok = strategyManager.prepare(isDummy = False)
+    if not ok:
         return
 
     # start the web server
@@ -90,7 +91,8 @@ def startFromWeb(configFileName):
 
     # read COPASI model file etc.
     strategyManager = strategy.StrategyManager()
-    if not strategyManager.prepare(isDummy = False):
+    ok = strategyManager.prepare(isDummy = False)
+    if not ok:
         g.log(LOG_ERROR, "Preparing for execution failed")
         return None
 
@@ -114,6 +116,8 @@ def main():
     if len(sys.argv) > 1 and sys.argv[1] == "web":
         # web-only mode; load the last saved web config, if present
         g.loadConfig(os.path.join(SELF_PATH, "tmpweb", "config.json"), isQuiet = True)
+        # always use the same model file - the one POSTed from the web
+        g.setConfig("copasi.modelFile", "@SELF@/tmpweb/model.cps")
         # create an empty strategy and wait for input commands
         strategyManager = strategy.StrategyManager()
         strategyManager.prepare(isDummy = True)

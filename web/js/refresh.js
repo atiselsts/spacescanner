@@ -58,6 +58,10 @@ SPACESCANNER.refresh = function() {
             doEstimateNumJobs = true;
         }
 
+	if (data.error) {
+	    SPACESCANNER.notify("Error: " + data.error, "error");
+	}
+
         if (isActive != oldIsActive) {
             $("#params-job-number").html("" + totalNumJobs);
 
@@ -216,7 +220,8 @@ SPACESCANNER.refresh = function() {
                 + "Max CPU time: " + (Math.round(10 * job.cpu) / 10.0) + " sec / "
                 + "Total CPU time: " + (Math.round(10 * job.totalCpu) / 10.0) + " sec / "
                 + "Status: " + status + " / "
-                + "Final method: " + (job.methods && job.methods.length ? job.methods[0] : "") + " / "
+                + (job.active ? "Current" : "Final")
+                + " method: " + (job.methods && job.methods.length ? job.methods[0] : "") + " / "
                 + params + "\n";
             s += '</div><br/>\n'
         }

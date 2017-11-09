@@ -13,6 +13,5 @@
     ],
     "output" : {
         "logfile" : "spacescanner.log"
-    },
-    "testMode" : true
+    }
 }

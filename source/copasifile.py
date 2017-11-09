@@ -199,8 +199,9 @@ class CopasiFile:
         self.modeFileDirectory = os.path.dirname(filename)
 
         if not isReadable(filename):
-            g.log(LOG_ERROR, "error while loading COPASI model: file not found or not readable")
-            return False
+            s = "error while loading COPASI model: file not found or not readable"
+            g.log(LOG_ERROR, s)
+            return False, s
 
         self.isFileRead = True
         self.optimizationTask = None
@@ -210,7 +211,9 @@ class CopasiFile:
             self.xmlroot = ElementTree.parse(filename).getroot()
         except:
             self.xmlroot = None
-            return False
+            s = "error while loading COPASI model: failed to parse the XML"
+            g.log(LOG_ERROR, s)
+            return False, s
 
         # Example XML structure:
         #   <xml><ListOfTasks><Task type="optimization">...
@@ -222,8 +225,9 @@ class CopasiFile:
                     self.paramEstimationTask = TaskSettings(task)
 
         if self.optimizationTask is None and self.paramEstimationTask is None:
-            g.log(LOG_ERROR, "error while loading COPASI model: neither optimization nor parameter estimation tasks found in the COPASI file")
-            return False
+            s = "error while loading COPASI model: neither optimization nor parameter estimation tasks found in the COPASI file"
+            g.log(LOG_ERROR, s)
+            return False, s
 
         # always load stuff relevant to both optimization and param estimation tasks
         if self.optimizationTask is not None:
@@ -232,12 +236,14 @@ class CopasiFile:
             # do validation only if required
             if self.taskType == COPASI_TASK_OPTIMIZATION:
                 if len(self.optimizationTask.paramDict) == 0:
-                    g.log(LOG_ERROR, "error while loading COPASI model: parameters for optimization task not defined in the COPASI file")
-                    return False
+                    s = "error while loading COPASI model: parameters for optimization task not defined in the COPASI file"
+                    g.log(LOG_ERROR, s)
+                    return False, s
 
                 if not self.optimizationTask.objectiveFunction:
-                    g.log(LOG_ERROR, "error while loading COPASI model: objective function not defined in the COPASI file")
-                    return False
+                    s = "error while loading COPASI model: objective function not defined in the COPASI file"
+                    g.log(LOG_ERROR, s)
+                    return False, s
 
         if self.paramEstimationTask is not None:
             self.loadParameters(self.paramEstimationTask, "fititem")
@@ -245,11 +251,12 @@ class CopasiFile:
             # do validation only if required
             if self.taskType == COPASI_TASK_PARAM_ESTIMATION:
                 if len(self.paramEstimationTask.paramDict) == 0:
-                    g.log(LOG_ERROR, "error while loading COPASI model: parameters for parameter estimation task not defined in the COPASI file")
-                    return False
+                    s = "error while loading COPASI model: parameters for parameter estimation task not defined in the COPASI file"
+                    g.log(LOG_ERROR, s)
+                    return False, s
 
         # return true only if the current state is functional
-        return self.isValid()
+        return self.isValid(), "loaded ok"
 
 
     def loadParameters(self, task, paramGroupName):
@@ -449,11 +456,19 @@ class CopasiFile:
     def isValid(self):
         if self.taskType == COPASI_TASK_OPTIMIZATION:
             if not self.isFileRead: return True
-            return self.optimizationTask is not None
-        if self.taskType == COPASI_TASK_PARAM_ESTIMATION:
+            if self.optimizationTask is None:
+                g.log(LOG_ERROR, "Optimization task not defined in the model file")
+                return False
+        elif self.taskType == COPASI_TASK_PARAM_ESTIMATION:
             if not self.isFileRead: return True
-            return self.paramEstimationTask is not None
-        return False
+            if self.paramEstimationTask is None:
+                g.log(LOG_ERROR, "Parameter estimation task not defined in the model file")
+                return False
+        else:
+            g.log(LOG_ERROR, "Unknown task type: {}".format(self.taskType))
+            return False
+
+        return True
 
 
     def createCopy(self, configFilename, reportFilename, parameters, methods,
@@ -499,7 +514,7 @@ class CopasiFile:
 def testOptimizationTask():
     cf = CopasiFile(COPASI_TASK_OPTIMIZATION)
     print("opening a file")
-    if not cf.read("../models/complex.cps"):
+    if not cf.read("../models/complex.cps")[0]:
         return -1
     print("querying parameters")
     params = cf.queryParameters()
@@ -513,7 +528,7 @@ def testOptimizationTask():
 def testParamEstimationTask():
     cf = CopasiFile(COPASI_TASK_PARAM_ESTIMATION)
     print("opening a file")
-    if not cf.read("../models/metformin-parameter-estimation.cps"):
+    if not cf.read("../models/metformin-parameter-estimation.cps")[0]:
         return -1
     print("querying parameters")
     params = cf.queryParameters()

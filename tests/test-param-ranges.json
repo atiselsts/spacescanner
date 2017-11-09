@@ -16,6 +16,5 @@
     "output" : {
         "logfile" : "spacescanner.log",
         "loglevel" : 5
-    },
-    "testMode" : true
+    }
 }
