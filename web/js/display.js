@@ -120,11 +120,40 @@ SPACESCANNER.display = function() {
         methods["#job" + job.id] = method
 
         var allData = [];
+        var startData = [];
+        var maxTime = 0.0;
+        var minValue = 10e100;
+        var maxValue = -10e100;
+
+        var config = SPACESCANNER.settings.get("optimization");
+        var referenceTime = config.paramEstimationReferenceValueSec;
+        if (referenceTime === undefined) {
+            referenceTime = 0;
+        }
+
+        var lastValues = [];
         for (var runner = 0; runner < job.data.length; runner++) {
             var jobdata = job.data[runner];
+            //console.log("Job " + runner + " data: " + JSON.stringify(jobdata));
             for (var j = 0; j < jobdata.values.length; j++) {
-                allData.push({time: jobdata.time[j], of: jobdata.values[j], runner: runner});
+                var r = {time: jobdata.time[j], of: jobdata.values[j], runner: runner};
+                if (jobdata.time[j] < referenceTime) {
+                    startData.push(r);
+                } else {
+                    allData.push(r);
+                }
+                maxTime = Math.max(maxTime, r.time);
+                maxValue = Math.max(maxValue, r.of);
+                minValue = Math.min(minValue, r.of);
+                if (j === jobdata.values.length - 1) {
+                    lastValues.push(r.of);
+                }
             }
+        }
+
+        // if before '2 * ref_time' show all data; else show just the non-starting data
+        if (maxTime < 2.0 * referenceTime) {
+            allData = allData.concat(startData);
         }
 
         allData.sort(function (a, b){  
@@ -133,13 +162,34 @@ SPACESCANNER.display = function() {
             return 0;
         });
 
+        if (allData.length > 0) {
+            var lastMinValue = 10e100;
+            var lastMaxValue = -10e100;
+            for (var runner = 0; runner < lastValues.length; runner++) {
+                lastMaxValue = Math.max(lastMaxValue, lastValues[runner]);
+                lastMinValue = Math.min(lastMinValue, lastValues[runner]);
+            }
+
+            var bestValue = (taskType === "optimization") ? lastMaxValue : lastMinValue;
+            var worstValue = (taskType === "optimization") ? lastMinValue : lastMaxValue;
+            $("#job" + i + "_best_value").html(
+                "Best value: <i>" + bestValue + "</i>" +
+                    "&nbsp;&nbsp;&nbsp;&nbsp;" +
+                    "Worst value: <i>" + worstValue + "</i>");
+        } else {
+            $("#job" + i + "_best_value").html("");
+        }
+
         var runnerValues = [];
         var jobData = new google.visualization.DataTable();
         jobData.addColumn('number'); //, 'Time');
         for (var j = 0; j < job.data.length; j++) {
-            jobData.addColumn('number', 'Runner ' + (j+1));
-            // start from the baseline (if present), not from zero
-            runnerValues.push(baseline);
+            var name = 'Runner ' + (j+1) + ' \n(' + lastValues[j] + ')';
+            jobData.addColumn('number', name);
+            if (taskType === "optimization") {
+                // start from the baseline (if present), not from zero
+                runnerValues.push(baseline);
+            }
         }
 
         $.each(allData, function (_, entry) { 
@@ -153,6 +203,8 @@ SPACESCANNER.display = function() {
             }
             jobData.addRow(row);
         });
+
+        //console.log("All job data: " + JSON.stringify(jobData));
 
         var webConfig = SPACESCANNER.settings.get("web");
         var taskName = taskType === "optimization" ?

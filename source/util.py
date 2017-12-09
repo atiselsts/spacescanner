@@ -98,6 +98,17 @@ TERMINATION_REASON_MAX                = 5
 MIN_OF_VALUE = float("-inf") # minimal objective function value
 MAX_OF_VALUE = float("inf")  # maximal objective function value
 
+OPTIMIZATION_OF_DEFAULT_VALUE = 0.0
+# The parameter estimation default value cannot be 0.0,
+# as the graph is displayed in log scale, and
+# and the task is minization rather than maximization, so 0.0
+# is the perfect ending value, rather than a starting value!
+#
+# For these reasons we select 10.0 as a value to display momentarily,
+# until the first real value is found. There is no special justification
+# behind the number 10, other than it being more suitable than 0.0.
+PARAM_ESTIMATION_OF_DEFAULT_VALUE = 10.0
+
 ENC = json.JSONEncoder()
 
 ################################################
@@ -293,7 +304,14 @@ def getNonconvergedResults(filename):
 def jsonFixInfinity(x, defaultValue):
     if x is None or math.isnan(x) or math.isinf(x):
         return defaultValue
+    if x == 0.0:
+        return defaultValue # this was addded for parameter estimation to look better at log scale
     return x
+
+def getTaskDefaultValue(taskType):
+    if taskType == COPASI_TASK_OPTIMIZATION:
+        return OPTIMIZATION_OF_DEFAULT_VALUE
+    return PARAM_ESTIMATION_OF_DEFAULT_VALUE
 
 # escape the TAB characters with the ascii code for them
 def xmlEscapeTabs(s):

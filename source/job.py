@@ -145,12 +145,19 @@ class Job:
             if self.convergenceTime is not None:
                 minAbsoluteTime = float(g.getConfig("optimization.consensusDelaySec"))
                 # XXX: do not check the relative time here
-                if self.hasConsensus(False) and self.timeDiffExceeded(time.time() - self.convergenceTime, minAbsoluteTime):
-                    # count COPASI termination as consensus in this case
-                    # XXX: note that this does *not* overwrite "time limit exceeded" exit code!
-                    for r in self.runners:
-                        if r.terminationReason == TERMINATION_REASON_COPASI_FINISHED:
-                            r.terminationReason = TERMINATION_REASON_CONSENSUS
+                if self.hasConsensus(False):
+                    countCopasiTerminationAsConcensus = False
+                    if self.pool.strategy.taskType == COPASI_TASK_PARAM_ESTIMATION:
+                        countCopasiTerminationAsConcensus = True
+                    elif self.timeDiffExceeded(time.time() - self.convergenceTime, minAbsoluteTime):
+                        countCopasiTerminationAsConcensus = True
+
+                    if countCopasiTerminationAsConcensus:
+                        # count COPASI termination as consensus in this case
+                        # XXX: note that this does *not* overwrite "time limit exceeded" exit code!
+                        for r in self.runners:
+                            if r.terminationReason == TERMINATION_REASON_COPASI_FINISHED:
+                                r.terminationReason = TERMINATION_REASON_CONSENSUS
             # switch the methods if required
             self.decideTermination()
             return
@@ -291,7 +298,7 @@ class Job:
             #print("{}: worst or best are inf: {} {}".format(self.getName(), worst, best))
             return False
 
-        if self.pool.strategy.taskType == "optimization":
+        if self.pool.strategy.taskType == COPASI_TASK_OPTIMIZATION:
             return self.hasConsensusOptimizationTask(worst, best)
         return self.hasConsensusParameterEstimationTask(worst, best, isStillRunning)
 
@@ -499,26 +506,29 @@ class Job:
         return (bestOfValue, bestStats, maxCpuTime, totalCpuTime, isActive, terminationReason)
 
 
-    def dumpResults(self, f, allParams):
+    def dumpResults(self, f, rank, allParams):
         (bestOfValue, bestStats, maxCpuTime, totalCpuTime, _, terminationReason) = self.getStatus()
 
         # OF value,CPU time,Total CPU time,Job ID,Stop reason
-        f.write("{},{},{},{},{},{},{},".format(
-            bestOfValue, maxCpuTime, totalCpuTime, self.id, self.currentMethod,
-            len(self.params), reasonToStr(terminationReason)))
+        f.write("{},{},{},{},{},{},{},{},".format(
+            rank, bestOfValue, maxCpuTime, totalCpuTime, self.id,
+            self.currentMethod, len(self.params), reasonToStr(terminationReason)))
 
-        # which parameters are included
-        paramState = ['1' if x in self.params else '0' \
-                      for x in allParams]
-        f.write(",".join(paramState))
+        if False:
+            # write down which parameters are included
+            paramState = ['1' if x in self.params else '0' \
+                          for x in allParams]
+            f.write(",".join(paramState) + ",")
 
-        # included parameter values (use 1.0 for excluded parameters)
-        paramValues = [1.0] * len(allParams)
+        # write down included parameter values;
+        # use n/a for excluded parameters
+        paramValues = ["n/a"] * len(allParams)
+
         if bestStats is not None:
             for (index, name) in enumerate(self.params):
                 paramValues[allParams.index(name)] = bestStats.params[index]
 
-        f.write("," + ",".join([str(x) for x in paramValues]))
+        f.write(",".join([str(x) for x in paramValues]))
 
         f.write("\n")
 
@@ -532,7 +542,8 @@ class Job:
 
         return {
             "id" : self.id,
-            "of" : jsonFixInfinity(bestOfValue, 0.0),
+            "of" : jsonFixInfinity(bestOfValue,
+                                   getTaskDefaultValue(self.pool.strategy.taskType)),
             "cpu" : maxCpuTime,
             "totalCpu" : totalCpuTime,
             "active" : isActive,
@@ -553,7 +564,13 @@ class Job:
             if runner.isActive:
                 isActive = True
 
-            baselineValue = jsonFixInfinity(self.pool.strategy.topBaseline, 0.0)
+            defaultValue = getTaskDefaultValue(self.pool.strategy.taskType)
+            if self.pool.strategy.taskType == COPASI_TASK_PARAM_ESTIMATION:
+                # use the constant as the starting value value
+                startingValue = PARAM_ESTIMATION_OF_DEFAULT_VALUE
+            else:
+                # use the previously found baseline as the starting value
+                startingValue = jsonFixInfinity(self.pool.strategy.topBaseline, defaultValue)
 
             for generation in range(1, self.runnerGeneration + 1):
                 stats = runner.getAllStatsForGeneration(generation)
@@ -561,18 +578,24 @@ class Job:
                 isFirstProcessed = False
                 for s in stats:
                     t = prevTime + s.cpuTime
+                    v = jsonFixInfinity(s.ofValue, defaultValue)
                     if not isFirstProcessed:
                         isFirstProcessed = True
-                        # insert a dummy item at the time of the first value found
-                        cpuTimes.append(t)
-                        ofValues.append(baselineValue)
+                        if self.pool.strategy.taskType == COPASI_TASK_OPTIMIZATION:
+                            # insert a dummy item at the time of the first value found
+                            cpuTimes.append(t)
+                            ofValues.append(startingValue)
+                        else:
+                            # use the first found as the real staring value
+                            startingValue = v
                     cpuTimes.append(t)
-                    ofValues.append(jsonFixInfinity(s.ofValue, 0.0))
+                    ofValues.append(v)
 
+                # in case there are no stats yet
                 if not isFirstProcessed:
                     t = sum(self.oldCpuTimes[:generation])
                     cpuTimes.append(t)
-                    ofValues.append(baselineValue)
+                    ofValues.append(startingValue)
 
             # always add the current state
             if len(ofValues):
@@ -580,7 +603,7 @@ class Job:
                 lastOfValue = ofValues[-1]
             else:
                 # use the baseline value
-                lastOfValue = baselineValue
+                lastOfValue = startingValue
             cpuTimes.append(sum(self.oldCpuTimes) + runner.currentCpuTime)
             ofValues.append(lastOfValue)
 

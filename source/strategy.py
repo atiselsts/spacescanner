@@ -312,24 +312,24 @@ class StrategyManager:
     # For maximization tasks: if a > b
     # For minimization tasks: if a < b
     def isOfValueBetter(self, a, b):
-        if self.taskType == "optimization":
+        if self.taskType == COPASI_TASK_OPTIMIZATION:
             return a > b
         return a < b
 
     def getOfValueSelectionFn(self):
-        if self.taskType == "optimization":
+        if self.taskType == COPASI_TASK_OPTIMIZATION:
             return max
         return min
 
     def isOfValueSortReverse(self):
-        if self.taskType == "optimization":
+        if self.taskType == COPASI_TASK_OPTIMIZATION:
             # sort from biggest to smallest
             return True
         # sort from smallest to biggest
         return False
 
     def getInitialOfValue(self):
-        if self.taskType == "optimization":
+        if self.taskType == COPASI_TASK_OPTIMIZATION:
             return MIN_OF_VALUE
         return MAX_OF_VALUE
 
@@ -399,14 +399,14 @@ class StrategyManager:
 
         allParams = self.copasiConfig["params"]
 
-        cnt = 0
+        rank = 1
         with open(filename, "w") as f:
             self.dumpCsvFileHeader(f)
             for job in allJobsByBestOfValue:
-                job.dumpResults(f, allParams)
-                cnt += 1
-                if totalLimit and cnt >= totalLimit:
+                job.dumpResults(f, rank, allParams)
+                if totalLimit and rank >= totalLimit:
                     break
+                rank += 1
 
         g.log(LOG_INFO, '<spacescanner>: results of finished jobs saved in "' + filename + '"')
         return filename
@@ -414,11 +414,14 @@ class StrategyManager:
 
     def dumpCsvFileHeader(self, f):
         evaluationResultName = "OF value" if self.taskType == COPASI_TASK_OPTIMIZATION else "Difference"
+        f.write("Rank,")
         f.write(evaluationResultName + ",")
         f.write("Max CPU time,Total CPU time,Job ID,Method,Number of parameters,Stop reason,")
         paramNames = [x.strip("'") for x in self.copasiConfig["params"]]
-        f.write(",".join([x + " included" for x in paramNames]))
-        f.write("," + ",".join(paramNames))
+        if False:
+            # don't do this anymore: takes too much space?
+            f.write(",".join([x + " included" for x in paramNames]) + ",")
+        f.write(",".join(paramNames))
         f.write("\n")
 
 
@@ -440,7 +443,7 @@ class StrategyManager:
         with self.jobLock:
             self.finishedJobs[job.id] = job
 
-            if self.taskType == "optimization":
+            if self.taskType == COPASI_TASK_OPTIMIZATION:
                 # optimization; if this is the zero-parameter job, use the result as a baseline
                 if not job.areParametersChangeable:
                     self.topBaseline = job.getBestOfValue()
@@ -525,7 +528,7 @@ class StrategyManager:
             return False
 
         isReached = False
-        if self.taskType == "optimization":
+        if self.taskType == COPASI_TASK_OPTIMIZATION:
             # Optimization; maximize
 
             requiredValue = targetValue
@@ -582,7 +585,8 @@ class StrategyManager:
     def ioGetAllJobs(self, qs):
         response = {
             "taskType" : self.taskType,
-            "baseline" : jsonFixInfinity(self.topBaseline, 0.0),
+            "baseline" : jsonFixInfinity(self.topBaseline,
+                                         getTaskDefaultValue(self.taskType)),
             "stats" : []
         }
         with self.jobLock:
@@ -599,7 +603,9 @@ class StrategyManager:
     def ioGetActiveJobs(self, qs):
         response = {
             "taskType" : self.taskType,
-            "baseline" : jsonFixInfinity(self.topBaseline, 0.0), "stats" : []
+            "baseline" : jsonFixInfinity(self.topBaseline,
+                                         getTaskDefaultValue(self.taskType)),
+            "stats" : []
         }
         with self.jobLock:
             if bool(g.getConfig("webTestMode")):
@@ -622,7 +628,8 @@ class StrategyManager:
         job = None
         response = {
             "taskType" : self.taskType,
-            "baseline" : jsonFixInfinity(self.topBaseline, 0.0),
+            "baseline" : jsonFixInfinity(self.topBaseline,
+                                         getTaskDefaultValue(self.taskType)),
             "stats" : []
         }
         with self.jobLock:

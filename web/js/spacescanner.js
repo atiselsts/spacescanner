@@ -54,10 +54,10 @@ var SPACESCANNER = function() {
                     return;
                 }
             } else {
-		// clear the experimental filename field: the presence/absence of the
-		// experimental data is used by the backend to guess the task type
-		$( '#input-import-experimentalFilename' ).val("");
-	    }
+                // clear the experimental filename field: the presence/absence of the
+                // experimental data is used by the backend to guess the task type
+                $( '#input-import-experimentalFilename' ).val("");
+            }
         });
 
     $('#button-terminate-server')

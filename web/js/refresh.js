@@ -58,9 +58,9 @@ SPACESCANNER.refresh = function() {
             doEstimateNumJobs = true;
         }
 
-	if (data.error) {
-	    SPACESCANNER.notify("Error: " + data.error, "error");
-	}
+        if (data.error) {
+            SPACESCANNER.notify("Error: " + data.error, "error");
+        }
 
         if (isActive != oldIsActive) {
             $("#params-job-number").html("" + totalNumJobs);
