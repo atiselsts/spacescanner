@@ -122,8 +122,6 @@ SPACESCANNER.display = function() {
         var allData = [];
         var startData = [];
         var maxTime = 0.0;
-        var minValue = 10e100;
-        var maxValue = -10e100;
 
         var config = SPACESCANNER.settings.get("optimization");
         var referenceTime = config.paramEstimationReferenceValueSec;
@@ -131,64 +129,98 @@ SPACESCANNER.display = function() {
             referenceTime = 0;
         }
 
-        var lastValues = [];
+        var lastValues = {};
+        var hasData = [];
+        var hasStartData = [];
         for (var runner = 0; runner < job.data.length; runner++) {
             var jobdata = job.data[runner];
+            hasData.push(false);
+            hasStartData.push(false);
             //console.log("Job " + runner + " data: " + JSON.stringify(jobdata));
             for (var j = 0; j < jobdata.values.length; j++) {
                 var r = {time: jobdata.time[j], of: jobdata.values[j], runner: runner};
                 if (jobdata.time[j] < referenceTime) {
                     startData.push(r);
+                    hasStartData[runner] = true;
                 } else {
                     allData.push(r);
+                    hasData[runner] = true;
                 }
                 maxTime = Math.max(maxTime, r.time);
-                maxValue = Math.max(maxValue, r.of);
-                minValue = Math.min(minValue, r.of);
                 if (j === jobdata.values.length - 1) {
-                    lastValues.push(r.of);
+                    lastValues[runner] = r.of;
                 }
             }
         }
 
         // if before '2 * ref_time' show all data; else show just the non-starting data
-        if (maxTime < 2.0 * referenceTime) {
+        if (maxTime < 2.0 * referenceTime || taskType === "optimization" ) {
             allData = allData.concat(startData);
+            // mark that the data is present if just some start data is preset
+            for (var runner = 0; runner < job.data.length; runner++) {
+                if (hasStartData[runner]) {
+                    hasData[runner] = true;
+                }
+            }
         }
 
-        allData.sort(function (a, b){  
+        var maximization = taskType === "optimization" ? 1 : -1;
+        allData.sort(function (a, b){
+            // sort by time first
             if (a.time < b.time) return -1;
             if (a.time > b.time) return 1;
+            // sort by value second, depending on whether this is maximization task
+            if (a.of < b.of) return maximization * -1;
+            if (a.of > b.of) return maximization;
             return 0;
         });
 
-        if (allData.length > 0) {
-            var lastMinValue = 10e100;
-            var lastMaxValue = -10e100;
-            for (var runner = 0; runner < lastValues.length; runner++) {
+        if (allData.length <= 0) {
+            // no data; hide the chart (other items related to the job are still displayed)
+            $("#job" + i + "_chart").hide();
+            return;
+        }
+        // has data; show the chart
+        $("#job" + i + "_chart").show();
+
+        var lastMinValue = 10e100;
+        var lastMaxValue = -10e100;
+        for (var runner = 0; runner < job.data.length; runner++) {
+            if (lastValues[runner] !== undefined) {
                 lastMaxValue = Math.max(lastMaxValue, lastValues[runner]);
                 lastMinValue = Math.min(lastMinValue, lastValues[runner]);
             }
-
-            var bestValue = (taskType === "optimization") ? lastMaxValue : lastMinValue;
-            var worstValue = (taskType === "optimization") ? lastMinValue : lastMaxValue;
-            $("#job" + i + "_best_value").html(
-                "Best value: <i>" + bestValue + "</i>" +
-                    "&nbsp;&nbsp;&nbsp;&nbsp;" +
-                    "Worst value: <i>" + worstValue + "</i>");
-        } else {
-            $("#job" + i + "_best_value").html("");
         }
+
+        //var bestValue = (taskType === "optimization") ? lastMaxValue : lastMinValue;
+        //var worstValue = (taskType === "optimization") ? lastMinValue : lastMaxValue;
+        $("#job" + i + "_best_value").html(
+            "Min value: <i>" + lastMinValue + "</i>" +
+                "&nbsp;&nbsp;&nbsp;&nbsp;" +
+                "Max value: <i>" + lastMaxValue + "</i>");
 
         var runnerValues = [];
         var jobData = new google.visualization.DataTable();
+
+        var firstValue = allData[0];
+        if (taskType === "optimization") {
+            if (baseline < firstValue) {
+                firstValue = baseline;
+            }
+        } else {
+            if (baseline > firstValue) {
+                firstValue = baseline;
+            }
+        }
+
         jobData.addColumn('number'); //, 'Time');
-        for (var j = 0; j < job.data.length; j++) {
-            var name = 'Runner ' + (j+1) + ' \n(' + lastValues[j] + ')';
-            jobData.addColumn('number', name);
-            if (taskType === "optimization") {
-                // start from the baseline (if present), not from zero
-                runnerValues.push(baseline);
+        for (var runner = 0; runner < job.data.length; runner++) {
+            if (hasData[runner]) {
+                var name = 'Runner ' + (runner+1) + ' \n(' + lastValues[runner] + ')';
+                jobData.addColumn('number', name);
+
+                // start from the first value / baseline (if present), not from zero
+                runnerValues.push(firstValue);
             }
         }
 
@@ -198,8 +230,10 @@ SPACESCANNER.display = function() {
 
             var row = [];
             row.push(entry.time);
-            for (var j = 0; j < job.data.length; j++) {
-                row.push(runnerValues[j]);
+            for (var runner = 0; runner < job.data.length; runner++) {
+                if (hasData[runner]) {
+                    row.push(runnerValues[runner]);
+                }
             }
             jobData.addRow(row);
         });
@@ -224,7 +258,6 @@ SPACESCANNER.display = function() {
             }
         };
         chart.draw(jobData, options);
-
     }
 
     // Load the Visualization API and the piechart package.

@@ -565,47 +565,35 @@ class Job:
                 isActive = True
 
             defaultValue = getTaskDefaultValue(self.pool.strategy.taskType)
-            if self.pool.strategy.taskType == COPASI_TASK_PARAM_ESTIMATION:
-                # use the constant as the starting value value
-                startingValue = PARAM_ESTIMATION_OF_DEFAULT_VALUE
-            else:
-                # use the previously found baseline as the starting value
-                startingValue = jsonFixInfinity(self.pool.strategy.topBaseline, defaultValue)
 
             for generation in range(1, self.runnerGeneration + 1):
                 stats = runner.getAllStatsForGeneration(generation)
                 prevTime = sum(self.oldCpuTimes[:generation - 1])
-                isFirstProcessed = False
+                isFirstStatProcessed = False
                 for s in stats:
                     t = prevTime + s.cpuTime
                     v = jsonFixInfinity(s.ofValue, defaultValue)
-                    if not isFirstProcessed:
-                        isFirstProcessed = True
+                    if not isFirstStatProcessed:
+                        isFirstStatProcessed = True
                         if self.pool.strategy.taskType == COPASI_TASK_OPTIMIZATION:
-                            # insert a dummy item at the time of the first value found
-                            cpuTimes.append(t)
-                            ofValues.append(startingValue)
-                        else:
-                            # use the first found as the real staring value
-                            startingValue = v
+                            # for optimization tasks, insert a dummy
+                            # item at the time of the first value found.
+                            startingValue = jsonFixInfinity(self.pool.strategy.topBaseline, defaultValue)
+                            # XXX: do this only if worse, in order to avoid jumping graphs
+                            if startingValue <= v:
+                                cpuTimes.append(t)
+                                ofValues.append(startingValue)
+
                     cpuTimes.append(t)
                     ofValues.append(v)
 
-                # in case there are no stats yet
-                if not isFirstProcessed:
-                    t = sum(self.oldCpuTimes[:generation])
-                    cpuTimes.append(t)
-                    ofValues.append(startingValue)
-
-            # always add the current state
             if len(ofValues):
-                # use the last computed OF value
-                lastOfValue = ofValues[-1]
+                # always add the current state if any values present
+                cpuTimes.append(sum(self.oldCpuTimes) + runner.currentCpuTime)
+                ofValues.append(ofValues[-1])
             else:
-                # use the baseline value
-                lastOfValue = startingValue
-            cpuTimes.append(sum(self.oldCpuTimes) + runner.currentCpuTime)
-            ofValues.append(lastOfValue)
+                # it is perfectly ok to return empty array, in case no values hve been found yet
+                pass
 
             reply.append({"id" : runnerID, "values" : ofValues, 
                           "time" : cpuTimes, "active" : runner.isActive})
