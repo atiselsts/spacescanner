@@ -158,14 +158,14 @@ test-broken-2:
 test-broken-3:
 	@rm -f spacescanner.log
 	$(PYTHON) $(SPACESCANNER) test-broken-no-of.json
-	@grep "error while loading COPASI model: objective function not defined in the COPASI file" spacescanner.log
+	@grep "error while loading COPASI model: an objective function is not defined in the COPASI file" spacescanner.log
 	@echo ..done
 	@echo ""
 
 test-broken-4:
 	@rm -f spacescanner.log
 	$(PYTHON) $(SPACESCANNER) test-broken-no-parameters.json
-	@grep "error while loading COPASI model: parameters for optimization task not defined in the COPASI file" spacescanner.log
+	@grep "error while loading COPASI model: parameters for the optimization task are not defined in the COPASI file" spacescanner.log
 	@echo ..done
 	@echo ""
 
