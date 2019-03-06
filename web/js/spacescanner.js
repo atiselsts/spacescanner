@@ -62,7 +62,17 @@ var SPACESCANNER = function() {
 
     $('#button-terminate-server')
         .on("click",function(e) {
-            var r = confirm("Are you sure?")
+            var msg;
+            if (SPACESCANNER.refresh.isActive()) {
+                msg = "Are you sure? The SpaceScanner is currently active!\n\n";
+                msg += "Stopping the server will stop the current operations and lose all state.\n\n";
+                msg += "It will also stop the server and disconnect the web interface.";
+            } else {
+                msg = "Are you sure?\n\n";
+                msg = "This will stop the server and disconnect the web interface.";
+            }
+
+            var r = confirm(msg);
             if (r !== true) {
                 return;
             }
