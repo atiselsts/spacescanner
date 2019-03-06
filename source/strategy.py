@@ -269,6 +269,8 @@ class StrategyManager:
         self.isExecutable = False
         self.lastError = ""
 
+        self.updateLockFile(enable=False, isInitialization=True)
+
         self.lastNumJobsDumped = 0
         # job counter, starting from 0
         self.nextJobID = 0
@@ -358,10 +360,32 @@ class StrategyManager:
             if self.activeJobPool is not None:
                 isUnfinished = self.activeJobPool.cleanup()
                 self.activeJobPool = None
+                self.updateLockFile(enable=False)
         if isUnfinished:
             sys.stderr.write("<spacescanner>: some jobs still running, waiting for cleanup...\n")
             time.sleep(2.0)
 
+    def updateLockFile(self, enable, isInitialization=False):
+        myPid = os.getpid()
+        filename = "lockfile.{}".format(myPid)
+        fullname = os.path.join(SELF_PATH, "results", filename)
+
+        g.log(LOG_ERROR, "Update lock file {}: {}".format(fullname, enable))
+
+        if enable:
+            try:
+                with open(fullname, "w") as f:
+                    pass
+            except Exception as ex:
+                g.log(LOG_ERROR, "Failed to create lock file {}: {}".format(fullname, ex))
+        else:
+            try:
+                os.remove(fullname)
+            except Exception as ex:
+                if not isInitialization:
+                    g.log(LOG_ERROR, "Failed to remove lock file {}: {}".format(fullname, ex))
+
+        return False
 
     def dumpResults(self, totalLimit = 0):
         if g.workDir is None:
@@ -699,12 +723,14 @@ class StrategyManager:
             if self.activeJobPool is not None:
                 self.activeJobPool.cleanup()
                 self.activeJobPool = None
+                self.updateLockFile(enable=False)
         return {"status" : "OK"}
 
 
     def finishActivePool(self):
         with self.jobLock:
             self.activeJobPool = None
+            self.updateLockFile(enable=False)
         self.dumpResults()
 
 
@@ -783,6 +809,7 @@ class StrategyManager:
                 pool = jobpool.JobPool(self, params, sel.areParametersChangeable())
                 with self.jobLock:
                     self.activeJobPool = pool
+                    self.updateLockFile(enable=True)
 
                 pool.start()
                 self.updateErrorMsg(pool)
