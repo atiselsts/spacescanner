@@ -400,13 +400,16 @@ class StrategyManager:
         allParams = self.copasiConfig["params"]
 
         rank = 1
-        with open(filename, "w") as f:
-            self.dumpCsvFileHeader(f)
-            for job in allJobsByBestOfValue:
-                job.dumpResults(f, rank, allParams)
-                if totalLimit and rank >= totalLimit:
-                    break
-                rank += 1
+        try:
+            with open(filename, "w") as f:
+                self.dumpCsvFileHeader(f)
+                for job in allJobsByBestOfValue:
+                    job.dumpResults(f, rank, allParams)
+                    if totalLimit and rank >= totalLimit:
+                        break
+                    rank += 1
+        except Exception as ex:
+            g.log(LOG_ERROR, "cannot save results to {}: {}".format(filename, ex))
 
         g.log(LOG_INFO, '<spacescanner>: results of finished jobs saved in "' + filename + '"')
         return filename
@@ -705,6 +708,15 @@ class StrategyManager:
         self.dumpResults()
 
 
+    def updateErrorMsg(self, pool):
+        if pool.errorMsg:
+            if self.lastError == "":
+                self.lastError = pool.errorMsg
+            elif pool.errorMsg != "":
+                self.lastError += "\n" + pool.errorMsg
+                pool.errorMsg = ""
+
+
     def execute(self):
         parameterSelections = []
 
@@ -773,10 +785,14 @@ class StrategyManager:
                     self.activeJobPool = pool
 
                 pool.start()
+                self.updateErrorMsg(pool)
+
                 while True:
                     time.sleep(1.0)
                     if self.doQuitFlag:
                         return True
+
+                    self.updateErrorMsg(pool)
 
                     try:
                         pool.refresh()

@@ -95,6 +95,7 @@ class Runner:
         self.reportFilename = None
         self.copasiFile = None
         self.generation = generation
+        self.errorMsg = ""
 
     def getFullName(self):
         return self.job.getFullName() + "/{} (method '{}')".format(
@@ -105,6 +106,7 @@ class Runner:
             self.id, self.methodName)
 
     def prepare(self, workDir, copasiFile, startParamValues):
+        self.errorMsg = ""
         filename = "job{}_runner{}".format(self.job.id, self.id)
 
         # Use separate directory for each run to avoid too many files per directory
@@ -119,9 +121,17 @@ class Runner:
         self.inputFilename = os.path.join(dirname, "input_" + filename + ".cps")
         self.reportFilename = os.path.join(dirname, "output_" + filename + ".log")
         self.copasiFile = copasiFile
-        if not copasiFile.createCopy(self.inputFilename, self.reportFilename,
-                                     self.job.params, [self.methodName], startParamValues,
-                                     self.job.areParametersChangeable):
+
+        try:
+            ok = copasiFile.createCopy(self.inputFilename, self.reportFilename,
+                                       self.job.params, [self.methodName], startParamValues,
+                                       self.job.areParametersChangeable)
+        except Exception as ex:
+            self.errorMsg = "cannot copy the model file {}: {}".format(self.inputFilename, ex)
+            g.log(LOG_ERROR, self.errorMsg)
+            ok = False
+
+        if not ok:
             return False
 
         # rename the old report file, if any expected
@@ -139,7 +149,8 @@ class Runner:
 
         copasiExe = os.path.join(COPASI_DIR, COPASI_EXECUTABLE)
         if not isExecutable(copasiExe):
-            g.log(LOG_ERROR, 'COPASI binary is not executable or does not exist under "' + copasiExe + '"')
+            self.errorMsg = 'COPASI binary is not executable or does not exist under "' + copasiExe + '"'
+            g.log(LOG_ERROR, self.errorMsg)
             return False
 
         args = [copasiExe, "--nologo", self.inputFilename]
@@ -221,9 +232,14 @@ class Runner:
         if stats.isValid:
             # overwrite the input file with parameter values corresponding to the best result so far
             paramsDict = dict(zip(self.job.params, stats.params))
-            self.copasiFile.createCopy(self.inputFilename, self.reportFilename,
-                                       self.job.params, [self.methodName],
-                                       paramsDict, self.job.areParametersChangeable)
+            try:
+                self.copasiFile.createCopy(self.inputFilename, self.reportFilename,
+                                           self.job.params, [self.methodName],
+                                           paramsDict, self.job.areParametersChangeable)
+            except Exception as ex:
+                self.errorMsg = 'Cannot create the final model file {} with the best results: {}'.format(self.inputFilename, ex)
+                g.log(LOG_ERROR, self.errorMsg)
+
 
     def checkReport(self, hasTerminated, now):
         assert self.isActive

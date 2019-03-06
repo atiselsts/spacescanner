@@ -111,8 +111,11 @@ class HttpServerHandler(BaseHTTPRequestHandler):
         except:
             pass
         filename = os.path.join(dirname, filename)
-        with open(filename, "wb") as f:
-            f.write(contents.encode("UTF-8"))
+        try:
+            with open(filename, "wb") as f:
+                f.write(contents.encode("UTF-8"))
+        except:
+            g.log(LOG_ERROR, "cannot save to file")
         return filename
 
     def sendDefaultHeaders(self, contents, isJSON = True, contentType = None):
@@ -209,7 +212,7 @@ class HttpServerHandler(BaseHTTPRequestHandler):
                         "resultsPresent" : sm.getNumFinishedJobs() > 0,
                         "error" : sm.lastError }
             # XXX: perhaps resetting this should be timer based?
-            sm.lastError = None
+            sm.lastError = ""
         elif o.path == '/allstatus':
             response = sm.ioGetAllJobs(qs)
         elif o.path == '/activestatus':

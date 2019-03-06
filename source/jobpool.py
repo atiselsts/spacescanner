@@ -44,6 +44,7 @@ class JobPool:
         self.maxNumParallelJobs = int(math.ceil(float(self.numUsableCores) / self.numRunnersPerJob))
         self.bestOfValue = strategy.getInitialOfValue()
         self.bestParams = []
+        self.errorMsg = ""
 
     def start(self):
         # try to start n jobs at once
@@ -82,7 +83,11 @@ class JobPool:
 
         # execute the job
         if not j.execute(g.workDir, self.strategy.copasiFile):
-            g.log(LOG_DEBUG, "failed to execute {}".format(j.getName()))
+            g.log(LOG_ERROR, "failed to execute {}: {}".format(j.getName(), j.errorMsg))
+            if self.errorMsg == "":
+                self.errorMsg = j.errorMsg
+            elif j.errorMsg != "":
+                self.errorMsg += "\n" + j.errorMsg
             self.finishJob(j)
 
             # while the number is not under the limit, wait for some job to terminate

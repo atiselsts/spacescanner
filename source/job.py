@@ -67,6 +67,7 @@ class Job:
         self.bestOfValueAfter3Sec = None
         # wait this much seconds for other runners to terminate after the first one
         self.waitForTerminationSec = 10
+        self.errorMsg = ""
 
 
     def getFullName(self):
@@ -117,7 +118,8 @@ class Job:
         for id in range(int(g.getConfig("optimization.runsPerJob"))):
             r = runner.Runner(self, id + 1, self.currentMethod, self.runnerGeneration)
             if not r.prepare(self.workDir, self.copasiFile, bestParams):
-                g.log(LOG_ERROR, "{}: failed to create a runner".format(r.getName()))
+                g.log(LOG_ERROR, "{}: failed to create a runner: {}".format(r.getName(), r.errorMsg))
+                self.errorMsg = r.errorMsg
                 return False
             self.runners.append(r)
 

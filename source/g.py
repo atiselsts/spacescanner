@@ -204,8 +204,11 @@ def log(loglevel, msg):
         msg += "\n"
         sys.stderr.write(msg)
         if logFileName is not None:
-            with open(logFileName, "a+") as f:
-                f.write(msg)
+            try:
+                with open(logFileName, "a+") as f:
+                    f.write(msg)
+            except Exception as ex:
+                print("Got an exception while trying to write to log file: {}".format(ex))
 
 ################################################
 # Startup
@@ -247,10 +250,13 @@ def prepare(configFileName):
         logFileName = os.path.join(workDir, "spacescanner.log")
 
     # update the log file
-    with open(logFileName, "a+") as f:
-        f.write("============= ")
-        f.write(spacescannerStartTime)
-        f.write("\n")
+    try:
+        with open(logFileName, "a+") as f:
+            f.write("============= ")
+            f.write(spacescannerStartTime)
+            f.write("\n")
+    except Exception as ex:
+        print("Got an exception while preparing log file: {}".format(ex))
 
     try:
         # copy the used configuration file as a reference
