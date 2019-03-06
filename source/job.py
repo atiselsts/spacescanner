@@ -229,7 +229,7 @@ class Job:
         # check if the runs have reached consensus
         if consensusReached:
             if self.convergenceTime is None:
-                g.log(LOG_DEBUG, self.getName() + ": reached consensus, waiting for guard time before termination")
+                g.log(LOG_DEBUG, self.getName() + ": reached consensus, waiting for a guard time before termination")
                 self.convergenceTime = now
                 self.convergenceValue = self.getWorstOfValue()
 
@@ -388,7 +388,7 @@ class Job:
                 if anyNotFound:
                     g.log(LOG_INFO, "terminating {}: failed to evaluate the objective function".format(self.getName()))
                 else:
-                    g.log(LOG_INFO, "terminating {}: all fallback methods exhausted without reaching consensus".format(self.getName()))
+                    g.log(LOG_INFO, "terminating {}: all fallback methods exhausted without reaching a consensus".format(self.getName()))
                 self.pool.finishJob(self)
                 return
 
@@ -414,7 +414,7 @@ class Job:
             return
 
         if len(self.methods) == 0:
-            g.log(LOG_INFO, "terminating {}: all methods exhausted without reaching consensus".format(self.getName()))
+            g.log(LOG_INFO, "terminating {}: all methods exhausted without reaching a consensus".format(self.getName()))
             self.pool.finishJob(self)
             return
 
@@ -425,7 +425,7 @@ class Job:
         else:
             self.currentMethod = self.methods[0]
 
-        g.log(LOG_INFO, "switching {} to next method: {}".format(
+        g.log(LOG_INFO, "switching {} to the next method: {}".format(
             self.getName(), self.currentMethod))
         if not self.createRunners():
             self.pool.finishJob(self)
@@ -594,7 +594,7 @@ class Job:
                 cpuTimes.append(sum(self.oldCpuTimes) + runner.currentCpuTime)
                 ofValues.append(ofValues[-1])
             else:
-                # it is perfectly ok to return empty array, in case no values hve been found yet
+                # it is perfectly ok to return an empty array, in case no values hve been found yet
                 pass
 
             reply.append({"id" : runnerID, "values" : ofValues, 

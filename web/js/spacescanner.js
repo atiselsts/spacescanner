@@ -45,19 +45,6 @@ var SPACESCANNER = function() {
                 SPACESCANNER.notify("Model file not specified", "error");
                 return;
             }
-            var taskType = $('input[name=input-import-taskType]:checked').val();
-            if (taskType === "parameterFitting") {
-                var expFilename = $( '#input-import-experimentalFilename' ).val();
-                if (!expFilename || expFilename.length == 0) {
-                    e.preventDefault();
-                    SPACESCANNER.notify("Experimental data file not specified", "error");
-                    return;
-                }
-            } else {
-                // clear the experimental filename field: the presence/absence of the
-                // experimental data is used by the backend to guess the task type
-                $( '#input-import-experimentalFilename' ).val("");
-            }
         });
 
     $('#button-terminate-server')
@@ -290,6 +277,16 @@ var SPACESCANNER = function() {
 
     $(function() {
         console.log("loading SpaceScanner web interface...")
+    });
+
+    var uppie = new Uppie();
+
+    //    uppie($('#input-import-filename'), function(event, formData, files) {
+    uppie(document.querySelectorAll("#input-import-filename"), function(event, formData, files) {
+        console.log("got reply");
+        console.log("files = " + files.join("\n"));
+        console.log("data = " + JSON.stringify(formData));
+        // document.querySelector(".output").textContent = files.join("\n");
     });
 
     return {

@@ -370,8 +370,6 @@ class StrategyManager:
         filename = "lockfile.{}".format(myPid)
         fullname = os.path.join(SELF_PATH, "results", filename)
 
-        g.log(LOG_ERROR, "Update lock file {}: {}".format(fullname, enable))
-
         if enable:
             try:
                 with open(fullname, "w") as f:

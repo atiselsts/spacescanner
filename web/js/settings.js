@@ -288,13 +288,17 @@ SPACESCANNER.settings = function() {
     function onTaskTypeChanged() {
         var taskType = $('input[name=input-import-taskType]:checked').val();
         if (taskType === "parameterFitting") {
-            // enable experiment filename field
-            $( "#input-import-experimentalFilename" ).prop('disabled', false);
+            // enable multiple file upload
+            $( "#input-import-filename" ).prop('multiple', true);
+            $( "#input-import-filename" ).prop('directory', true);
+            $( "#input-import-filename" ).prop('webkitdirectory', true);
+            $( "#input-import-filename" ).prop('allowdirs', true);
         } else {
-            // clear and disable experiment filename field: the fact that this field
-            // is clear is used by the SpaceScanner backend to decide the task type
-            $( "#input-import-experimentalFilename" ).val("");
-            $( "#input-import-experimentalFilename" ).prop('disabled', true);
+            // disable multiple file upload
+            $( "#input-import-filename" ).removeProp('multiple');
+            $( "#input-import-filename" ).removeProp('directory');
+            $( "#input-import-filename" ).removeProp('webkitdirectory');
+            $( "#input-import-filename" ).removeProp('allowdirs');
         }
     }
 
@@ -302,17 +306,9 @@ SPACESCANNER.settings = function() {
         // Task settings
         $( '#input-import-taskName' ).val(currentSettings["taskName"]);
         $( '#input-import-taskType' ).val(currentSettings["copasi"]["taskType"]);
-        // disable the experiment filename field if and only if `parameterFitting` is not selected
-        if (currentSettings["copasi"]["taskType"] === "parameterFitting") {
-            // enable experiment filename field
-            $( "#input-import-experimentalFilename" ).prop('disabled', false);
-        } else {
-            // clear and disable experiment filename field: the fact that this field
-            // is clear is used by the SpaceScanner backend to decide the task type
-            $( "#input-import-experimentalFilename" ).val("");
-            $( "#input-import-experimentalFilename" ).prop('disabled', true);
-        }
         $( 'input[type=radio][name=input-import-taskType]' ).change(onTaskTypeChanged);
+        // call this now to update the button class
+        onTaskTypeChanged();
 
         // Performance settings
         $( "#input-option-runsPerJob" ).val(getd(currentSettings["optimization"], "runsPerJob", 4));

@@ -205,14 +205,16 @@
     </div>
 
     <div class="form-row">
-        <label for="input-import-filename" style="width:170px"><i class="icon-tag"></i> Model file</label>
-        <input type="file" id="input-import-filename" name="file1" placeholder="Filename">
+        <label for="input-import-filename" style="width:170px"><i class="icon-tag"></i> Model file(s)</label>
+        <!--        <input type="file" id="input-import-filename" name="file1" placeholder="Filename"> -->
+        <input type="file" id="input-import-filename" placeholder="File or directory name" multiple directory webkitdirectory allowdirs/>
     </div>
 
+    <!--
     <div class="form-row">
         <label for="input-import-experimentalFilename" style="width:170px"><i class="icon-tag"></i> Experimental data</label>
         <input type="file" id="input-import-experimentalFilename" name="file2" placeholder="Filename">
-    </div>
+    </div> -->
 
     <div class="form-row">
         <label for="input-import-taskName" style="width:170px">Task name</label>
@@ -564,6 +566,7 @@
 <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>-->
 <script src="https://www.google.com/jsapi"></script>
 <script src="js/fileupload.js"></script>
+<script src="js/uppie.js"></script>
 <script src="js/spacescanner.js"></script>
 <script src="js/settings.js"></script>
 <script src="js/display.js"></script>

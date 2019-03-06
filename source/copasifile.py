@@ -211,7 +211,7 @@ class CopasiFile:
             self.xmlroot = ElementTree.parse(filename).getroot()
         except:
             self.xmlroot = None
-            s = "error while loading COPASI model: failed to parse the XML"
+            s = "error while loading COPASI model: failed to parse XML"
             g.log(LOG_ERROR, s)
             return False, s
 
@@ -225,7 +225,7 @@ class CopasiFile:
                     self.paramEstimationTask = TaskSettings(task)
 
         if self.optimizationTask is None and self.paramEstimationTask is None:
-            s = "error while loading COPASI model: neither optimization nor parameter estimation tasks found in the COPASI file"
+            s = "error while loading COPASI model: neither optimization nor parameter estimation tasks found in the COPASI file!"
             g.log(LOG_ERROR, s)
             return False, s
 
@@ -236,12 +236,12 @@ class CopasiFile:
             # do validation only if required
             if self.taskType == COPASI_TASK_OPTIMIZATION:
                 if len(self.optimizationTask.paramDict) == 0:
-                    s = "error while loading COPASI model: parameters for optimization task not defined in the COPASI file"
+                    s = "error while loading COPASI model: parameters for the optimization task are not defined in the COPASI file!"
                     g.log(LOG_ERROR, s)
                     return False, s
 
                 if not self.optimizationTask.objectiveFunction:
-                    s = "error while loading COPASI model: objective function not defined in the COPASI file"
+                    s = "error while loading COPASI model: an objective function is not defined in the COPASI file!"
                     g.log(LOG_ERROR, s)
                     return False, s
 

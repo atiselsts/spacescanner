@@ -271,7 +271,7 @@ class HttpServerHandler(BaseHTTPRequestHandler):
         else:
           try:
             # a hack in order to tell Python-3 to open the file as a binary (UTF-8 encoded)
-            # otherwirse the CGI module breaks down internally, due to mixing up str/bytes
+            # otherwise the CGI module breaks down internally, due to mixing up str/bytes
             headers = copy.copy(self.headers)
             headers['Content-disposition'] = ";filename=tmpweb.form"
 
@@ -308,6 +308,9 @@ class HttpServerHandler(BaseHTTPRequestHandler):
         EXP_DATA_FILE_NAME = "exp-data.txt"
         MODEL_FILE_NAME = "model.cps"
         marker = '<Parameter name="File Name" type="file" value="'
+
+        # TODO FIXME: there can be multiple parameter files!
+        # TODO FIXME: need to also somehow get the task type??? perhaps change the upload url
 
         index = receivedModel.find(marker)
         if index != -1:
