@@ -4,7 +4,7 @@
         "consensusDelaySec" : 5
     },
     "copasi" : {
-        "modelFile" : "@SELF@/models/simple-6params.cps",
+        "modelFile" : "@SELF@/models/optimization/simple-6params.cps",
         "methods" : ["RandomSearch"],
         "fallbackMethods" : []
     },

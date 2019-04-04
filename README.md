@@ -186,7 +186,7 @@ Fields:
 
 <pre>{
     "copasi" : {
-        "modelFile" : "@SELF@/dependecies/models/simple-6params.cps",
+        "modelFile" : "@SELF@/models/optimization/simple-6params.cps",
 	"taskType" : "optimization",
         "methods" : ["ParticleSwarm", "GeneticAlgorithm", "GeneticAlgorithmSR", "EvolutionaryProgram", "EvolutionaryStrategySR", "ScatterSearch", "SimulatedAnnealing"],
         "fallbackMethods" : ["GeneticAlgorithmSR", "EvolutionaryStrategySR"],

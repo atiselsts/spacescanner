@@ -4,7 +4,7 @@ NODEJS?=nodejs
 
 all: check-version test-broken test-web test-param-estimation test-fast-consensus test-no-solution test-param-ranges test-param-ranges2 test-solution-timeout test-top test-suspend-resume cleanup
 
-test-param-estimation: test-param-estimation-simple test-param-estimation-reference-time test-param-estimation-top
+test-param-estimation: test-param-estimation-simple test-param-estimation-multi test-param-estimation-reference-time test-param-estimation-top
 	@true
 
 test-broken: test-broken-1 test-broken-2 test-broken-3 test-broken-4 test-broken-5 test-broken-6
@@ -13,6 +13,11 @@ test-broken: test-broken-1 test-broken-2 test-broken-3 test-broken-4 test-broken
 check-version:
 	@echo printing Python version...
 	@echo `python -V`
+
+prerequisites:
+	-npm install -S 'jquery@>=2.1'
+	-npm install -S 'jsdom@<7'
+	-npm install sleep
 
 ###############################################################################
 # Optimization tests
@@ -105,6 +110,14 @@ test-param-estimation-simple:
 	@echo ..done
 	@echo ""
 
+test-param-estimation-multi:
+	@echo Testing parameter estimation with multiple experiment files...
+	@rm -f spacescanner.log
+	$(PYTHON) $(SPACESCANNER) test-param-estimation-multi.json
+	@grep "terminating job 1: consensus reached" spacescanner.log
+	@echo ..done
+	@echo ""
+
 test-param-estimation-reference-time:
 	@echo Testing parameter estimation with a different reference time...
 	@rm -f spacescanner.log
@@ -125,7 +138,7 @@ test-param-estimation-top:
 # Web tests
 ###############################################################################
 
-test-web:
+test-web: prerequisites
 	@echo Testing web API...
 	$(PYTHON) $(SPACESCANNER) web &  # start in background
 	@echo Starting web API tests, NODEJS=$(NODEJS)

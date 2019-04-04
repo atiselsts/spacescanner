@@ -4,7 +4,7 @@
         "consensusDelaySec" : 10
     },
     "copasi" : {
-        "modelFile" : "@SELF@/models/simple-6params.cps",
+        "modelFile" : "@SELF@/models/optimization/simple-6params.cps",
         "methods" : ["ParticleSwarm"],
         "fallbackMethods" : ["GeneticAlgorithmSR"]
     },

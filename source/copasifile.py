@@ -514,7 +514,7 @@ class CopasiFile:
 def testOptimizationTask():
     cf = CopasiFile(COPASI_TASK_OPTIMIZATION)
     print("opening a file")
-    if not cf.read("../models/complex.cps")[0]:
+    if not cf.read("../models/optimization/complex.cps")[0]:
         return -1
     print("querying parameters")
     params = cf.queryParameters()
@@ -528,7 +528,7 @@ def testOptimizationTask():
 def testParamEstimationTask():
     cf = CopasiFile(COPASI_TASK_PARAM_ESTIMATION)
     print("opening a file")
-    if not cf.read("../models/metformin-parameter-estimation.cps")[0]:
+    if not cf.read("../models/parameter-estimation-single/metformin-parameter-estimation.cps")[0]:
         return -1
     print("querying parameters")
     params = cf.queryParameters()

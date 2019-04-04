@@ -1,6 +1,6 @@
 {
     "copasi" : {
-        "modelFile" : "@SELF@/models/metformin-parameter-estimation.cps",
+        "modelFile" : "@SELF@/models/parameter-estimation-single/metformin-parameter-estimation.cps",
 	"taskType" : "parameterFitting"
     },
     "optimization" : {

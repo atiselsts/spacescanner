@@ -29,7 +29,7 @@ function test1()
 {
     logTest("TEST 1");
 
-    var contents = fs.readFileSync('../models/simple-6params.cps', "utf8");
+    var contents = fs.readFileSync('../models/optimization/simple-6params.cps', "utf8");
     if (!contents) {
         console.log("Error while reading model file");
         failTests();

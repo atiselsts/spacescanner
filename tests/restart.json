@@ -8,7 +8,7 @@
         "runsPerJob" : 2
     },
     "copasi" : {
-        "modelFile" : "@SELF@/models/complex.cps",
+        "modelFile" : "@SELF@/models/optimization/complex.cps",
         "methods" : ["GeneticAlgorithm", "EvolutionaryProgram", "GeneticAlgorithmSR", "EvolutionaryStrategySR", "ScatterSearch", "SimulatedAnnealing"]
     },
     "restartOnFile" : "@SELF@/processing/results-all.csv",

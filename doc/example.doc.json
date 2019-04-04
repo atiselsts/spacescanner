@@ -5,7 +5,7 @@
 {
     "copasi" : {
         // COPASI model file name; @SELF@ refers to SpaceScanner source directory
-        "modelFile" : "@SELF@/models/simple-6params.cps",
+        "modelFile" : "@SELF@/models/optimization/simple-6params.cps",
         // whether to run an optimization task ("optimization") or a parameter estimation ("parameterFitting") task; default: "optimization")
         "taskType" : "optimization",
         // which and how many methods to use; can contain a method more than once

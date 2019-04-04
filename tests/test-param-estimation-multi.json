@@ -1,6 +1,6 @@
 {
     "copasi" : {
-        "modelFile" : "@SELF@/models/parameter-estimation-single/metformin-parameter-estimation.cps",
+        "modelFile" : "@SELF@/models/parameter-estimation-multiple-experiments/XOrg fiks pie pl 28 v01 t03.cps",
 	"taskType" : "parameterFitting"
     },
     "optimization" : {

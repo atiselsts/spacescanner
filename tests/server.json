@@ -7,6 +7,6 @@
         "runsPerJob" : 4
     },
     "copasi" : {
-        "modelFile" : "@SELF@/models/complex.cps"
+        "modelFile" : "@SELF@/models/optimization/complex.cps"
     }
 }

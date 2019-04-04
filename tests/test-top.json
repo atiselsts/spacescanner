@@ -6,7 +6,7 @@
         "bestOfValue" : 100
     },
     "copasi" : {
-        "modelFile" : "@SELF@/models/simple-6params.cps"
+        "modelFile" : "@SELF@/models/optimization/simple-6params.cps"
     },
     "parameters" : [
         {"type" : "exhaustive", "range" : [1, 6]}
