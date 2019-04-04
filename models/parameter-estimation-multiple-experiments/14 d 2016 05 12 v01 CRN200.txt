@@ -1,0 +1,2 @@
+Time	CRNp	GBBp	Mp	CRNhe	CRNmus	GBBmus	Mmus	CRNliv	GBBliv	Mliv	CRNkid0.48	28	1.5	1.7	833.0	833.0	25.0		301	11.0		600.0			0.73	96.6											1.48	62.5										2.48	55.1											4.48	62.7											7.48	62.5															10.48	83.1													14.48	47.8				778	81		470	49
+	
