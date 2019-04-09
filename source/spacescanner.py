@@ -117,7 +117,7 @@ def main():
         # web-only mode; load the last saved web config, if present
         g.loadConfig(os.path.join(SELF_PATH, "tmpweb", "config.json"), isQuiet = True)
         # always use the same model file - the one POSTed from the web
-        g.setConfig("copasi.modelFile", "@SELF@/tmpweb/model.cps")
+        g.setConfig("copasi.modelFile", os.path.join("@SELF@", "tmpweb", webserver.MODEL_FILE_NAME))
         # create an empty strategy and wait for input commands
         strategyManager = strategy.StrategyManager()
         strategyManager.prepare(isDummy = True)

@@ -39,6 +39,10 @@ import spacescanner
 
 ################################################
 
+MODEL_FILE_NAME = "model.cps"
+
+################################################
+
 # Note: this is a single-threaded server, to keep things simple!
 class InterruptibleHTTPServer(HTTPServer):
     serverInstance = None
@@ -256,7 +260,7 @@ class HttpServerHandler(BaseHTTPRequestHandler):
 
         contentLength = int(self.headers.get('content-length', 0))
         receivedModel = ""
-        receivedExperimentalData = ""
+        receivedExperimentalData = []
 
         if self.headers['Content-Type'] == "application/json":
             try:
@@ -291,12 +295,17 @@ class HttpServerHandler(BaseHTTPRequestHandler):
                     if field_item.filename:
                         # The field contains an uploaded file
                         received = field_item.file.read(contentLength).decode("utf-8")
-                        # quick-and-dirty decision;
+                        # quick-and-dirty decision; based on the file type and the COPASI tag
                         # also, should look at the charset declared in the file *before* decoding as "utf-8"
-                        if startsWith(received, "<?xml"):
+                        if startsWith(received, "<?xml") and ("<COPASI" in received):
                             receivedModel = received
                         else:
-                            receivedExperimentalData = received
+                            # assume that all other files are experiment files.
+                            # if other types of files are present, saving them
+                            # will not harm the system in any case.
+                            filename = os.path.basename(field_item.filename)
+                            g.log(LOG_INFO, "got filename: {}".format(field_item.filename))
+                            receivedExperimentalData.append((filename, received))
           except TypeError as te:
               # the TypeError "not indexable" happens when trying the web test
               g.log(LOG_INFO, "Failed to parse CGI form: {}".format(te))
@@ -304,29 +313,14 @@ class HttpServerHandler(BaseHTTPRequestHandler):
         if not receivedModel:
             return self.serveError(qs, 400, "No valid model file received")
 
-        # replace the exp data file name in the model file with "exp-data.txt"
-        EXP_DATA_FILE_NAME = "exp-data.txt"
-        MODEL_FILE_NAME = "model.cps"
-        marker = '<Parameter name="File Name" type="file" value="'
-
-        # TODO FIXME: there can be multiple parameter files!
-        # TODO FIXME: need to also somehow get the task type??? perhaps change the upload url
-
-        index = receivedModel.find(marker)
-        if index != -1:
-            end = index + len(marker)
-            while end < len(receivedModel) and receivedModel[end] != '"':
-                end += 1
-            receivedModel = receivedModel[:index+len(marker)] + EXP_DATA_FILE_NAME + receivedModel[end:]
-
         # write the model and data files
         modelFilename = self.saveInFile(receivedModel, MODEL_FILE_NAME)
-        expDataFilename = self.saveInFile(receivedExperimentalData, EXP_DATA_FILE_NAME)
+        for filename, data in receivedExperimentalData:
+            self.saveInFile(data, filename)
 
-        # XXX: this is a hack that allows to guess the task type without the web
-        # server to explicitly sending it. This assumes that exp data is only set for
-        # parameter estimation tasks
-        if receivedExperimentalData:
+        # XXX: this is a hack that allows to guess the task type asking the web server for it.
+        # This assumes that exp data is only set for parameter estimation tasks.
+        if len(receivedExperimentalData):
             taskType = COPASI_TASK_PARAM_ESTIMATION
         else:
             taskType = COPASI_TASK_OPTIMIZATION
