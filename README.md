@@ -57,19 +57,17 @@ Alternatively, get it through Git: `git clone https://github.com/atiselsts/space
 **Prerequisites:**
 
 * Python (both version 2 and version 3 are supported);
-* `psutil` Python module. 
+* `psutil` Python module.
+* `Flask` Python module.
+* `gevent` Python module.
 
-Install `psutil` with PIP, Python package manager, e.g.:
- 
-   `sudo pip install psutil`
+Install the requirements with PIP, Python package manager, e.g.:
+
+   `sudo pip install -r requirements.txt`
  
 To install `pip`, it may be possible to use `easy_install`:
 
    `sudo easy_install pip`
-
-Alternatively, run this on Ubuntu Linux to install `psutil`:
- 
-   `sudo apt-get install python-psutil`
 
 SpaceScanner has been successfully tested on 64-bit Linux and Windows, including Cygwin.
 

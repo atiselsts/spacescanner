@@ -238,7 +238,7 @@ var SPACESCANNER = function() {
             var job = SPACESCANNER.display.getJobID(index);
             if (job) {
                 $.ajax({
-                    url: "stop/" + job,
+                    url: "stop?jobid=" + job,
                     success: function (returnData) {
                         SPACESCANNER.notify("Stopping job " + job);
                     },

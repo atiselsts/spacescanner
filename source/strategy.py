@@ -681,8 +681,7 @@ class StrategyManager:
         return cfg
 
 
-    def ioGetResults(self, qs):
-        totalLimit = int(qs.get("totallimit", 0))
+    def ioGetResults(self, qs, totalLimit):
         filename = self.dumpResults(totalLimit)
         contents = ""
         try: 

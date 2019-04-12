@@ -144,7 +144,7 @@ SPACESCANNER.refresh = function() {
 
         $.ajax({
             type: "GET",
-            url: "job/" + id,
+            url: "job?jobid=" + id,
             contentType: "application/json",
             dataType: "json",
             success:  function (response) {

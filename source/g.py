@@ -161,10 +161,11 @@ def loadConfig(filename, isQuiet = False):
     try:
         with open(configFileName, "r") as f:
             config = json.load(f)
-    except IOError as e:
+    except Exception as ex:
         config = {} # use default config
         if not isQuiet:
-            log(LOG_ERROR, "<spacescanner>: exception occurred while loading configuration file: " + str(e))
+            log(LOG_ERROR, "<spacescanner>: exception occurred while loading configuration file {}: ".format(configFileName))
+            log(LOG_ERROR, "  {}".format(ex))
             log(LOG_ERROR, "going to use the default configuration!\n")
 
     # see if the number of runners is below the number of CPU cores

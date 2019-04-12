@@ -39,9 +39,10 @@ import os, sys, traceback
 # local files
 from util import *
 import g
-import webserver
+import flaskwebserver
 import process
 import strategy
+import start
 
 ################################################
 # Execute the web server (in a separate thread)
@@ -50,8 +51,7 @@ def executeWebserver(strategyManager):
     try:
         port = int(g.getConfig("web.port"))
         g.log(LOG_INFO, "<spacescanner>: starting webserver, port: " + str(port))
-        server = webserver.InterruptibleHTTPServer(('', port), webserver.HttpServerHandler)
-        server.strategyManager = strategyManager
+        server = flaskwebserver.Server(('', port), strategyManager)
         # report ok and enter the main loop
         g.log(LOG_DEBUG, "<spacescanner>: webserver started, listening to port {}".format(port))
         server.serve_forever()
@@ -61,46 +61,6 @@ def executeWebserver(strategyManager):
         g.log(LOG_ERROR, traceback.format_exc())
         sys.exit(1)
     sys.exit(0)
-
-
-################################################
-
-def start(configFileName):
-    if not g.prepare(configFileName):
-        return
-
-    # read COPASI model file etc.
-    strategyManager = strategy.StrategyManager()
-    ok = strategyManager.prepare(isDummy = False)
-    if not ok:
-        return
-
-    # start the web server
-    if bool(g.getConfig("web.enable")):
-        process.createBackgroundThread(executeWebserver, strategyManager)
-
-    # start the selected parameter sweep strategy
-    strategyManager.execute()
-
-################################################
-
-def startFromWeb(configFileName):
-    if not g.prepare(configFileName):
-        g.log(LOG_ERROR, "Preparing from config file failed: " + configFileName)
-        return None
-
-    # read COPASI model file etc.
-    strategyManager = strategy.StrategyManager()
-    ok = strategyManager.prepare(isDummy = False)
-    if not ok:
-        g.log(LOG_ERROR, "Preparing for execution failed")
-        return None
-
-    # start the selected parameter sweep strategy asynchronously
-    process.createBackgroundThread(lambda s: s.execute(), strategyManager)
-
-    return strategyManager
-
 
 ################################################
 # Should replace this with daemonization?
@@ -115,9 +75,9 @@ def wait():
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == "web":
         # web-only mode; load the last saved web config, if present
-        g.loadConfig(os.path.join(SELF_PATH, "tmpweb", "config.json"), isQuiet = True)
+        g.loadConfig(flaskwebserver.CONFIG_FILE_NAME, isQuiet = True)
         # always use the same model file - the one POSTed from the web
-        g.setConfig("copasi.modelFile", os.path.join("@SELF@", "tmpweb", webserver.MODEL_FILE_NAME))
+        g.setConfig("copasi.modelFile", flaskwebserver.MODEL_FILE_NAME)
         # create an empty strategy and wait for input commands
         strategyManager = strategy.StrategyManager()
         strategyManager.prepare(isDummy = True)
@@ -126,7 +86,8 @@ def main():
         wait()
     else:
         # normal mode
-        if not start(sys.argv[1] if len(sys.argv) > 1 else None):
+        configFileName = sys.argv[1] if len(sys.argv) > 1 else None
+        if not start.start(configFileName, executeWebserver):
             return -1
 
         # if "hang" mode is configured, do not quit until Ctrl+C is pressed

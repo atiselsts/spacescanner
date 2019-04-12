@@ -122,6 +122,8 @@ def test():
     ret = p.run()
     print("return code: {}".format(ret))
 
+################################################
+
 if __name__ == "__main__":
     # CPU speed testing: `echo "6^6^3^2" | bc`
     test()
