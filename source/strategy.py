@@ -472,6 +472,7 @@ class StrategyManager:
                 # optimization; if this is the zero-parameter job, use the result as a baseline
                 if not job.areParametersChangeable:
                     self.topBaseline = job.getBestOfValue()
+                    g.log(LOG_INFO, "  set baseline={}".format(self.topBaseline))
                     # do no include the result of this job in the "normal" results
                     return
             else:
@@ -500,6 +501,7 @@ class StrategyManager:
 
     def isTOPEnabled(self):
         targetFraction = g.getConfig("optimization.targetFractionOfTOP")
+        g.log(LOG_INFO, "isTOPEnabled? targetFraction={}".format(targetFraction))
         if targetFraction is None or targetFraction == 0.0:
             # TOP is disabled
             return False
@@ -511,6 +513,7 @@ class StrategyManager:
             return False
 
         targetFraction = float(g.getConfig("optimization.targetFractionOfTOP"))
+        g.log(LOG_INFO, "top is enabled, targetFraction={}".format(targetFraction))
 
         # calculate the target value, looking at both config and at the job with all parameters, if any
         try:
@@ -525,6 +528,8 @@ class StrategyManager:
                   g.getConfig("optimization.bestOfValue")))
             return False
 
+        g.log(LOG_INFO, "  configTarget={}".format(configTarget))
+
         # get the joblist describing the execution with "full-set" parameters
         joblist = self.jobsByBestOfValue[-1]
         if joblist:
@@ -536,6 +541,8 @@ class StrategyManager:
         if self.isOfValueBetter(configTarget, targetValue):
             # the configured value is better, use it
             targetValue = configTarget
+
+        g.log(LOG_INFO, "  targetValue={}".format(targetValue))
 
         if targetValue == self.getInitialOfValue():
             g.log(LOG_DEBUG, "TOP: no target value: {} {}".format(configTarget, calculatedTarget))

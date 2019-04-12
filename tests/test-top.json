@@ -12,6 +12,7 @@
         {"type" : "exhaustive", "range" : [1, 6]}
     ],
     "output" : {
-        "logfile" : "spacescanner.log"
+        "logfile" : "spacescanner.log",
+        "loglevel" : 3
     }
 }
