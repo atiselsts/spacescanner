@@ -152,14 +152,14 @@ function test4()
     });
 }
 
-// get specific job (number 2)
+// get specific job (number 1)
 function test5()
 {
     logTest("TEST 5");
 
     $.ajax({
         type: "GET",
-        url: "http://localhost:19000/job?jobid=2",
+        url: "http://localhost:19000/job?jobid=1",
         dataType: "json",
         crossDomain: true,
         success: function (returnData) {
@@ -227,14 +227,14 @@ function test7()
 }
 
 
-// stop running specific job (number 2)
+// stop running specific job (number 1)
 function test8()
 {
     logTest("TEST 8");
 
     $.ajax({
         type: "GET",
-        url: "http://localhost:19000/stop?jobid=2",
+        url: "http://localhost:19000/stop?jobid=1",
         dataType: "json",
         crossDomain: true,
         success: function (returnData) {

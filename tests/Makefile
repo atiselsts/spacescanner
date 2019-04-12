@@ -143,7 +143,7 @@ test-web: prerequisites
 	$(PYTHON) $(SPACESCANNER) web &  # start in background
 	@echo Starting web API tests, NODEJS=$(NODEJS)
 	@$(NODEJS) webtest.js
-	@sleep 2 # wait as bit for SpaceScanner to terminate to be on the safe side
+	@sleep 5 # wait as bit for SpaceScanner to terminate to be on the safe side
 	@echo ..done
 	@echo ""
 
