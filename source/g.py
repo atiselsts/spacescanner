@@ -259,12 +259,14 @@ def prepare(configFileName):
     except Exception as ex:
         print("Got an exception while preparing log file: {}".format(ex))
 
+    referenceConfig = os.path.join(workDir, "config.json")
     try:
         # copy the used configuration file as a reference
-        shutil.copyfile(configFileName, os.path.join(workDir, "config.json"))
+        shutil.copyfile(configFileName, referenceConfig)
     except:
         # the file probably does not exist; print a warning
-        log(LOG_INFO, "failed to copy SpaceScanner configuration file to " + workDir)
+        log(LOG_INFO, "failed to copy SpaceScanner configuration file from {} to {}".format(
+            configFileName, referenceConfig))
 
     if isCygwin():
         # remove the first part from the path and normalize it to make Copasi happy

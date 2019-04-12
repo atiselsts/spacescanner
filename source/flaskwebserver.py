@@ -76,6 +76,10 @@ def saveInFile(contents, filename):
         os.mkdir(WEB_UPLOAD_DIRECTORY)
     except:
         pass
+
+    if not os.path.isabs(filename):
+        filename = os.path.join(WEB_UPLOAD_DIRECTORY, filename)
+
     # write file in that directory
     try:
         with open(filename, "wb") as f:
@@ -219,9 +223,9 @@ def postModel():
         abort(Response("No valid model file received\n", 400))
 
     # write the model and data files
-    modelFilename = saveInFile(receivedModel, MODEL_FILE_NAME)
+    saveInFile(receivedModel, MODEL_FILE_NAME)
     for filename, data in receivedExperimentalData:
-        self.saveInFile(data, filename)
+        saveInFile(data, os.path.basename(filename))
 
     # XXX: this is a hack that allows to guess the task type asking the web server for it.
     # This assumes that exp data is only set for parameter estimation tasks.
@@ -233,7 +237,7 @@ def postModel():
     # check if the model is all right
     sm = Server.serverInstance.strategyManager
     if sm.prepare(isDummy = False, taskType = taskType):
-        response = {"filename" : modelFilename}
+        response = {"filename" : MODEL_FILE_NAME}
     else:
         # report errors if any happened while loading the model file
         response = {"error" : sm.lastError}
@@ -242,8 +246,8 @@ def postModel():
 
 @flask.route('/start', methods = ['POST'])
 def postConfig():
-    filename = saveInFile(request.data, CONFIG_FILE_NAME)
-    sm = start.startFromWeb(filename)
+    saveInFile(request.data, CONFIG_FILE_NAME)
+    sm = start.startFromWeb(CONFIG_FILE_NAME)
     if sm is None:
         abort("Cannot start SpaceScanner optimizations", 500)
 
