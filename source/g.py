@@ -172,7 +172,7 @@ def loadConfig(filename, isQuiet = False):
     numCores = multiprocessing.cpu_count()
     numMaxRuns = int(getConfig("optimization.maxConcurrentRuns", numCores))
     if numMaxRuns > numCores:
-        log(LOG_INFO, "warning: reducing the number of maximal concurrent optimizations rune to the number of CPU cores: {}".format(numCores))
+        log(LOG_INFO, "warning: limiting the number of maximal concurrent optimization runs to the number of CPU cores: {}".format(numCores))
         setConfig("optimization.maxConcurrentRuns", numCores)
 
 def getAllConfig():
