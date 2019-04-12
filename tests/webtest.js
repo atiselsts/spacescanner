@@ -159,7 +159,7 @@ function test5()
 
     $.ajax({
         type: "GET",
-        url: "http://localhost:19000/job/2",
+        url: "http://localhost:19000/job?jobid=2",
         dataType: "json",
         crossDomain: true,
         success: function (returnData) {
@@ -234,7 +234,7 @@ function test8()
 
     $.ajax({
         type: "GET",
-        url: "http://localhost:19000/stop/2",
+        url: "http://localhost:19000/stop?jobid=2",
         dataType: "json",
         crossDomain: true,
         success: function (returnData) {
