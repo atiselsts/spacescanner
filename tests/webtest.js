@@ -163,7 +163,7 @@ function test5()
         dataType: "json",
         crossDomain: true,
         success: function (returnData) {
-            console.log("job 2: " + JSON.stringify(returnData));
+            console.log("job 1: " + JSON.stringify(returnData));
             if (returnData.error) {
                 failTests();
             } else {
@@ -184,7 +184,7 @@ function test6()
 
     $.ajax({
         type: "GET",
-        url: "http://localhost:19000/results",
+        url: "http://localhost:19000/results.csv",
         crossDomain: true,
         success: function (returnData) {
             console.log("results: " + returnData);
@@ -238,7 +238,7 @@ function test8()
         dataType: "json",
         crossDomain: true,
         success: function (returnData) {
-            console.log("stop job 2: " + JSON.stringify(returnData));
+            console.log("stopped job 1: " + JSON.stringify(returnData));
             if (returnData.error) {
                 failTests();
             } else {
@@ -246,7 +246,7 @@ function test8()
             }
         },
         error: function (data, textStatus, xhr) {
-            console.log("stop job error: " + data + " " + textStatus);
+            console.log("stoping job 2 error: " + data + " " + textStatus);
             failTests();
         }
     });
