@@ -107,7 +107,7 @@ class Runner:
 
     def prepare(self, workDir, copasiFile, startParamValues):
         self.errorMsg = ""
-        filename = "job{}_runner{}".format(self.job.id, self.id)
+        filename = "job{}_run{}".format(self.job.id, self.id)
 
         # Use separate directory for each run to avoid too many files per directory
         # or at least not hit this issue too early.
