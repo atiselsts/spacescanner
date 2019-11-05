@@ -11,7 +11,8 @@ SPACESCANNER.settings = function() {
         "copasi" : {
             "modelFile" : "@SELF@/tmpweb/model.cps",
             "methods" : ["ParticleSwarm"],
-            "fallbackMethods" : ["GeneticAlgorithmSR"]
+            "fallbackMethods" : ["GeneticAlgorithmSR"],
+            "taskType" : "optimization"
         },
         "parameters" : [
             {"type" : "exhaustive", "range" : [1, 2]},
@@ -378,7 +379,7 @@ SPACESCANNER.settings = function() {
     function saveSettings() {
         // Task settings
         currentSettings["taskName"] = $( '#input-import-taskName' ).val();
-        currentSettings["copasi"]["taskType"] = $('input[name=input-import-taskType]:checked').val();
+        currentSettings["copasi"]["taskType"] = "optimization"; //$('input[name=input-import-taskType]:checked').val();
 
         // Performance settings
         currentSettings["optimization"]["runsPerJob"] = parseInt($( "#input-option-runsPerJob" ).val());

@@ -9,7 +9,7 @@ var SPACESCANNER = function() {
         modal: true,
         autoOpen: false,
         width: 750,
-        height: 300,
+        height: 250, //300,
         open: function() {
             SPACESCANNER.settings.populateSettings();
         },
@@ -25,7 +25,7 @@ var SPACESCANNER = function() {
             SPACESCANNER.notify("Model file selected:\n" + filename, "success");
             $( "#dialog-select-model" ).dialog("close");
             SPACESCANNER.settings.saveSettings();
-            var title = SPACESCANNER.settings.get("copasi")["taskType"] === "optimization" ?
+            var title = true ? // SPACESCANNER.settings.get("copasi")["taskType"] === "optimization" ?
                 "Optimization task" :
                 "Parameter fitting task";
             title += ": model file '" + filename + "'";
