@@ -216,7 +216,7 @@ SPACESCANNER.display = function() {
         jobData.addColumn('number'); //, 'Time');
         for (var runner = 0; runner < job.data.length; runner++) {
             if (hasData[runner]) {
-                var name = 'Runner ' + (runner+1) + ' \n(' + lastValues[runner] + ')';
+                var name = 'Run ' + (runner+1) + ' \n(' + lastValues[runner] + ')';
                 jobData.addColumn('number', name);
 
                 // start from the first value / baseline (if present), not from zero
