@@ -48,7 +48,7 @@ test-param-ranges:
 	@rm -f spacescanner.log
 	$(PYTHON) $(SPACESCANNER) test-param-ranges.json
 	@grep "total 18 parameter combination(s) to try out" spacescanner.log
-	@grep "starting job 1 (optimization parameters: 'Hexokinase' 'Phosphofructokinase' 'Glucose in')" spacescanner.log
+	@grep "starting job 1 (optimization parameters: 'Glucose in' 'Hexokinase' 'Phosphofructokinase')" spacescanner.log
 	@grep "terminating job 18" spacescanner.log
 	@grep "results of finished jobs saved" spacescanner.log
 	@echo ..done
@@ -69,8 +69,8 @@ test-named-params1:
 	@rm -f spacescanner.log
 	$(PYTHON) $(SPACESCANNER) test-named-params1.json
 	@grep "total 2 parameter combination(s) to try out" spacescanner.log
-	@grep "starting job 1 (optimization parameters: 'Pyruvate kinase' 'Glucose in' 'Hexokinase')" spacescanner.log
-	@grep "starting job 2 (optimization parameters: 'Glucose in' 'Phosphofructokinase' 'Hexokinase')" spacescanner.log
+	@grep "optimization parameters: 'Glucose in' 'Hexokinase' 'Pyruvate kinase')" spacescanner.log
+	@grep "optimization parameters: 'Glucose in' 'Hexokinase' 'Phosphofructokinase')" spacescanner.log
 	@grep "results of finished jobs saved" spacescanner.log
 	@echo ..done
 	@echo ""
@@ -80,7 +80,7 @@ test-named-params2:
 	@rm -f spacescanner.log
 	$(PYTHON) $(SPACESCANNER) test-named-params2.json
 	@grep "total 1 parameter combination(s) to try out" spacescanner.log
-	@grep "starting job 1 (optimization parameters: 'Pyruvate kinase' 'Glucose in' 'ATPase' 'Phosphofructokinase' 'GAPD' 'Hexokinase')" spacescanner.log
+	@grep "starting job 1 (optimization parameters: 'ATPase' 'GAPD' 'Glucose in' 'Hexokinase' 'Phosphofructokinase' 'Pyruvate kinase')" spacescanner.log
 	@grep "results of finished jobs saved" spacescanner.log
 	@echo ..done
 	@echo ""

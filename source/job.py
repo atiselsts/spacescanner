@@ -71,7 +71,7 @@ class Job:
 
 
     def getFullName(self):
-        return "job {} (optimization parameters: ".format(self.id) + " ".join(self.params) + ")"
+        return "job {} (optimization parameters: ".format(self.id) + " ".join(sorted(self.params)) + ")"
 
 
     def getName(self):
