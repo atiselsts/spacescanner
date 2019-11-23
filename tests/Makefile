@@ -127,8 +127,8 @@ test-suspend-resume:
 	@echo Testing load balancing functionality when there are more jobs than cores...
 	@rm -f spacescanner.log
 	$(PYTHON) $(SPACESCANNER) test-suspend-resume.json
-	@grep -e "resuming process .*job2/input_job2_runner3.cps" spacescanner.log
-	@grep -e "suspending process .*job2/input_job2_runner3.cps" spacescanner.log
+	@grep -e "resuming process .*job2/input_job2_run3.cps" spacescanner.log
+	@grep -e "suspending process .*job2/input_job2_run3.cps" spacescanner.log
 	@echo ..done
 	@echo ""
 
