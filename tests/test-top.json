@@ -2,7 +2,7 @@
     "optimization" : {
         "consensusDelaySec" : 5,
         "consensusCorridor" : 0.9,
-        "targetFractionOfTOP" : 0.1,
+        "targetFractionOfTOP" : 0.3,
         "bestOfValue" : 100
     },
     "copasi" : {

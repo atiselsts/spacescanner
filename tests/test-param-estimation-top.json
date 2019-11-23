@@ -6,10 +6,10 @@
     "optimization" : {
         "consensusDelaySec" : 5,
         "consensusCorridor" : 0.5,
-	"targetFractionOfTOP" : 0.3
+	"targetFractionOfTOP" : 0.1
     },
     "parameters" : [
-	{"type" : "exhaustive", "range" : [1, 4]}
+	{"type" : "exhaustive", "range" : [1, 3]}
     ],
     "output" : {
         "logfile" : "spacescanner.log"

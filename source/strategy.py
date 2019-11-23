@@ -65,26 +65,12 @@ class ParamSelection(object):
 
     def getAllJobHashes(self, alwaysParams, neverParams):
         hashes = set()
-        for paramSet in self.getAdjustedParameterSets(alwaysParams, neverParams):
+        for paramSet in self.getParameterSets(alwaysParams, neverParams):
             for params in paramSet:
                 hash = getParamSetHash(params, self.strategy.copasiConfig["params"],
                                        not self.areParametersChangeable())
                 hashes.add(hash)
         return hashes
-
-    # same as getParameterSets, but applies extra "always" and "never" named parameters
-    # overriden by the class ParamSelectionZero.
-    def getAdjustedParameterSets(self, alwaysParams, neverParams):
-        adjustedParamSets = []
-        for paramSet in self.getParameterSets():
-            adjustedParamSet = []
-            # iterate for all parametrs in the file
-            for paramSelection in paramSet:
-                # append based on `alwaysParams` and `neverParams` criteria
-                if selectionMatches(paramSelection, alwaysParams, neverParams):
-                    adjustedParamSet.append(paramSelection)
-            adjustedParamSets.append(adjustedParamSet)
-        return adjustedParamSets
 
     @staticmethod
     def create(specification, strategy):
@@ -151,7 +137,8 @@ class ParamSelectionFullSet(ParamSelection):
     def __init__(self, strategy):
         super(ParamSelectionFullSet, self).__init__(PARAM_SEL_FULL_SET, strategy, 0, 0)
 
-    def getParameterSets(self):
+    def getParameterSets(self, alwaysParams, neverParams):
+        # XXX: ignore the "always" and "never" params
         yield [self.allParameters]
 
     def getNumCombinations(self):
@@ -162,13 +149,10 @@ class ParamSelectionZero(ParamSelection):
     def __init__(self, strategy):
         super(ParamSelectionZero, self).__init__(PARAM_SEL_ZERO, strategy, 0, 0)
 
-    def getParameterSets(self):
+    def getParameterSets(self, alwaysParams, neverParams):
         # return all params; will set the boundary conditions to the start value anyway
+        # XXX: ignore the "always" and "never" params
         yield [self.allParameters]
-
-    def getAdjustedParameterSets(self, alwaysParams, neverParams):
-        # baseline optimization: threat this one specially and always include
-        return self.getParameterSets()
 
     def getNumCombinations(self):
         return 1
@@ -179,7 +163,8 @@ class ParamSelectionExplicit(ParamSelection):
         super(ParamSelectionExplicit, self).__init__(PARAM_SEL_EXPLICIT, strategy, 0, 0)
         self.explicitParameterSets = []
 
-    def getParameterSets(self):
+    def getParameterSets(self, alwaysParams, neverParams):
+        # XXX: ignore the "always" and "never" params
         yield self.explicitParameterSets
 
     def getNumCombinations(self):
@@ -196,7 +181,7 @@ class ParamSelectionExhaustive(ParamSelection):
     def __init__(self, strategy, start, end):
         super(ParamSelectionExhaustive, self).__init__(PARAM_SEL_EXHAUSTIVE, strategy, start, end)
 
-    def getParameterSets(self):
+    def getParameterSets(self, alwaysParams, neverParams):
         # optimize all combinations of k parameters
         step = -1 if self.isReverse else 1
         for k in range(self.start, self.end + step, step):
@@ -205,7 +190,9 @@ class ParamSelectionExhaustive(ParamSelection):
                 return
             paramCombinations = []
             for it in itertools.combinations(self.allParameters, k):
-                paramCombinations.append(list(it))
+                paramSelection = list(it)
+                if selectionMatches(paramSelection, alwaysParams, neverParams):
+                    paramCombinations.append(paramSelection)
             yield paramCombinations
 
     def getNumCombinations(self):
@@ -220,7 +207,7 @@ class ParamSelectionGreedy(ParamSelection):
     def __init__(self, strategy, start, end):
         super(ParamSelectionGreedy, self).__init__(PARAM_SEL_GREEDY, strategy, start, end)
 
-    def getParameterSets(self):
+    def getParameterSets(self, alwaysParams, neverParams):
         # add one more parameter to the best current parameter combination
         for k in range(self.start, self.end + 1):
             # terminate if good enough value already found
@@ -235,7 +222,9 @@ class ParamSelectionGreedy(ParamSelection):
             paramCombinations = []
             for p in self.allParameters:
                 if p not in bestParams:
-                    paramCombinations.append(copy.copy(bestParams) + [p])
+                    paramSelection = copy.copy(bestParams) + [p]
+                    if selectionMatches(paramSelection, alwaysParams, neverParams):
+                        paramCombinations.append(paramSelection)
             yield paramCombinations
 
     def getNumCombinations(self):
@@ -249,7 +238,7 @@ class ParamSelectionGreedyReverse(ParamSelection):
     def __init__(self, strategy, start, end):
         super(ParamSelectionGreedyReverse, self).__init__(PARAM_SEL_GREEDY_REVERSE, strategy, start, end)
 
-    def getParameterSets(self):
+    def getParameterSets(self, alwaysParams, neverParams):
         # remove one more parameter from the best current parameter combination
         for k in range(self.start, self.end - 1, -1):
             if k >= self.n - 1:
@@ -260,7 +249,9 @@ class ParamSelectionGreedyReverse(ParamSelection):
                     return # error occured
             paramCombinations = []
             for p in bestParams:
-                paramCombinations.append([x for x in bestParams if x != p])
+                paramSelection = [x for x in bestParams if x != p]
+                if selectionMatches(paramSelection, alwaysParams, neverParams):
+                    paramCombinations.append(paramSelection)
             yield paramCombinations
 
     def getNumCombinations(self):
@@ -610,7 +601,7 @@ class StrategyManager:
                 isReached = achievedValue <= requiredValue
 
 
-        g.log(LOG_DEBUG, "TOP: {} parameters, {} achieved, {} required, {} target, {} configTarget, {} calculatedTarget".format(numParameters, achievedValue, requiredValue,
+        g.log(LOG_DEBUG, "TOP: {} parameters, {} achieved, {} required, {} target, {} configTarget, {} calculatedTarget\n".format(numParameters, achievedValue, requiredValue,
                                                                                                                                 targetValue, configTarget, calculatedTarget))
 
 
@@ -845,7 +836,7 @@ class StrategyManager:
         parameterSelections.sort(key = lambda x: x.getSortOrder())
         for sel in parameterSelections:
             g.log(LOG_DEBUG, "processing parameter selection of type {}".format(sel.type))
-            for params in sel.getAdjustedParameterSets(alwaysParams, neverParams):
+            for params in sel.getParameterSets(alwaysParams, neverParams):
                 g.log(LOG_DEBUG, "made a new pool of {} jobs".format(len(params)))
                 pool = jobpool.JobPool(self, params, sel.areParametersChangeable())
                 with self.jobLock:
