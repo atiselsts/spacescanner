@@ -1,0 +1,23 @@
+{
+    "optimization" : {
+        "timeLimitSec" : 30,
+        "consensusDelaySec" : 10
+    },
+    "copasi" : {
+        "modelFile" : "@SELF@/models/optimization/simple-6params.cps"
+    },
+    "parameters" : [
+        {"type" : "exhaustive", "range" : [1, 6]}
+    ],
+    "named_parameters" : [
+        {"name" : "Hexokinase", "included" : "never"},
+        {"name" : "Glucose in", "included" : "never"}, 
+        {"name" : "Phosphofructokinase", "included" : "never"},
+        {"name" : "Pyruvate kinase", "included" : "never"},
+        {"name" : "ATPase", "included" : "never"},
+        {"name" : "GAPD", "included" : "never"}
+    ],
+    "output" : {
+        "logfile" : "spacescanner.log"
+    }
+}

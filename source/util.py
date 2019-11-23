@@ -326,3 +326,17 @@ def getParamSetHash(parameters, allParameters, isZero):
         return 0
     paramState = [2**i for i,x in enumerate(allParameters) if x in parameters]
     return sum(paramState)
+
+#####################################################################
+def selectionMatches(selection, alwaysParams, neverParams):
+    # convert the names to lower case and strip starting/tailing quotes
+    normalizedSelection = [param.strip("'").strip('"').lower() for param in selection]
+    # the selection is good if it contains all of the "always" parameters
+    for always in alwaysParams:
+        if always not in normalizedSelection:
+            return False
+    # the selection is good if it contains none of the "never" parameters
+    for never in neverParams:
+        if never in normalizedSelection:
+            return False
+    return True

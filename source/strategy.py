@@ -63,14 +63,28 @@ class ParamSelection(object):
     def areParametersChangeable(self):
         return self.type != PARAM_SEL_ZERO
 
-    def getAllJobHashes(self):
+    def getAllJobHashes(self, alwaysParams, neverParams):
         hashes = set()
-        for paramSet in self.getParameterSets():
+        for paramSet in self.getAdjustedParameterSets(alwaysParams, neverParams):
             for params in paramSet:
                 hash = getParamSetHash(params, self.strategy.copasiConfig["params"],
                                        not self.areParametersChangeable())
                 hashes.add(hash)
         return hashes
+
+    # same as getParameterSets, but applies extra "always" and "never" named parameters
+    # overriden by the class ParamSelectionZero.
+    def getAdjustedParameterSets(self, alwaysParams, neverParams):
+        adjustedParamSets = []
+        for paramSet in self.getParameterSets():
+            adjustedParamSet = []
+            # iterate for all parametrs in the file
+            for paramSelection in paramSet:
+                # append based on `alwaysParams` and `neverParams` criteria
+                if selectionMatches(paramSelection, alwaysParams, neverParams):
+                    adjustedParamSet.append(paramSelection)
+            adjustedParamSets.append(adjustedParamSet)
+        return adjustedParamSets
 
     @staticmethod
     def create(specification, strategy):
@@ -151,6 +165,10 @@ class ParamSelectionZero(ParamSelection):
     def getParameterSets(self):
         # return all params; will set the boundary conditions to the start value anyway
         yield [self.allParameters]
+
+    def getAdjustedParameterSets(self, alwaysParams, neverParams):
+        # baseline optimization: threat this one specially and always include
+        return self.getParameterSets()
 
     def getNumCombinations(self):
         return 1
@@ -747,6 +765,23 @@ class StrategyManager:
                 pool.errorMsg = ""
 
 
+    def getSpecialParams(self):
+        alwaysParams = []
+        neverParams = []
+        if g.getConfig("named_parameters"):
+            for spec in g.getConfig("named_parameters"):
+                if "name" not in spec or "included" not in spec:
+                    g.log(LOG_ERROR, "invalid config file named parameters specification: {}".format(spec))
+                    continue
+                name = spec["name"].strip("'").strip('"').lower()
+                if spec["included"] == "never":
+                    neverParams.append(name)
+                elif spec["included"] == "always":
+                    alwaysParams.append(name)
+        g.log(LOG_DEBUG, "getSpecialParams: always={} never={}".format(alwaysParams, neverParams))
+        return alwaysParams, neverParams
+
+
     def execute(self):
         parameterSelections = []
 
@@ -790,9 +825,11 @@ class StrategyManager:
             spec = {"type" : "full-set"}
             parameterSelections.append(ParamSelection.create(spec, self))
 
+        alwaysParams, neverParams = self.getSpecialParams()
+
         hashes = set()
         for sel in parameterSelections:
-            hashes = hashes.union(sel.getAllJobHashes())
+            hashes = hashes.union(sel.getAllJobHashes(alwaysParams, neverParams))
         self.totalNumJobs = len(hashes)
         # if the extra "dummy" job0 is scheduled, do not include it in this number
         if hasZerothJob:
@@ -808,7 +845,7 @@ class StrategyManager:
         parameterSelections.sort(key = lambda x: x.getSortOrder())
         for sel in parameterSelections:
             g.log(LOG_DEBUG, "processing parameter selection of type {}".format(sel.type))
-            for params in sel.getParameterSets():
+            for params in sel.getAdjustedParameterSets(alwaysParams, neverParams):
                 g.log(LOG_DEBUG, "made a new pool of {} jobs".format(len(params)))
                 pool = jobpool.JobPool(self, params, sel.areParametersChangeable())
                 with self.jobLock:

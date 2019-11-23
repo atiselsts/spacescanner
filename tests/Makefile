@@ -2,9 +2,12 @@ PYTHON = python
 SPACESCANNER = ../source/spacescanner.py
 NODEJS?=nodejs
 
-all: check-version test-broken test-web test-param-estimation test-fast-consensus test-no-solution test-param-ranges test-param-ranges2 test-solution-timeout test-top test-suspend-resume cleanup
+all: check-version test-broken test-web test-param-estimation test-fast-consensus test-no-solution test-param-ranges test-param-ranges2 test-named-params test-solution-timeout test-top test-suspend-resume cleanup
 
 test-param-estimation: test-param-estimation-simple test-param-estimation-multi test-param-estimation-reference-time test-param-estimation-top
+	@true
+
+test-named-params: test-named-params1 test-named-params2 test-named-params3
 	@true
 
 test-broken: test-broken-1 test-broken-2 test-broken-3 test-broken-4 test-broken-5 test-broken-6
@@ -55,6 +58,37 @@ test-param-ranges2:
 	@echo Testing parameter range zero configuration options...
 	@rm -f spacescanner.log
 	$(PYTHON) $(SPACESCANNER) test-param-ranges2.json
+	@grep "total 0 parameter combination(s) to try out" spacescanner.log
+	@grep "starting job 0 (optimization parameters: " spacescanner.log
+	@grep "results of finished jobs saved" spacescanner.log
+	@echo ..done
+	@echo ""
+
+test-named-params1:
+	@echo Testing named parameters, both \"always\" and \"never\"...
+	@rm -f spacescanner.log
+	$(PYTHON) $(SPACESCANNER) test-named-params1.json
+	@grep "total 2 parameter combination(s) to try out" spacescanner.log
+	@grep "starting job 1 (optimization parameters: 'Pyruvate kinase' 'Glucose in' 'Hexokinase')" spacescanner.log
+	@grep "starting job 2 (optimization parameters: 'Glucose in' 'Phosphofructokinase' 'Hexokinase')" spacescanner.log
+	@grep "results of finished jobs saved" spacescanner.log
+	@echo ..done
+	@echo ""
+
+test-named-params2:
+	@echo Testing named parameters, all \"always\" included...
+	@rm -f spacescanner.log
+	$(PYTHON) $(SPACESCANNER) test-named-params2.json
+	@grep "total 1 parameter combination(s) to try out" spacescanner.log
+	@grep "starting job 1 (optimization parameters: 'Pyruvate kinase' 'Glucose in' 'ATPase' 'Phosphofructokinase' 'GAPD' 'Hexokinase')" spacescanner.log
+	@grep "results of finished jobs saved" spacescanner.log
+	@echo ..done
+	@echo ""
+
+test-named-params3:
+	@echo Testing named parameters, all \"never\" included...
+	@rm -f spacescanner.log
+	$(PYTHON) $(SPACESCANNER) test-named-params3.json
 	@grep "total 0 parameter combination(s) to try out" spacescanner.log
 	@grep "starting job 0 (optimization parameters: " spacescanner.log
 	@grep "results of finished jobs saved" spacescanner.log
