@@ -17,6 +17,8 @@ SPACESCANNER.settings = function() {
             {"type" : "exhaustive", "range" : [1, 2]},
             {"type" : "greedy", "range" : [3, 4]}
         ],
+        "named_parameters" : [
+        ],
         "output" : {
             "loglevel" : 3
         },
@@ -28,6 +30,8 @@ SPACESCANNER.settings = function() {
 
     // make a copy
     var currentSettings = JSON.parse(JSON.stringify(defaultSettings));
+
+    var currentParams = [];
 
     // read from the server
     function querySettings() {
@@ -68,6 +72,18 @@ SPACESCANNER.settings = function() {
             },
             error: function (data, textStatus, xhr) {
                 SPACESCANNER.notify("Failed to start jobs: " + JSON.stringify(data) + " " + textStatus, "error");
+            }
+        });
+    }
+
+    function stopAll() {
+        $.ajax({
+            url: "stopall",
+            success: function (returnData) {
+                SPACESCANNER.notify("Stopping all jobs");
+            },
+            error: function (data, textStatus, xhr) {
+                SPACESCANNER.notify("Failed to stop jobs: " + JSON.stringify(data) + " " + textStatus, "error");
             }
         });
     }
@@ -126,6 +142,23 @@ SPACESCANNER.settings = function() {
         return result;
     }
 
+    function getNumOptimizableParams() {
+        if (!currentParams) {
+            currentParams = [];
+        }
+        var numParams = currentParams.length;
+        var len = currentSettings["named_parameters"] ? currentSettings["named_parameters"].length : 0;
+        for (var i = 0; i < len; ++i) {
+            var p = currentSettings["named_parameters"][i];
+            if (p.included === "always" || p.included === "never") {
+                if(currentParams.indexOf(p.name) >= 0) {
+                    numParams--;
+                }
+            }
+        }
+        return numParams >= 0 ? numParams : 0; // don't allow to be negative
+    }
+
     function estimateNumJobs() {
         if (!$( "#dialog-parameters" ).is(':visible')) {
             return;
@@ -138,12 +171,12 @@ SPACESCANNER.settings = function() {
         $( "#params-count-row-disabled" ).hide();
         $( "#params-count-row-enabled" ).show();
 
-        var totalNumParams = SPACESCANNER.refresh ? SPACESCANNER.refresh.totalNumParams() : 0;
-        if(!totalNumParams) {
+        if(!SPACESCANNER.refresh) {
             $("#params-job-status").html("Estimated");
             $("#params-job-number").html("<i>unknown</i>");
             return;
         }
+        var totalNumParams = getNumOptimizableParams();
         var totalNumJobs = 0;
         var parameters = [];
         for (var i = 0; i < MAX_DISPLAY_PARAMS; ++i) {
@@ -430,6 +463,14 @@ SPACESCANNER.settings = function() {
                 }
             }
             currentSettings["parameters"] = parameters;
+
+            // always/never optimize parameters
+            currentSettings["named_parameters"] = [];
+            for (var i = 0; i < currentParams.length; ++i) {
+                var paramIncluded = $('input[name=dialog-params-param-' + i + ']:checked').val();
+                var p = {name: currentParams[i], included: paramIncluded};
+                currentSettings["named_parameters"].push(p);
+            }
         }
 
         if (currentSettings["optimization"]["targetFractionOfTOP"] != 0) {
@@ -467,8 +508,26 @@ SPACESCANNER.settings = function() {
         set : function(property, value) {
             currentSettings[property] = value;
         },
+        setParams : function(newParams) {
+            console.log("setting new params: " + JSON.stringify(newParams));
+            currentParams = newParams;
+        },
+        getParams : function() {
+            return currentParams;
+        },
+        getParamIncluded : function(paramName) {
+            var len = currentSettings["named_parameters"] ? currentSettings["named_parameters"].length : 0;
+            for (var i = 0; i < len; ++i) {
+                var p = currentSettings["named_parameters"][i];
+                if(p.name === paramName) {
+                    return p.included;
+                }
+            }
+            return "contingent";
+        },
         querySettings : querySettings,
         postSettings : postSettings,
+        stopAll : stopAll,
         populateSettings : populateSettings,
         saveSettings : saveSettings,  
         displayParam : displayParam,

@@ -195,6 +195,8 @@
 
 <div id="dialog" class="hide"><form id="dialog-form" class="form-horizontal"></form></div>
 
+<!-- ----------------------------------------------------------- -->
+
 <div id="dialog-select-model" class="hide">
    <form id="dialog-visual-options-form" class="form-horizontal" method="post" action="modelfile" enctype="multipart/form-data">
 
@@ -210,12 +212,6 @@
         <input type="file" id="input-import-filename" placeholder="File or directory name" multiple directory webkitdirectory allowdirs/>
     </div>
 
-    <!--
-    <div class="form-row">
-        <label for="input-import-experimentalFilename" style="width:170px"><i class="icon-tag"></i> Experimental data</label>
-        <input type="file" id="input-import-experimentalFilename" name="file2" placeholder="Filename">
-    </div> -->
-
     <div class="form-row">
         <label for="input-import-taskName" style="width:170px">Task name</label>
         <input type="text" id="input-import-taskName" placeholder="Name (optional)">
@@ -229,13 +225,16 @@
     </form>
 </div>
 
+<!-- ----------------------------------------------------------- -->
 
 <div id="dialog-status" class="hide">
+  <!-- Populated dynamically -->
   <div class="form-row">
     Refreshing...
   </div>
 </div>
 
+<!-- ----------------------------------------------------------- -->
 
 <div id="dialog-settings" class="hide">
     <div class="dialog-tabs">
@@ -267,12 +266,9 @@
         <input type="number" id="input-option-timeLimit" style="width:100px !important"  placeholder="3600" min="10" title="Maximal CPU time for optimization in case neither consensus, nor stagnation, nor other termination conditions have been reached">
     </div>
 
-<!--    <br/> -->
     <div class="form-row">
         <label for="input-option-consensusDelaySec" style="width:200px">Consensus delay, sec</label>
         <input type="number" id="input-option-consensusDelaySec" style="width:100px !important"  placeholder="300" min="10" title="The minimal time to continue after the consensus criteria has been reached">
-<!--    </div>
-    <div class="form-row"> -->
 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
@@ -388,6 +384,8 @@
    </div>
 </div>
 
+<!-- ----------------------------------------------------------- -->
+
 <div id="dialog-parameters" class="hide">
     <!-- max 5 types of parameters -->
 
@@ -396,8 +394,10 @@
       <span id="params-count-row-enabled" class="hide">The model has <span id="params-total-number"><i>unknown number of</i></span> parameters to optimize. <span id="params-job-status">Estimated</span> number of jobs: <span id="params-job-number"><i>unknown</i></span></span>
     </div>
 
+    <!-- ---------------------------------------------------- -->
+
     <div class="form-row" id="row-params0">
-        <label for="input-option-params0" style="width:120px">Parameter set:</label>
+        <label for="input-option-params0" style="width:120px">Parameter set</label>
         <select id="input-option-params0" style="width:150px !important; color: black" title="Type of the parameter set">
           <option value="full-set" title="Every parameter in model file (a single run)">Full set only</option>
           <option value="exhaustive" title="Exhaustive search of parameter combinations">Exhaustive</option>
@@ -423,6 +423,8 @@
   </span>
 
     </div>
+
+    <!-- ---------------------------------------------------- -->
 
     <div class="form-row" id="row-params1" class="hide">
         <label for="input-option-params1" style="width:120px">Parameter set</label>
@@ -454,6 +456,8 @@
   &nbsp;&nbsp;<a id="button-del-params1" class="button small">Remove</a>
     </div>
 
+    <!-- ---------------------------------------------------- -->
+
     <div class="form-row" id="row-params2" class="hide">
         <label for="input-option-params2" style="width:120px">Parameter set</label>
         <select id="input-option-params2" style="width:150px !important; color: black" title="Type of the parameter set">
@@ -484,6 +488,8 @@
   &nbsp;&nbsp;<a id="button-del-params2" class="button small">Remove</a>
     </div>
 
+    <!-- ---------------------------------------------------- -->
+
     <div class="form-row" id="row-params3" class="hide">
         <label for="input-option-params3" style="width:120px">Parameter set</label>
         <select id="input-option-params3" style="width:150px !important; color: black" title="Type of the parameter set">
@@ -513,6 +519,8 @@
 
   &nbsp;&nbsp;<a id="button-del-params3" class="button small">Remove</a>
     </div>
+
+    <!-- ---------------------------------------------------- -->
 
     <div class="form-row" id="row-params4" class="hide">
         <label for="input-option-params4" style="width:120px">Parameter set</label>
@@ -547,7 +555,12 @@
     <ul class="actions">
       <li><a id="button-add-params" class="button small" title="Add new row of parameter sets">Add another</a></li>
     </ul>
+
+    <!-- the next div is populated dynamically -->
+    <div class="form-row" id="dialog-params-model-params"></div>
 </div>
+
+<!-- ----------------------------------------------------------- -->
 
 <div id="dialog-export" class="hide">
     <div class="form-row">
@@ -560,10 +573,10 @@
     </div>
 </div>
 
+<!-- ----------------------------------------------------------- -->
+
 <script src="jquery/js/jquery-1.9.1.js"></script>
-<!-- <script src="bootstrap/js/bootstrap.min.js"></script> -->
 <script src="jquery/js/jquery-ui-1.10.3.custom.min.js"></script>
-<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>-->
 <script src="https://www.google.com/jsapi"></script>
 <script src="js/fileupload.js"></script>
 <script src="js/uppie.js"></script>

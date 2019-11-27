@@ -237,7 +237,8 @@ def postModel():
     # check if the model is all right
     sm = Server.serverInstance.strategyManager
     if sm.prepare(isDummy = False, taskType = taskType):
-        response = {"filename" : MODEL_FILE_NAME}
+        paramNames = [x.strip("'").strip('"') for x in sm.copasiConfig.get("params", [])]
+        response = {"filename" : MODEL_FILE_NAME, "params" : paramNames}
     else:
         # report errors if any happened while loading the model file
         response = {"error" : sm.lastError}

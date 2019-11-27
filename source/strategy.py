@@ -451,7 +451,7 @@ class StrategyManager:
         f.write("Rank,")
         f.write(evaluationResultName + ",")
         f.write("Max CPU time,Total CPU time,Job ID,Method,Number of parameters,Stop reason,")
-        paramNames = [x.strip("'") for x in self.copasiConfig["params"]]
+        paramNames = [x.strip("'").strip('"') for x in self.copasiConfig["params"]]
         if False:
             # don't do this anymore: takes too much space?
             f.write(",".join([x + " included" for x in paramNames]) + ",")
@@ -759,11 +759,12 @@ class StrategyManager:
     def getSpecialParams(self):
         alwaysParams = []
         neverParams = []
-        if g.getConfig("named_parameters"):
+        if type(g.getConfig("named_parameters")) is list:
             for spec in g.getConfig("named_parameters"):
                 if "name" not in spec or "included" not in spec:
                     g.log(LOG_ERROR, "invalid config file named parameters specification: {}".format(spec))
                     continue
+                # convert the names to lower case and strip starting/tailing quotes
                 name = spec["name"].strip("'").strip('"').lower()
                 if spec["included"] == "never":
                     neverParams.append(name)

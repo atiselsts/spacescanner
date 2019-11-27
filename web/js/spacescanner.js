@@ -25,6 +25,7 @@ var SPACESCANNER = function() {
             SPACESCANNER.notify("Model file selected:\n" + filename, "success");
             $( "#dialog-select-model" ).dialog("close");
             SPACESCANNER.settings.saveSettings();
+            SPACESCANNER.settings.setParams(data["params"]);
             var title = SPACESCANNER.settings.get("copasi")["taskType"] === "optimization" ?
                 "Optimization task" :
                 "Parameter fitting task";
@@ -158,6 +159,33 @@ var SPACESCANNER = function() {
         open: function() {
             SPACESCANNER.settings.populateSettings();
             SPACESCANNER.settings.estimateNumJobs();
+
+            var s = "";
+            var params = SPACESCANNER.settings.getParams();
+            if(params.length) {
+                s += "<table><tbody>";
+                s += '<tr>';
+                s += '<th style="width:55%">Parameter</th>';
+                s += '<th style="width:15%">Combinatorially optimized</th>';
+                s += '<th style="width:15%">Always optimized</th>';
+                s += '<th style="width:15%">Never optimized</th>';
+                s += '</tr>\n';
+
+                for (var i = 0; i < params.length; ++i) {
+                    var r = '<input type="radio" name="dialog-params-param-' + i + '" ';
+                    var included = SPACESCANNER.settings.getParamIncluded(params[i]);
+                    var c1 = included === "contingent" ? " checked" : "";
+                    var c2 = included === "always" ? " checked" : "";
+                    var c3 = included === "never" ? " checked" : "";
+                    s += '<td id="dialog-params-param-row-' + i + '" style="width:55%">' + params[i] + '</td>';
+                    s += '<td style="width:15%">' + r + 'value="contingent"' + c1 + '></td>';
+                    s += '<td style="width:15%">' + r + 'value="always"' + c2 + '></td>';
+                    s += '<td style="width:15%">' + r + 'value="never"' + c3 + '></td>';
+                    s += '</tr>\n';
+                }
+                s += "</tbody></table>";
+            }
+            $( "#dialog-params-model-params" ).html(s);
         },
         buttons: [
             {
@@ -216,17 +244,8 @@ var SPACESCANNER = function() {
             if (!SPACESCANNER.refresh.isActive()) {
                 // start
                 SPACESCANNER.settings.postSettings();
-            } else { 
-                // stop
-                $.ajax({
-                    url: "stopall",
-                    success: function (returnData) {
-                        SPACESCANNER.notify("Stopping all jobs");
-                    },
-                    error: function (data, textStatus, xhr) {
-                        SPACESCANNER.notify("Failed to stop jobs: " + JSON.stringify(data) + " " + textStatus, "error");
-                    }
-                });
+            } else {
+                SPACESCANNER.settings.stopAll();
             }
         }
     });
