@@ -12,6 +12,8 @@ SPACESCANNER.refresh = function() {
     var hasResults = false;
     var totalNumJobs = 0;
     var totalNumParams = 0;
+    var numParamsAlwaysIncluded = 0;
+    var numParamsNeverIncluded = 0;
 
     var resultsButtonClicked = false;
 
@@ -36,6 +38,26 @@ SPACESCANNER.refresh = function() {
         });
     }
 
+    function updateAlwaysNeverIncludedParams(oldTotalNumParams) {
+        var doEstimateNumJobs = false;
+        var oldNumParamsAlwaysIncluded = numParamsAlwaysIncluded;
+        var oldNumParamsNeverIncluded = numParamsNeverIncluded;
+
+        var namedParamSettings = SPACESCANNER.settings.getNumNamedParams();
+        numParamsAlwaysIncluded = namedParamSettings.numAlways;
+        numParamsNeverIncluded = namedParamSettings.numNever;
+
+        if (oldTotalNumParams != totalNumParams
+            || numParamsAlwaysIncluded != oldNumParamsAlwaysIncluded
+            || numParamsNeverIncluded != oldNumParamsNeverIncluded) {
+            var numCombinatorially = totalNumParams - numParamsAlwaysIncluded - numParamsNeverIncluded;
+            var s = " (" + numCombinatorially + " combinatorially optimized, " + numParamsAlwaysIncluded + " always included, " + numParamsNeverIncluded + " ignored)";
+            $("#params-num-per-class").text(s);
+            doEstimateNumJobs = true;
+        }
+        return doEstimateNumJobs;
+    }
+
     function updateStatus(data) {
         var oldIsModelExecutable = isModelExecutable;
         var oldIsActive = isActive;
@@ -43,7 +65,7 @@ SPACESCANNER.refresh = function() {
         var oldTotalNumJobs = totalNumJobs;
         var oldTotalNumParams = totalNumParams;
         var doEstimateNumJobs = false;
-        
+
         isModelExecutable = data.isExecutable;
         isActive = data.isActive;
         hasResults = data.resultsPresent;
@@ -51,9 +73,14 @@ SPACESCANNER.refresh = function() {
         totalNumParams = data.totalNumParams;
 
         if (oldTotalNumParams != totalNumParams) {
-            $("#params-total-number").html("" + totalNumParams + " total");
+            $("#params-total-number").html("" + totalNumParams);
             doEstimateNumJobs = true;
         }
+
+        if (updateAlwaysNeverIncludedParams(oldTotalNumParams)) {
+            doEstimateNumJobs = true;
+        }
+
         if (oldTotalNumJobs != totalNumJobs) {
             doEstimateNumJobs = true;
         }
@@ -239,6 +266,9 @@ SPACESCANNER.refresh = function() {
     return {
         refresh: refresh,
         refreshFull: refreshFull,
+        redrawAlwaysNeverIncludedParams : function () {
+            updateAlwaysNeverIncludedParams(totalNumParams);
+        },
         isActive: function () { return isActive },
         showFinishedJobResults: showFinishedJobResults,
         totalNumParams: function () { return totalNumParams },

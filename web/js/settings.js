@@ -525,6 +525,34 @@ SPACESCANNER.settings = function() {
             }
             return "contingent";
         },
+        getNumNamedParams : function() {
+            var settings;
+            if ($( "#dialog-parameters" ).is(':visible')) {
+                // populate from the dialog
+                settings = {"named_parameters" : []};
+                for (var i = 0; i < currentParams.length; ++i) {
+                    var paramIncluded = $('input[name=dialog-params-param-' + i + ']:checked').val();
+                    var p = {name: currentParams[i], included: paramIncluded};
+                    settings["named_parameters"].push(p);
+                }
+            } else {
+                // use cached settings
+                settings = currentSettings;
+            }
+            var ret = {numAlways: 0, numNever: 0, numContingent: 0};
+            var len = settings["named_parameters"] ? settings["named_parameters"].length : 0;
+            for (var i = 0; i < len; ++i) {
+                var p = settings["named_parameters"][i];
+                if (p.included === "always") {
+                    ret.numAlways++;
+                } else if (p.included === "never") {
+                    ret.numNever++;
+                } else {
+                    ret.numContingent++;
+                }
+            }
+            return ret;
+        },
         querySettings : querySettings,
         postSettings : postSettings,
         stopAll : stopAll,

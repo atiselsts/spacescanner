@@ -162,13 +162,13 @@ var SPACESCANNER = function() {
 
             var s = "";
             var params = SPACESCANNER.settings.getParams();
-            if(params.length) {
+            if (params.length) {
                 s += "<table><tbody>";
                 s += '<tr>';
-                s += '<th style="width:55%">Parameter</th>';
-                s += '<th style="width:15%">Combinatorially optimized</th>';
-                s += '<th style="width:15%">Always optimized</th>';
-                s += '<th style="width:15%">Never optimized</th>';
+                s += '<th style="width:64%;text-align:center;vertical-align:middle;font-weight:bold">Parameter</th>';
+                s += '<th style="width:12%;text-align:center;font-weight:bold">Combinatorially optimized</th>';
+                s += '<th style="width:12%;text-align:center;font-weight:bold">Always optimized</th>';
+                s += '<th style="width:12%;text-align:center;font-weight:bold">Never optimized</th>';
                 s += '</tr>\n';
 
                 for (var i = 0; i < params.length; ++i) {
@@ -178,14 +178,22 @@ var SPACESCANNER = function() {
                     var c2 = included === "always" ? " checked" : "";
                     var c3 = included === "never" ? " checked" : "";
                     s += '<td id="dialog-params-param-row-' + i + '" style="width:55%">' + params[i] + '</td>';
-                    s += '<td style="width:15%">' + r + 'value="contingent"' + c1 + '></td>';
-                    s += '<td style="width:15%">' + r + 'value="always"' + c2 + '></td>';
-                    s += '<td style="width:15%">' + r + 'value="never"' + c3 + '></td>';
+                    s += '<td style="width:12%;text-align:center">' + r + 'value="contingent"' + c1 + '></td>';
+                    s += '<td style="width:12%;text-align:center">' + r + 'value="always"' + c2 + '></td>';
+                    s += '<td style="width:12%;text-align:center">' + r + 'value="never"' + c3 + '></td>';
                     s += '</tr>\n';
                 }
                 s += "</tbody></table>";
             }
             $( "#dialog-params-model-params" ).html(s);
+
+            // setup change callbacks
+            for (var i = 0; i < params.length; ++i) {
+                $( 'input[type=radio][name=dialog-params-param-' + i + ']' ).change(function() {
+                    SPACESCANNER.refresh.redrawAlwaysNeverIncludedParams();
+                    SPACESCANNER.settings.estimateNumJobs();
+                });
+            }
         },
         buttons: [
             {
