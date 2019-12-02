@@ -1,11 +1,11 @@
 {
     "copasi" : {
         "modelFile" : "@SELF@/models/parameter-estimation-multiple-experiments/XOrg fiks pie pl 28 v01 t03.cps",
-	"taskType" : "parameterFitting"
+	      "taskType" : "parameterFitting"
     },
     "optimization" : {
         "consensusDelaySec" : 5,
-        "consensusCorridor" : 0.5
+        "consensusCorridor" : 0.8
     },
     "parameters" : [
         {"type" : "full-set"}
