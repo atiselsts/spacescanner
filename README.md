@@ -1,6 +1,13 @@
 # SpaceScanner: [Copasi](http://copasi.org) optimization run launcher ##
 
-[![Build Status](https://travis-ci.org/atiselsts/spacescanner.svg)](https://travis-ci.org/atiselsts/spacescanner/branches)
+[![Build Status](https://travis-ci.org/atiselsts/spacescanner.svg?branch=master)](https://travis-ci.org/atiselsts/spacescanner/branches)
+
+**The SpaceScanner publication**:
+
+If you use this software, please cite the relevant application note:
+
+*Atis Elsts, Agris Pentjuss, Egils Stalidzans;* SpaceScanner: COPASI wrapper for automated management of global stochastic optimization experiments. *Bioinformatics*, Oxford University Press, 2017.
+DOI: https://doi.org/10.1093/bioinformatics/btx363*
 
 **SpaceScanner** features:
 
@@ -36,6 +43,11 @@ SpaceScanner is easy to use and configure. There are two ways how to work with S
 
 * a command-line interface that expects a configuration file in JSON format as the only argument;
 * a web interface that allows the user to interactively configure, start, and stop Copasi optimizations, as well as see their results graphically.
+
+
+# User manual
+
+Available [here](doc/SpaceScanner%20User%20Manual%20v03.pdf).
 
 
 # Directory structure of this repository
