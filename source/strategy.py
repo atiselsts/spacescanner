@@ -73,7 +73,7 @@ class ParamSelection(object):
         return hashes
 
     @staticmethod
-    def create(specification, strategy):
+    def create(specification, strategy, numAlwaysIncludeParams):
         if "type" not in specification:
             return None
 
@@ -95,6 +95,10 @@ class ParamSelection(object):
             if start == 0 or end == 0:
                 g.log(LOG_ERROR, "parameter selection ranges must contain numbers in the range [1 .. n]")
                 return None
+
+        # if always-on parameters are named, adjust the range to always optimize for them
+        start += numAlwaysIncludeParams
+        end += numAlwaysIncludeParams
 
         if specification["type"] == "full-set":
             x = ParamSelectionFullSet(strategy)
@@ -349,7 +353,7 @@ class StrategyManager:
             return self.activeJobPool is not None
 
     def getTotalNumJobs(self):
-        return max(self.nextJobID - 1, self.totalNumJobs)
+        return max(max(self.nextJobID - 1, self.totalNumJobs), 0)
 
     def getTotalNumParams(self):
         if self.copasiConfig is None:
@@ -777,11 +781,14 @@ class StrategyManager:
     def execute(self):
         parameterSelections = []
 
+        alwaysParams, neverParams = self.getSpecialParams()
+        numAlwaysParams = len(alwaysParams)
+
         if self.taskType == COPASI_TASK_OPTIMIZATION:
             # always add the zero'th job at start, needed to show baseline in graphs and for TOP
             g.log(LOG_INFO, "optimizing for zero parameters initially to find the baseline")
             spec = {"type" : "zero"}
-            parameterSelections.append(ParamSelection.create(spec, self))
+            parameterSelections.append(ParamSelection.create(spec, self, numAlwaysParams))
             hasZerothJob = True
         else:
             hasZerothJob = False
@@ -789,7 +796,7 @@ class StrategyManager:
         if self.isTOPEnabled():
             # add all parameters: will define the target value
             spec = {"type" : "full-set"}
-            parameterSelections.append(ParamSelection.create(spec, self))
+            parameterSelections.append(ParamSelection.create(spec, self, numAlwaysParams))
 
         if g.getConfig("restartOnFile"):
             # Guess which parameters have not been optimized yet based on the .csv result file
@@ -797,14 +804,14 @@ class StrategyManager:
             parameterSets = getNonconvergedResults(filename)
             for ps in parameterSets:
                 spec = {"type" : "explicit", "parameters" : ps}
-                x = ParamSelection.create(spec, self)
+                x = ParamSelection.create(spec, self, numAlwaysParams)
                 if x not in parameterSelections:
                     parameterSelections.append(x)
 
         elif g.getConfig("parameters"):
             # Take the paramter sets from the file
             for spec in g.getConfig("parameters"):
-                x = ParamSelection.create(spec, self)
+                x = ParamSelection.create(spec, self, numAlwaysParams)
                 if x is None:
                     g.log(LOG_ERROR, "invalid parameter specification: {}".format(ENC.encode(spec)))
                     continue
@@ -815,16 +822,14 @@ class StrategyManager:
             # add the default optimization target: all parameters
             g.log(LOG_INFO, "optimizing only for all parameters")
             spec = {"type" : "full-set"}
-            parameterSelections.append(ParamSelection.create(spec, self))
-
-        alwaysParams, neverParams = self.getSpecialParams()
+            parameterSelections.append(ParamSelection.create(spec, self, numAlwaysParams))
 
         hashes = set()
         for sel in parameterSelections:
             hashes = hashes.union(sel.getAllJobHashes(alwaysParams, neverParams))
         self.totalNumJobs = len(hashes)
         # if the extra "dummy" job0 is scheduled, do not include it in this number
-        if hasZerothJob:
+        if hasZerothJob and self.totalNumJobs > 0:
             self.totalNumJobs -= 1
         else:
             # start from job1, not job0 (which is ignored by the web interface)
